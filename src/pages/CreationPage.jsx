@@ -3,6 +3,7 @@ import { mockCreations, mockComments } from '../data/mockCreations';
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { CATEGORY_ICONS } from '../components/CommunityWidgets';
+import ReviewSection from '../components/ReviewSection';
 import SiteHeader from '../components/SiteHeader';
 
 export default function CreationPage() {
@@ -183,28 +184,27 @@ export default function CreationPage() {
           </div>
         )}
 
-        {/* Comments */}
-        <div className="retro-panel comments-section">
-          <div className="section-header">
-            <h2>💬 Comments ({mockComments.length})</h2>
-          </div>
+        {/* Reviews & Reactions */}
+        {!isMock && <ReviewSection creationId={id} />}
 
-          <div className="comment-form">
-            <textarea placeholder="Leave a comment... (Sign in required)" />
-            <button>POST</button>
-          </div>
-
-          {mockComments.map((comment) => (
-            <div key={comment.id} className="comment">
-              <div className="comment-avatar">{comment.avatar}</div>
-              <div className="comment-body">
-                <div className="comment-user">{comment.user}</div>
-                <div className="comment-text">{comment.text}</div>
-                <div className="comment-date">{comment.date}</div>
-              </div>
+        {/* Mock Comments fallback for demo creations */}
+        {isMock && (
+          <div className="retro-panel comments-section">
+            <div className="section-header">
+              <h2>💬 Comments ({mockComments.length})</h2>
             </div>
-          ))}
-        </div>
+            {mockComments.map((comment) => (
+              <div key={comment.id} className="comment">
+                <div className="comment-avatar">{comment.avatar}</div>
+                <div className="comment-body">
+                  <div className="comment-user">{comment.user}</div>
+                  <div className="comment-text">{comment.text}</div>
+                  <div className="comment-date">{comment.date}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </>
   );

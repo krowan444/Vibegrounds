@@ -40,9 +40,12 @@ export default function SiteHeader({ compact = false }) {
               <>
                 <Link
                   to={`/profile/${encodeURIComponent(displayName)}`}
-                  style={{ color: 'var(--orange)', fontFamily: 'var(--font-retro)', fontSize: '17px', textDecoration: 'none' }}
+                  style={{ color: 'var(--orange)', fontFamily: 'var(--font-retro)', fontSize: '17px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px' }}
                 >
-                  👾 {displayName}
+                  {profile?.avatar_url ? (
+                    <img src={profile.avatar_url} alt="" style={{ width: '22px', height: '22px', borderRadius: '2px', objectFit: 'cover', border: '1px solid var(--border-dark)' }} />
+                  ) : '👾'}
+                  {displayName}
                 </Link>
                 <span style={{ color: '#666' }}>|</span>
                 <Link to="/edit-profile" style={{ fontSize: '16px' }}>

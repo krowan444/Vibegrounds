@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { AVATARS, DEFAULT_AVATAR } from '../data/avatars';
 import SiteHeader from '../components/SiteHeader';
 
 export default function EditProfilePage() {
@@ -16,7 +17,7 @@ export default function EditProfilePage() {
       setForm({
         username: profile.username || '',
         bio: profile.bio || '',
-        avatar_url: profile.avatar_url || '',
+        avatar_url: profile.avatar_url || DEFAULT_AVATAR.path,
         website: profile.website || ''
       });
     }
@@ -52,7 +53,6 @@ export default function EditProfilePage() {
     setSaving(true);
 
     try {
-      // Basic validation
       if (!form.username.trim()) throw new Error('Username cannot be empty');
       if (form.username.length < 2) throw new Error('Username must be at least 2 characters');
       if (form.username.length > 30) throw new Error('Username cannot exceed 30 characters');
@@ -61,12 +61,11 @@ export default function EditProfilePage() {
       await updateProfile({
         username: form.username.trim(),
         bio: form.bio.trim(),
-        avatar_url: form.avatar_url.trim(),
+        avatar_url: form.avatar_url,
         website: form.website.trim()
       });
 
       setSuccess('✅ Profile updated! Looking fresh, viber!');
-      // Redirect to profile after a brief pause
       setTimeout(() => navigate(`/profile/${encodeURIComponent(form.username.trim())}`), 1500);
     } catch (err) {
       if (err.message?.includes('duplicate') || err.message?.includes('unique')) {
@@ -110,6 +109,70 @@ export default function EditProfilePage() {
               </div>
             )}
 
+            {/* ── AVATAR PICKER ── */}
+            <div className="retro-form-group">
+              <label style={{ marginBottom: '8px', display: 'block' }}>Choose Your Avatar</label>
+
+              {/* Current selection preview */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
+                <img
+                  src={form.avatar_url || DEFAULT_AVATAR.path}
+                  alt="Current avatar"
+                  style={{
+                    width: '64px', height: '64px', borderRadius: '4px',
+                    border: '3px solid var(--orange)', objectFit: 'cover'
+                  }}
+                />
+                <div style={{ fontFamily: 'var(--font-retro)', fontSize: '16px', color: 'var(--text-secondary)' }}>
+                  {AVATARS.find(a => a.path === form.avatar_url)?.name || 'Custom'} — Selected ✓
+                </div>
+              </div>
+
+              {/* Avatar grid */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(10, 1fr)',
+                gap: '6px',
+                padding: '8px',
+                background: 'var(--bg-dark)',
+                border: '2px solid var(--border-dark)',
+                borderRadius: '2px'
+              }}>
+                {AVATARS.map(avatar => {
+                  const isSelected = form.avatar_url === avatar.path;
+                  return (
+                    <button
+                      key={avatar.id}
+                      type="button"
+                      onClick={() => setForm({ ...form, avatar_url: avatar.path })}
+                      title={avatar.name}
+                      style={{
+                        width: '100%',
+                        aspectRatio: '1',
+                        padding: '2px',
+                        cursor: 'pointer',
+                        border: isSelected ? '3px solid var(--orange)' : '2px solid var(--border-dark)',
+                        borderRadius: '4px',
+                        background: isSelected ? 'rgba(232,163,23,0.15)' : 'transparent',
+                        outline: 'none',
+                        transition: 'all 0.15s',
+                        opacity: isSelected ? 1 : 0.8
+                      }}
+                    >
+                      <img
+                        src={avatar.path}
+                        alt={avatar.name}
+                        style={{
+                          width: '100%', height: '100%', objectFit: 'cover',
+                          borderRadius: '2px', display: 'block'
+                        }}
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <div className="retro-form-group">
               <label>Username</label>
               <input
@@ -137,17 +200,6 @@ export default function EditProfilePage() {
               <div style={{ fontFamily: 'var(--font-retro)', fontSize: '14px', color: 'var(--text-dim)', marginTop: '2px' }}>
                 {form.bio.length}/300
               </div>
-            </div>
-
-            <div className="retro-form-group">
-              <label>Avatar URL</label>
-              <input
-                type="url"
-                placeholder="https://example.com/your-avatar.png"
-                value={form.avatar_url}
-                onChange={(e) => setForm({ ...form, avatar_url: e.target.value })}
-                disabled={saving}
-              />
             </div>
 
             <div className="retro-form-group">
@@ -179,9 +231,9 @@ export default function EditProfilePage() {
           <div className="retro-panel-body" style={{
             fontFamily: 'var(--font-retro)', fontSize: '17px', color: 'var(--text-secondary)', lineHeight: '1.4'
           }}>
+            <p><strong style={{ color: 'var(--orange)' }}>Avatar:</strong> Click any character to select your profile picture</p>
             <p><strong style={{ color: 'var(--orange)' }}>Username:</strong> This is your public identity on VibeGrounds</p>
             <p><strong style={{ color: 'var(--orange)' }}>Bio:</strong> A short description about yourself (max 300 chars)</p>
-            <p><strong style={{ color: 'var(--orange)' }}>Avatar:</strong> Paste a URL to an image for your profile pic</p>
             <p><strong style={{ color: 'var(--orange)' }}>Website:</strong> Link to your portfolio or homepage</p>
           </div>
         </div>
