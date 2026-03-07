@@ -6,15 +6,34 @@ import SiteHeader from '../components/SiteHeader';
 
 const CATEGORIES = ['games', 'tools', 'art', 'experiments', 'websites', 'other'];
 
+// Normalize a URL: auto-prepend https:// if missing
+export function normalizeUrl(raw) {
+  let url = raw.trim();
+  if (!url) return '';
+  if (!/^https?:\/\//i.test(url)) {
+    url = 'https://' + url;
+  }
+  return url;
+}
+
+// Validate that a string is a proper URL after normalization
+export function isValidUrl(str) {
+  try {
+    const u = new URL(str);
+    return u.hostname.includes('.');
+  } catch {
+    return false;
+  }
+}
+
 export default function UploadPage() {
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({
     title: '',
     description: '',
     category: 'tools',
-    project_url: '',
-    thumbnail_url: ''
+    project_url: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -42,26 +61,6 @@ export default function UploadPage() {
     );
   }
 
-  // Normalize a URL: auto-prepend https:// if missing
-  const normalizeUrl = (raw) => {
-    let url = raw.trim();
-    if (!url) return '';
-    if (!/^https?:\/\//i.test(url)) {
-      url = 'https://' + url;
-    }
-    return url;
-  };
-
-  // Validate that a string is a proper URL after normalization
-  const isValidUrl = (str) => {
-    try {
-      const u = new URL(str);
-      return u.hostname.includes('.');
-    } catch {
-      return false;
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -76,17 +75,12 @@ export default function UploadPage() {
         throw new Error('Please enter a valid website address (e.g. customaihoodies.com)');
       }
 
-      // Normalize thumbnail URL if provided
-      const normalizedThumbUrl = form.thumbnail_url.trim()
-        ? normalizeUrl(form.thumbnail_url)
-        : '';
-
       const { error: insertError } = await supabase.from('creations').insert({
         title: form.title.trim(),
         description: form.description.trim(),
         category: form.category,
         project_url: normalizedProjectUrl,
-        thumbnail_url: normalizedThumbUrl,
+        thumbnail_url: '',
         creator_id: user.id
       });
 
@@ -153,17 +147,6 @@ export default function UploadPage() {
                   <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>
                 ))}
               </select>
-            </div>
-
-            <div className="retro-form-group">
-              <label>Preview Image URL</label>
-              <input
-                type="url"
-                placeholder="https://example.com/preview.png"
-                value={form.thumbnail_url}
-                onChange={(e) => setForm({ ...form, thumbnail_url: e.target.value })}
-                disabled={loading}
-              />
             </div>
 
             <div className="retro-form-group">
