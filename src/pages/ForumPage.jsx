@@ -1,0 +1,195 @@
+import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
+import SiteHeader from '../components/SiteHeader';
+
+const CATEGORY_ICONS = {
+  'general': '💬',
+  'vibe-coding': '⚡',
+  'show-project': '🚀',
+  'help-feedback': '🆘',
+  'retro-internet': '🕹️'
+};
+
+export default function ForumPage() {
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      // Get categories
+      const { data: cats } = await supabase
+        .from('forum_categories')
+        .select('*')
+        .order('sort_order', { ascending: true });
+
+      if (cats) {
+        // Get thread counts and latest activity per category
+        const enriched = await Promise.all(cats.map(async (cat) => {
+          const { count: threadCount } = await supabase
+            .from('forum_threads')
+            .select('*', { count: 'exact', head: true })
+            .eq('category_id', cat.id);
+
+          // Get latest thread for "last activity"
+          const { data: latestThread } = await supabase
+            .from('forum_threads')
+            .select('title, last_activity_at')
+            .eq('category_id', cat.id)
+            .order('last_activity_at', { ascending: false })
+            .limit(1);
+
+          // Get total reply count across all threads in category
+          const { data: threads } = await supabase
+            .from('forum_threads')
+            .select('reply_count')
+            .eq('category_id', cat.id);
+          const totalReplies = threads ? threads.reduce((sum, t) => sum + (t.reply_count || 0), 0) : 0;
+
+          return {
+            ...cat,
+            threadCount: threadCount || 0,
+            totalReplies,
+            latestThread: latestThread?.[0] || null
+          };
+        }));
+
+        setCategories(enriched);
+      }
+      setLoading(false);
+    };
+    fetchCategories();
+  }, []);
+
+  return (
+    <>
+      <SiteHeader />
+
+      <div style={{ padding: '8px', maxWidth: '900px', margin: '0 auto' }}>
+        {/* Forum Header */}
+        <div className="retro-panel" style={{ marginBottom: '8px' }}>
+          <div className="section-header">
+            <h2>💬 VIBEGROUNDS COMMUNITY FORUM</h2>
+          </div>
+          <div style={{
+            padding: '10px 12px', fontFamily: 'var(--font-retro)', fontSize: '17px',
+            color: 'var(--text-secondary)', borderBottom: '1px solid var(--border-dark)'
+          }}>
+            Welcome to the forums! Discuss projects, share tips, and connect with fellow vibers.
+          </div>
+        </div>
+
+        {/* Category List */}
+        <div className="retro-panel">
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 80px 80px 140px',
+            gap: '0',
+            background: 'linear-gradient(180deg, #333 0%, #222 100%)',
+            borderBottom: '2px solid var(--orange)',
+            padding: '8px 12px',
+            fontFamily: 'var(--font-pixel)',
+            fontSize: '8px',
+            color: 'var(--orange)',
+            textTransform: 'uppercase',
+            letterSpacing: '1px'
+          }}>
+            <span>Board</span>
+            <span style={{ textAlign: 'center' }}>Threads</span>
+            <span style={{ textAlign: 'center' }}>Replies</span>
+            <span style={{ textAlign: 'right' }}>Latest</span>
+          </div>
+
+          {loading ? (
+            <div style={{
+              fontFamily: 'var(--font-retro)', fontSize: '20px', color: 'var(--orange)',
+              textAlign: 'center', padding: '30px'
+            }}>
+              ⏳ Loading forums...
+            </div>
+          ) : categories.length > 0 ? (
+            categories.map(cat => (
+              <Link
+                key={cat.id}
+                to={`/forum/category/${cat.slug}`}
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 80px 80px 140px',
+                  gap: '0',
+                  padding: '12px',
+                  borderBottom: '1px solid var(--border-dark)',
+                  textDecoration: 'none',
+                  color: 'inherit',
+                  transition: 'background 0.15s',
+                  alignItems: 'center'
+                }}
+                onMouseOver={e => e.currentTarget.style.background = 'rgba(232,163,23,0.05)'}
+                onMouseOut={e => e.currentTarget.style.background = 'transparent'}
+              >
+                <div>
+                  <div style={{
+                    fontFamily: 'var(--font-pixel)', fontSize: '10px', color: 'var(--orange)',
+                    textTransform: 'uppercase', marginBottom: '3px'
+                  }}>
+                    {CATEGORY_ICONS[cat.slug] || '📁'} {cat.name}
+                  </div>
+                  <div style={{
+                    fontFamily: 'var(--font-retro)', fontSize: '15px', color: 'var(--text-dim)'
+                  }}>
+                    {cat.description}
+                  </div>
+                </div>
+                <div style={{
+                  textAlign: 'center', fontFamily: 'var(--font-retro)', fontSize: '18px',
+                  color: 'var(--text-secondary)', fontWeight: 'bold'
+                }}>
+                  {cat.threadCount}
+                </div>
+                <div style={{
+                  textAlign: 'center', fontFamily: 'var(--font-retro)', fontSize: '18px',
+                  color: 'var(--text-secondary)'
+                }}>
+                  {cat.totalReplies}
+                </div>
+                <div style={{
+                  textAlign: 'right', fontFamily: 'var(--font-retro)', fontSize: '13px',
+                  color: 'var(--text-dim)'
+                }}>
+                  {cat.latestThread ? (
+                    <>
+                      <div style={{ color: 'var(--blue-link)', fontSize: '13px', marginBottom: '2px' }}>
+                        {cat.latestThread.title.length > 18
+                          ? cat.latestThread.title.slice(0, 18) + '…'
+                          : cat.latestThread.title}
+                      </div>
+                      <div>{getTimeAgo(cat.latestThread.last_activity_at)}</div>
+                    </>
+                  ) : (
+                    <span style={{ color: 'var(--text-dim)' }}>No threads yet</span>
+                  )}
+                </div>
+              </Link>
+            ))
+          ) : (
+            <div style={{
+              fontFamily: 'var(--font-retro)', fontSize: '18px', color: 'var(--text-dim)',
+              textAlign: 'center', padding: '30px'
+            }}>
+              Forum categories are loading... Make sure to run the forum.sql script!
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
+
+function getTimeAgo(dateStr) {
+  if (!dateStr) return '';
+  const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+  if (diff < 604800) return Math.floor(diff / 86400) + 'd ago';
+  return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}

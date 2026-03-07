@@ -85,6 +85,7 @@ export default function SiteHeader({ compact = false }) {
         <Link to="/">Visualisers</Link>
         {!compact && <Link to="/">Audio</Link>}
         <Link to="/portal">Portal</Link>
+        <Link to="/forum">Forum</Link>
         {!compact && (
           <>
             <Link to="/">Series</Link>

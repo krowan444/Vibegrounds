@@ -8,6 +8,9 @@ import ProfilePage from './pages/ProfilePage';
 import EditProfilePage from './pages/EditProfilePage';
 import CategoryPage from './pages/CategoryPage';
 import PortalPage from './pages/PortalPage';
+import ForumPage from './pages/ForumPage';
+import ForumCategoryPage from './pages/ForumCategoryPage';
+import ForumThreadPage from './pages/ForumThreadPage';
 import AuthPage from './pages/AuthPage';
 
 export default function App() {
@@ -23,6 +26,9 @@ export default function App() {
             <Route path="/edit-profile" element={<EditProfilePage />} />
             <Route path="/category/:category" element={<CategoryPage />} />
             <Route path="/portal" element={<PortalPage />} />
+            <Route path="/forum" element={<ForumPage />} />
+            <Route path="/forum/category/:slug" element={<ForumCategoryPage />} />
+            <Route path="/forum/thread/:id" element={<ForumThreadPage />} />
             <Route path="/auth" element={<AuthPage />} />
           </Routes>
         </BrowserChrome>
