@@ -1,11 +1,29 @@
 import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { mockCreations, dailyTop5, latestSubmissions, featuredCreators } from '../data/mockCreations';
+import { supabase } from '../lib/supabase';
+import { CreationCard, CATEGORY_ICONS } from '../components/CommunityWidgets';
 import SiteHeader from '../components/SiteHeader';
 
 export default function HomePage() {
   const featured = mockCreations.slice(0, 10);
   const latestGames = mockCreations.filter(c => c.category === 'Game');
   const topToday = [...mockCreations].sort((a, b) => b.votes - a.votes).slice(0, 5);
+
+  // Live latest creations from Supabase
+  const [liveCreations, setLiveCreations] = useState([]);
+
+  useEffect(() => {
+    const fetchLatest = async () => {
+      const { data } = await supabase
+        .from('creations')
+        .select('*, profiles(username)')
+        .order('created_at', { ascending: false })
+        .limit(12);
+      if (data) setLiveCreations(data);
+    };
+    fetchLatest();
+  }, []);
 
   return (
     <>
@@ -135,18 +153,38 @@ export default function HomePage() {
         {/* ════ CENTER COLUMN (MAIN CONTENT) ════ */}
         <main className="portal-main">
 
+          {/* Latest Creations from Supabase */}
+          {liveCreations.length > 0 && (
+            <div className="retro-panel">
+              <div className="section-header">
+                <h2>🆕 Latest Creations</h2>
+                <div className="section-header-links">
+                  {Object.entries(CATEGORY_ICONS).map(([cat, icon]) => (
+                    <span key={cat}>
+                      <Link to={`/category/${cat}`}>{icon} {cat.charAt(0).toUpperCase() + cat.slice(1)}</Link>
+                      {' '}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div className="creations-grid">
+                {liveCreations.map(c => <CreationCard key={c.id} creation={c} />)}
+              </div>
+            </div>
+          )}
+
           {/* Featured VG Creations */}
           <div className="retro-panel">
             <div className="section-header">
               <h2>⭐ Featured VG Creations!</h2>
               <div className="section-header-links">
-                <a href="#">AI Tools</a>
+                <Link to="/category/tools">🔧 Tools</Link>
                 <span style={{ color: '#666' }}>|</span>
-                <a href="#">Games</a>
+                <Link to="/category/games">🎮 Games</Link>
                 <span style={{ color: '#666' }}>|</span>
-                <a href="#">Visual</a>
+                <Link to="/category/art">🎨 Art</Link>
                 <span style={{ color: '#666' }}>|</span>
-                <a href="#">More...</a>
+                <Link to="/category/experiments">🧪 More...</Link>
               </div>
             </div>
             <div className="creations-grid">

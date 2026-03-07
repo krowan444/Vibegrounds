@@ -6,6 +6,7 @@ import CreationPage from './pages/CreationPage';
 import UploadPage from './pages/UploadPage';
 import ProfilePage from './pages/ProfilePage';
 import EditProfilePage from './pages/EditProfilePage';
+import CategoryPage from './pages/CategoryPage';
 import AuthPage from './pages/AuthPage';
 
 export default function App() {
@@ -19,6 +20,7 @@ export default function App() {
             <Route path="/upload" element={<UploadPage />} />
             <Route path="/profile/:username" element={<ProfilePage />} />
             <Route path="/edit-profile" element={<EditProfilePage />} />
+            <Route path="/category/:category" element={<CategoryPage />} />
             <Route path="/auth" element={<AuthPage />} />
           </Routes>
         </BrowserChrome>

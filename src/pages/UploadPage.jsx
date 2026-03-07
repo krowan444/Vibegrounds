@@ -1,19 +1,71 @@
-import { Link } from 'react-router-dom';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
 import SiteHeader from '../components/SiteHeader';
 
+const CATEGORIES = ['games', 'tools', 'art', 'experiments', 'websites', 'other'];
+
 export default function UploadPage() {
+  const { user, profile } = useAuth();
+  const navigate = useNavigate();
   const [form, setForm] = useState({
     title: '',
     description: '',
-    category: 'AI Tool',
-    url: '',
-    image: ''
+    category: 'tools',
+    project_url: '',
+    thumbnail_url: ''
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  // Must be logged in
+  if (!user) {
+    return (
+      <>
+        <SiteHeader compact />
+        <div className="upload-page">
+          <div className="retro-panel">
+            <div className="section-header">
+              <h2>🔒 Sign In Required</h2>
+            </div>
+            <div className="retro-panel-body" style={{
+              fontFamily: 'var(--font-retro)', fontSize: '18px', color: 'var(--text-secondary)',
+              textAlign: 'center', padding: '30px'
+            }}>
+              <p>You need to be signed in to upload creations.</p>
+              <a href="/auth" style={{ color: 'var(--orange)', fontWeight: 'bold' }}>Sign in here →</a>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert('🚀 Your creation has been submitted to VibeGrounds! (Demo mode)');
+    setError('');
+    setLoading(true);
+
+    try {
+      if (!form.title.trim()) throw new Error('Title is required');
+
+      const { error: insertError } = await supabase.from('creations').insert({
+        title: form.title.trim(),
+        description: form.description.trim(),
+        category: form.category,
+        project_url: form.project_url.trim(),
+        thumbnail_url: form.thumbnail_url.trim(),
+        creator_id: user.id
+      });
+
+      if (insertError) throw insertError;
+      navigate('/');
+    } catch (err) {
+      setError(err.message || 'Something went wrong');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -26,6 +78,16 @@ export default function UploadPage() {
             <h2>🚀 Upload Your Creation!</h2>
           </div>
           <form className="retro-panel-body" onSubmit={handleSubmit}>
+            {error && (
+              <div style={{
+                background: '#331111', border: '2px solid #cc3333',
+                padding: '8px 12px', marginBottom: '12px',
+                fontFamily: 'var(--font-retro)', fontSize: '17px', color: '#ff6666'
+              }}>
+                ⚠️ {error}
+              </div>
+            )}
+
             <div className="retro-form-group">
               <label>Project Title</label>
               <input
@@ -34,6 +96,7 @@ export default function UploadPage() {
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
                 required
+                disabled={loading}
               />
             </div>
 
@@ -44,6 +107,7 @@ export default function UploadPage() {
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
                 required
+                disabled={loading}
               />
             </div>
 
@@ -52,14 +116,11 @@ export default function UploadPage() {
               <select
                 value={form.category}
                 onChange={(e) => setForm({ ...form, category: e.target.value })}
+                disabled={loading}
               >
-                <option>AI Tool</option>
-                <option>Game</option>
-                <option>Visualiser</option>
-                <option>Experiment</option>
-                <option>Creative Code</option>
-                <option>Audio</option>
-                <option>Other</option>
+                {CATEGORIES.map(c => (
+                  <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>
+                ))}
               </select>
             </div>
 
@@ -68,8 +129,9 @@ export default function UploadPage() {
               <input
                 type="url"
                 placeholder="https://example.com/preview.png"
-                value={form.image}
-                onChange={(e) => setForm({ ...form, image: e.target.value })}
+                value={form.thumbnail_url}
+                onChange={(e) => setForm({ ...form, thumbnail_url: e.target.value })}
+                disabled={loading}
               />
             </div>
 
@@ -78,14 +140,20 @@ export default function UploadPage() {
               <input
                 type="url"
                 placeholder="https://your-project.com"
-                value={form.url}
-                onChange={(e) => setForm({ ...form, url: e.target.value })}
+                value={form.project_url}
+                onChange={(e) => setForm({ ...form, project_url: e.target.value })}
                 required
+                disabled={loading}
               />
             </div>
 
-            <button type="submit" className="retro-submit-btn">
-              🎯 SUBMIT TO VIBEGROUNDS
+            <button
+              type="submit"
+              className="retro-submit-btn"
+              disabled={loading}
+              style={loading ? { opacity: 0.6, cursor: 'wait' } : undefined}
+            >
+              {loading ? '⏳ SUBMITTING...' : '🎯 SUBMIT TO VIBEGROUNDS'}
             </button>
           </form>
         </div>
