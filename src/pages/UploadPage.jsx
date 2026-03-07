@@ -42,6 +42,26 @@ export default function UploadPage() {
     );
   }
 
+  // Normalize a URL: auto-prepend https:// if missing
+  const normalizeUrl = (raw) => {
+    let url = raw.trim();
+    if (!url) return '';
+    if (!/^https?:\/\//i.test(url)) {
+      url = 'https://' + url;
+    }
+    return url;
+  };
+
+  // Validate that a string is a proper URL after normalization
+  const isValidUrl = (str) => {
+    try {
+      const u = new URL(str);
+      return u.hostname.includes('.');
+    } catch {
+      return false;
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -50,12 +70,23 @@ export default function UploadPage() {
     try {
       if (!form.title.trim()) throw new Error('Title is required');
 
+      // Normalize and validate project URL
+      const normalizedProjectUrl = normalizeUrl(form.project_url);
+      if (!normalizedProjectUrl || !isValidUrl(normalizedProjectUrl)) {
+        throw new Error('Please enter a valid website address (e.g. customaihoodies.com)');
+      }
+
+      // Normalize thumbnail URL if provided
+      const normalizedThumbUrl = form.thumbnail_url.trim()
+        ? normalizeUrl(form.thumbnail_url)
+        : '';
+
       const { error: insertError } = await supabase.from('creations').insert({
         title: form.title.trim(),
         description: form.description.trim(),
         category: form.category,
-        project_url: form.project_url.trim(),
-        thumbnail_url: form.thumbnail_url.trim(),
+        project_url: normalizedProjectUrl,
+        thumbnail_url: normalizedThumbUrl,
         creator_id: user.id
       });
 
@@ -138,13 +169,16 @@ export default function UploadPage() {
             <div className="retro-form-group">
               <label>Project URL / Embed Link</label>
               <input
-                type="url"
-                placeholder="https://your-project.com"
+                type="text"
+                placeholder="your-project.com"
                 value={form.project_url}
                 onChange={(e) => setForm({ ...form, project_url: e.target.value })}
                 required
                 disabled={loading}
               />
+              <div style={{ fontFamily: 'var(--font-retro)', fontSize: '13px', color: 'var(--text-dim)', marginTop: '2px' }}>
+                https:// will be added automatically if missing
+              </div>
             </div>
 
             <button
