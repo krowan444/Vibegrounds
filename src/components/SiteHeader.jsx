@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function SiteHeader({ compact = false }) {
-  const { user, signOut } = useAuth();
+  const { user, profile, signOut } = useAuth();
 
   const handleSignOut = async () => {
     try {
@@ -12,8 +12,8 @@ export default function SiteHeader({ compact = false }) {
     }
   };
 
-  // Extract display name from email
-  const displayName = user?.email?.split('@')[0] || 'Viber';
+  // Use profile username, fall back to email prefix
+  const displayName = profile?.username || user?.email?.split('@')[0] || 'Viber';
 
   return (
     <header className="site-header">
@@ -38,9 +38,16 @@ export default function SiteHeader({ compact = false }) {
           <div className="site-auth-links">
             {user ? (
               <>
-                <span style={{ color: 'var(--orange)', fontFamily: 'var(--font-retro)', fontSize: '17px' }}>
+                <Link
+                  to={`/profile/${encodeURIComponent(displayName)}`}
+                  style={{ color: 'var(--orange)', fontFamily: 'var(--font-retro)', fontSize: '17px', textDecoration: 'none' }}
+                >
                   👾 {displayName}
-                </span>
+                </Link>
+                <span style={{ color: '#666' }}>|</span>
+                <Link to="/edit-profile" style={{ fontSize: '16px' }}>
+                  ⚙️
+                </Link>
                 <span style={{ color: '#666' }}>|</span>
                 <a
                   href="#"
