@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { mockCreations, dailyTop5, latestSubmissions, featuredCreators } from '../data/mockCreations';
+import SiteHeader from '../components/SiteHeader';
 
 export default function HomePage() {
   const featured = mockCreations.slice(0, 10);
@@ -9,43 +10,7 @@ export default function HomePage() {
   return (
     <>
       {/* ── SITE HEADER ── */}
-      <header className="site-header">
-        <div className="site-header-top">
-          <Link to="/" className="site-logo">
-            <img src="/images/logo.png" alt="VibeGrounds" />
-            <div>
-              <div className="site-logo-text">VIBEGROUNDS</div>
-              <div className="site-logo-tagline">THE FUTURE OF AI CREATIVITY, TODAY!</div>
-            </div>
-          </Link>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-            <div className="site-auth-links">
-              <Link to="/auth">SIGN IN</Link>
-              <span style={{ color: '#666' }}>|</span>
-              <Link to="/auth">JOIN VG!</Link>
-            </div>
-
-            <div className="site-search">
-              <input type="text" placeholder="Search..." />
-              <button>GO!</button>
-            </div>
-          </div>
-        </div>
-
-        {/* Nav Tabs */}
-        <nav className="site-nav">
-          <Link to="/" className="active">Home</Link>
-          <Link to="/">AI Tools</Link>
-          <Link to="/">Games</Link>
-          <Link to="/">Visualisers</Link>
-          <Link to="/">Audio</Link>
-          <Link to="/">Portal</Link>
-          <Link to="/">Series</Link>
-          <Link to="/">Themes</Link>
-          <Link to="/">Features</Link>
-        </nav>
-      </header>
+      <SiteHeader />
 
       {/* ── NEWS TICKER ── */}
       <div className="news-ticker">

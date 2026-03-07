@@ -1,6 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { mockCreations, mockComments } from '../data/mockCreations';
 import { useState } from 'react';
+import SiteHeader from '../components/SiteHeader';
 
 export default function CreationPage() {
   const { id } = useParams();
@@ -23,26 +24,7 @@ export default function CreationPage() {
 
   return (
     <>
-      <header className="site-header">
-        <div className="site-header-top">
-          <Link to="/" className="site-logo">
-            <img src="/images/logo.png" alt="VibeGrounds" style={{ height: '50px' }} />
-            <div className="site-logo-text" style={{ fontSize: '10px' }}>VIBEGROUNDS</div>
-          </Link>
-          <div className="site-auth-links">
-            <Link to="/auth">SIGN IN</Link>
-            <span style={{ color: '#666' }}>|</span>
-            <Link to="/auth">JOIN VG!</Link>
-          </div>
-        </div>
-        <nav className="site-nav">
-          <Link to="/">Home</Link>
-          <Link to="/">AI Tools</Link>
-          <Link to="/">Games</Link>
-          <Link to="/">Visualisers</Link>
-          <Link to="/">Portal</Link>
-        </nav>
-      </header>
+      <SiteHeader compact />
 
       <div className="creation-detail">
         <div className="creation-detail-header">
