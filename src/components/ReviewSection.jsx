@@ -1,364 +1,294 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import ReportButton from './ReportButton';
+import Notice from './Notice';
+import { timeAgo } from '../lib/format';
 
-const REACTION_TYPES = [
-  { key: 'fire', emoji: '🔥', label: 'Fire' },
-  { key: 'like', emoji: '👍', label: 'Like' },
-  { key: 'clever', emoji: '🧠', label: 'Clever' },
-  { key: 'funny', emoji: '😂', label: 'Funny' }
+const REACTIONS = [
+  { type: 'fire',   emoji: '🔥', label: 'Fire' },
+  { type: 'like',   emoji: '👍', label: 'Like' },
+  { type: 'clever', emoji: '🧠', label: 'Clever' },
+  { type: 'funny',  emoji: '😂', label: 'Funny' },
+  { type: 'cursed', emoji: '💀', label: 'Cursed' },
 ];
 
-// Simple profanity filter placeholder
-const BLOCKED_WORDS = ['spam', 'scam'];
-function filterComment(text) {
-  let filtered = text;
-  BLOCKED_WORDS.forEach(word => {
-    const re = new RegExp(word, 'gi');
-    filtered = filtered.replace(re, '***');
-  });
-  return filtered;
-}
-
-// Get or create a session ID for anonymous reaction tracking
-function getSessionId() {
-  let sid = sessionStorage.getItem('vg_session_id');
-  if (!sid) {
-    sid = crypto.randomUUID();
-    sessionStorage.setItem('vg_session_id', sid);
-  }
-  return sid;
-}
-
 export default function ReviewSection({ creationId }) {
-  const { profile } = useAuth();
-  const [reactionCounts, setReactionCounts] = useState({ fire: 0, like: 0, clever: 0, funny: 0 });
-  const [myReactions, setMyReactions] = useState(new Set());
+  const { user, profile, canPost, isStaff } = useAuth();
+
   const [reviews, setReviews] = useState([]);
-  const [reviewForm, setReviewForm] = useState({ name: '', comment: '' });
-  const [submitting, setSubmitting] = useState(false);
+  const [reactions, setReactions] = useState({});
+  const [mine, setMine] = useState(new Set());
+  const [body, setBody] = useState('');
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [editing, setEditing] = useState(null);
+  const [editBody, setEditBody] = useState('');
 
-  const sessionId = getSessionId();
+  const load = useCallback(async () => {
+    const [r, re] = await Promise.all([
+      supabase.from('reviews_public').select('*')
+        .eq('creation_id', creationId).order('created_at', { ascending: false }),
+      supabase.from('reactions').select('reaction_type, user_id').eq('creation_id', creationId),
+    ]);
 
-  // Fetch reactions and reviews
-  useEffect(() => {
-    if (!creationId) return;
+    setReviews(r.data || []);
 
-    const fetchData = async () => {
-      // Fetch reaction counts
-      const { data: allReactions } = await supabase
-        .from('reactions')
-        .select('reaction_type, session_id')
-        .eq('creation_id', creationId);
-
-      if (allReactions) {
-        const counts = { fire: 0, like: 0, clever: 0, funny: 0 };
-        const mine = new Set();
-        allReactions.forEach(r => {
-          counts[r.reaction_type] = (counts[r.reaction_type] || 0) + 1;
-          if (r.session_id === sessionId) mine.add(r.reaction_type);
-        });
-        setReactionCounts(counts);
-        setMyReactions(mine);
-      }
-
-      // Fetch reviews
-      const { data: reviewData } = await supabase
-        .from('reviews')
-        .select('*')
-        .eq('creation_id', creationId)
-        .eq('reported', false)
-        .order('created_at', { ascending: false })
-        .limit(50);
-
-      if (reviewData) setReviews(reviewData);
-    };
-    fetchData();
-  }, [creationId]);
-
-  // Pre-fill name from profile
-  useEffect(() => {
-    if (profile?.username && !reviewForm.name) {
-      setReviewForm(prev => ({ ...prev, name: profile.username }));
-    }
-  }, [profile]);
-
-  const handleReaction = async (type) => {
-    if (myReactions.has(type)) return; // Already reacted
-
-    const { error: insertErr } = await supabase.from('reactions').insert({
-      creation_id: creationId,
-      reaction_type: type,
-      session_id: sessionId
+    const tally = {};
+    const own = new Set();
+    (re.data || []).forEach((row) => {
+      tally[row.reaction_type] = (tally[row.reaction_type] || 0) + 1;
+      if (user && row.user_id === user.id) own.add(row.reaction_type);
     });
+    setReactions(tally);
+    setMine(own);
+  }, [creationId, user]);
 
-    if (!insertErr) {
-      setReactionCounts(prev => ({ ...prev, [type]: prev[type] + 1 }));
-      setMyReactions(prev => new Set([...prev, type]));
+  useEffect(() => { load(); }, [load]);
+
+  const toggleReaction = async (type) => {
+    if (!canPost) return;
+    const had = mine.has(type);
+
+    // optimistic
+    setMine((prev) => {
+      const next = new Set(prev);
+      had ? next.delete(type) : next.add(type);
+      return next;
+    });
+    setReactions((prev) => ({ ...prev, [type]: Math.max(0, (prev[type] || 0) + (had ? -1 : 1)) }));
+
+    if (had) {
+      await supabase.from('reactions').delete()
+        .eq('creation_id', creationId).eq('user_id', user.id).eq('reaction_type', type);
+    } else {
+      const { error: err } = await supabase.from('reactions')
+        .insert({ creation_id: creationId, user_id: user.id, reaction_type: type });
+      if (err) load(); // revert by reloading truth
     }
   };
 
-  const handleReviewSubmit = async (e) => {
+  const post = async (e) => {
     e.preventDefault();
+    if (!body.trim()) return;
+    setBusy(true);
     setError('');
-    setSuccess('');
-
-    const name = reviewForm.name.trim();
-    const comment = reviewForm.comment.trim();
-
-    if (!name) { setError('Please enter your name'); return; }
-    if (!comment) { setError('Please enter a comment'); return; }
-    if (comment.length > 500) { setError('Comment cannot exceed 500 characters'); return; }
-
-    setSubmitting(true);
     try {
-      const filtered = filterComment(comment);
-      const { data, error: insertErr } = await supabase
-        .from('reviews')
-        .insert({
-          creation_id: creationId,
-          reviewer_name: name,
-          reviewer_avatar: profile?.avatar_url || '',
-          comment: filtered
-        })
-        .select()
-        .single();
-
-      if (insertErr) throw insertErr;
-
-      setReviews(prev => [data, ...prev]);
-      setReviewForm(prev => ({ ...prev, comment: '' }));
-      setSuccess('Review posted! 🎉');
-      setTimeout(() => setSuccess(''), 3000);
-    } catch (err) {
-      setError(err.message || 'Failed to post review');
+      const { error: err } = await supabase.from('reviews').insert({
+        creation_id: creationId,
+        author_id: user.id,
+        body: body.trim(),
+      });
+      if (err) throw new Error(err.message);
+      setBody('');
+      await load();
+    } catch (e2) {
+      setError(e2.message);
     } finally {
-      setSubmitting(false);
+      setBusy(false);
     }
   };
 
-  const handleReport = async (reviewId) => {
-    if (!confirm('Report this comment?')) return;
-    await supabase.from('reviews').update({ reported: true }).eq('id', reviewId);
-    setReviews(prev => prev.filter(r => r.id !== reviewId));
-    console.log('Reported review:', reviewId);
+  const saveEdit = async (id) => {
+    setBusy(true);
+    try {
+      const { error: err } = await supabase.from('reviews')
+        .update({ body: editBody.trim(), updated_at: new Date().toISOString() })
+        .eq('id', id).eq('author_id', user.id);
+      if (err) throw new Error(err.message);
+      setEditing(null);
+      await load();
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const remove = async (id) => {
+    if (!window.confirm('Delete this comment?')) return;
+    await supabase.from('reviews').delete().eq('id', id);
+    await load();
   };
 
   return (
-    <div className="retro-panel" style={{ marginBottom: '16px' }}>
-      <div className="section-header">
-        <h2>📝 PROJECT REVIEWS</h2>
-      </div>
-
-      {/* ── REACTIONS ── */}
-      <div style={{ padding: '12px', borderBottom: '1px solid var(--border-dark)' }}>
-        <div style={{
-          fontFamily: 'var(--font-pixel)', fontSize: '9px', color: 'var(--text-secondary)',
-          textTransform: 'uppercase', marginBottom: '8px'
-        }}>
-          Reactions
-        </div>
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          {REACTION_TYPES.map(r => {
-            const isReacted = myReactions.has(r.key);
+    <>
+      {/* Reactions */}
+      <div className="retro-panel" style={{ marginBottom: '14px' }}>
+        <div className="section-header"><h2>⚡ Quick Reactions</h2></div>
+        <div className="retro-panel-body" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          {REACTIONS.map((r) => {
+            const on = mine.has(r.type);
             return (
               <button
-                key={r.key}
-                onClick={() => handleReaction(r.key)}
-                disabled={isReacted}
-                title={isReacted ? `You already ${r.label}d this!` : r.label}
+                key={r.type}
+                type="button"
+                onClick={() => toggleReaction(r.type)}
+                disabled={!canPost}
+                title={canPost ? r.label : 'Sign in and verify your email to react'}
                 style={{
-                  background: isReacted ? 'rgba(232,163,23,0.15)' : 'var(--bg-dark)',
-                  border: isReacted ? '2px solid var(--orange)' : '2px solid var(--border-dark)',
-                  color: 'var(--text-primary)',
-                  fontFamily: 'var(--font-retro)',
-                  fontSize: '18px',
-                  padding: '6px 12px',
-                  cursor: isReacted ? 'default' : 'pointer',
-                  borderRadius: '2px',
-                  transition: 'all 0.15s',
-                  opacity: isReacted ? 1 : 0.85,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px'
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  background: on ? 'rgba(232,163,23,.18)' : 'var(--bg-input)',
+                  border: `2px solid ${on ? 'var(--orange)' : 'var(--border-dark)'}`,
+                  color: 'var(--text-primary)', fontFamily: 'var(--font-retro)',
+                  fontSize: '18px', padding: '5px 11px',
+                  cursor: canPost ? 'pointer' : 'not-allowed',
+                  opacity: canPost ? 1 : 0.6,
                 }}
               >
                 <span style={{ fontSize: '20px' }}>{r.emoji}</span>
-                <span style={{ color: 'var(--orange)', fontWeight: 'bold' }}>{reactionCounts[r.key]}</span>
+                <span>{reactions[r.type] || 0}</span>
               </button>
             );
           })}
         </div>
       </div>
 
-      {/* ── REVIEW FORM ── */}
-      <div style={{ padding: '12px', borderBottom: '1px solid var(--border-dark)' }}>
-        <div style={{
-          fontFamily: 'var(--font-pixel)', fontSize: '9px', color: 'var(--text-secondary)',
-          textTransform: 'uppercase', marginBottom: '8px'
-        }}>
-          Leave a Review
+      {/* Comments */}
+      <div className="retro-panel">
+        <div className="section-header">
+          <h2>💬 Reviews ({reviews.length})</h2>
         </div>
 
-        {error && (
-          <div style={{
-            background: '#331111', border: '1px solid #cc3333',
-            padding: '6px 10px', marginBottom: '8px',
-            fontFamily: 'var(--font-retro)', fontSize: '16px', color: '#ff6666'
-          }}>
-            ⚠️ {error}
-          </div>
-        )}
-        {success && (
-          <div style={{
-            background: '#113311', border: '1px solid #33cc33',
-            padding: '6px 10px', marginBottom: '8px',
-            fontFamily: 'var(--font-retro)', fontSize: '16px', color: '#66ff66'
-          }}>
-            {success}
-          </div>
-        )}
+        <div className="retro-panel-body">
+          <Notice tone="error">{error}</Notice>
 
-        <form onSubmit={handleReviewSubmit}>
-          <div style={{ marginBottom: '6px' }}>
-            <input
-              type="text"
-              placeholder="Your name"
-              value={reviewForm.name}
-              onChange={e => setReviewForm({ ...reviewForm, name: e.target.value })}
-              maxLength={30}
-              disabled={submitting}
-              style={{
-                width: '100%', padding: '6px 8px',
-                background: 'var(--bg-input)', border: '2px solid var(--border-dark)',
-                color: 'var(--text-primary)', fontFamily: 'var(--font-retro)',
-                fontSize: '16px', outline: 'none'
-              }}
-            />
-          </div>
-          <div style={{ marginBottom: '6px' }}>
-            <textarea
-              placeholder="Write your review..."
-              value={reviewForm.comment}
-              onChange={e => setReviewForm({ ...reviewForm, comment: e.target.value })}
-              maxLength={500}
-              disabled={submitting}
-              style={{
-                width: '100%', minHeight: '60px', padding: '6px 8px',
-                background: 'var(--bg-input)', border: '2px solid var(--border-dark)',
-                color: 'var(--text-primary)', fontFamily: 'var(--font-retro)',
-                fontSize: '16px', outline: 'none', resize: 'vertical'
-              }}
-            />
-            <div style={{ fontFamily: 'var(--font-retro)', fontSize: '13px', color: 'var(--text-dim)', marginTop: '2px' }}>
-              {reviewForm.comment.length}/500
+          {!user ? (
+            <div style={{ fontFamily: 'var(--font-retro)', fontSize: '18px', color: 'var(--text-dim)' }}>
+              <Link to="/auth" style={{ color: 'var(--orange)' }}>Sign in</Link> to leave a review.
             </div>
-          </div>
-          <button
-            type="submit"
-            disabled={submitting}
-            style={{
-              background: 'var(--orange)', color: '#000', border: '2px solid var(--orange-dim)',
-              fontFamily: 'var(--font-pixel)', fontSize: '9px', padding: '8px 16px',
-              cursor: submitting ? 'wait' : 'pointer', textTransform: 'uppercase',
-              fontWeight: 'bold', opacity: submitting ? 0.6 : 1
-            }}
-          >
-            {submitting ? 'POSTING...' : 'SUBMIT REVIEW'}
-          </button>
-        </form>
-      </div>
-
-      {/* ── REVIEW LIST ── */}
-      <div>
-        <div style={{
-          fontFamily: 'var(--font-pixel)', fontSize: '9px', color: 'var(--text-secondary)',
-          textTransform: 'uppercase', padding: '10px 12px 6px',
-          borderBottom: '1px solid var(--border-dark)'
-        }}>
-          Recent Reviews ({reviews.length})
+          ) : !canPost ? (
+            <div style={{ fontFamily: 'var(--font-retro)', fontSize: '18px', color: 'var(--text-dim)' }}>
+              Confirm your email address to leave reviews.
+            </div>
+          ) : (
+            <form onSubmit={post}>
+              <textarea
+                value={body}
+                onChange={(e) => setBody(e.target.value)}
+                placeholder="What did you think? Be honest, be useful, don't be a dick."
+                maxLength={1000}
+                disabled={busy}
+                style={{
+                  width: '100%', minHeight: '70px', padding: '8px',
+                  background: 'var(--bg-input)', border: '2px solid var(--border-dark)',
+                  color: 'var(--text-primary)', fontFamily: 'var(--font-retro)',
+                  fontSize: '17px', resize: 'vertical',
+                }}
+              />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '6px' }}>
+                <button
+                  type="submit"
+                  disabled={busy || !body.trim()}
+                  style={{
+                    background: 'var(--orange)', color: '#000',
+                    border: '2px solid var(--orange-dim)', fontFamily: 'var(--font-pixel)',
+                    fontSize: '9px', padding: '7px 14px',
+                    cursor: busy ? 'wait' : 'pointer', opacity: body.trim() ? 1 : 0.5,
+                  }}
+                >
+                  {busy ? 'POSTING...' : 'POST REVIEW'}
+                </button>
+                <span style={{ fontFamily: 'var(--font-retro)', fontSize: '14px', color: 'var(--text-dim)' }}>
+                  {body.length}/1000
+                </span>
+              </div>
+            </form>
+          )}
         </div>
 
-        {reviews.length > 0 ? (
-          reviews.map(review => {
-            const timeAgo = getTimeAgo(review.created_at);
+        {reviews.length === 0 ? (
+          <div className="vg-empty" style={{ padding: '22px', fontSize: '17px' }}>
+            No reviews yet. Be the first to say something.
+          </div>
+        ) : (
+          reviews.map((r) => {
+            const isAuthor = user && r.author_id === user.id;
             return (
-              <div key={review.id} style={{
-                display: 'flex', gap: '10px', padding: '10px 12px',
-                borderBottom: '1px solid var(--border-dark)',
-                alignItems: 'flex-start'
-              }}>
-                <div style={{
-                  width: '32px', height: '32px', flexShrink: 0,
-                  borderRadius: '2px', overflow: 'hidden',
-                  border: '1px solid var(--border-dark)',
-                  background: 'var(--bg-dark)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center'
-                }}>
-                  {review.reviewer_avatar ? (
-                    <img src={review.reviewer_avatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  ) : (
-                    <span style={{ fontSize: '16px' }}>👾</span>
-                  )}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', flexWrap: 'wrap' }}>
+              <div key={r.id} style={{ padding: '10px 12px', borderTop: '1px solid var(--border-dark)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  {r.author_avatar
+                    ? <img src={r.author_avatar} alt="" style={{ width: '22px', height: '22px', objectFit: 'cover', border: '1px solid var(--border-dark)' }} />
+                    : <span>👾</span>}
+                  <Link
+                    to={`/profile/${r.author_username}`}
+                    style={{ fontFamily: 'var(--font-retro)', fontSize: '17px', color: 'var(--blue-link)', fontWeight: 'bold' }}
+                  >
+                    {r.author_username}
+                  </Link>
+                  {r.author_role !== 'user' && (
                     <span style={{
-                      fontFamily: 'var(--font-pixel)', fontSize: '8px', color: 'var(--orange)',
-                      textTransform: 'uppercase'
+                      fontFamily: 'var(--font-pixel)', fontSize: '6px', padding: '2px 4px',
+                      background: 'var(--orange)', color: '#000',
                     }}>
-                      {review.reviewer_name}
+                      {r.author_role.toUpperCase()}
                     </span>
-                    <span style={{ fontFamily: 'var(--font-retro)', fontSize: '13px', color: 'var(--text-dim)' }}>
-                      {timeAgo}
-                    </span>
-                    <button
-                      onClick={() => handleReport(review.id)}
-                      style={{
-                        background: 'none', border: 'none', cursor: 'pointer',
-                        fontFamily: 'var(--font-retro)', fontSize: '12px', color: 'var(--text-dim)',
-                        padding: '0', marginLeft: 'auto'
-                      }}
-                      title="Report comment"
-                    >
-                      🚩
-                    </button>
-                  </div>
-                  <div style={{
-                    fontFamily: 'var(--font-retro)', fontSize: '16px', color: 'var(--text-secondary)',
-                    lineHeight: '1.3', marginTop: '2px', wordBreak: 'break-word'
-                  }}>
-                    {review.comment}
-                  </div>
+                  )}
+                  <span style={{ fontFamily: 'var(--font-retro)', fontSize: '14px', color: 'var(--text-dim)' }}>
+                    {timeAgo(r.created_at)}
+                  </span>
+
+                  <span style={{ marginLeft: 'auto', display: 'flex', gap: '4px', alignItems: 'center' }}>
+                    {isAuthor && editing !== r.id && (
+                      <button
+                        type="button"
+                        onClick={() => { setEditing(r.id); setEditBody(r.body); }}
+                        style={ghostBtn}
+                      >
+                        ✏️ edit
+                      </button>
+                    )}
+                    {(isAuthor || isStaff) && (
+                      <button type="button" onClick={() => remove(r.id)} style={ghostBtn}>
+                        🗑 delete
+                      </button>
+                    )}
+                    {!isAuthor && <ReportButton targetType="review" targetId={r.id} compact />}
+                  </span>
                 </div>
+
+                {editing === r.id ? (
+                  <div style={{ marginTop: '6px' }}>
+                    <textarea
+                      value={editBody}
+                      onChange={(e) => setEditBody(e.target.value)}
+                      maxLength={1000}
+                      style={{
+                        width: '100%', minHeight: '60px', padding: '7px',
+                        background: 'var(--bg-input)', border: '2px solid var(--border-dark)',
+                        color: 'var(--text-primary)', fontFamily: 'var(--font-retro)', fontSize: '17px',
+                      }}
+                    />
+                    <div style={{ display: 'flex', gap: '6px', marginTop: '5px' }}>
+                      <button type="button" onClick={() => saveEdit(r.id)} disabled={busy} style={ghostBtn}>
+                        💾 save
+                      </button>
+                      <button type="button" onClick={() => setEditing(null)} style={ghostBtn}>
+                        cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{
+                    fontFamily: 'var(--font-retro)', fontSize: '18px',
+                    color: 'var(--text-primary)', marginTop: '4px',
+                    whiteSpace: 'pre-wrap', lineHeight: 1.35,
+                  }}>
+                    {r.body}
+                  </div>
+                )}
               </div>
             );
           })
-        ) : (
-          <div style={{
-            fontFamily: 'var(--font-retro)', fontSize: '16px', color: 'var(--text-dim)',
-            textAlign: 'center', padding: '20px'
-          }}>
-            No reviews yet. Be the first to share your thoughts! 💭
-          </div>
         )}
       </div>
-    </div>
+    </>
   );
 }
 
-// Simple relative time
-function getTimeAgo(dateStr) {
-  if (!dateStr) return '';
-  const now = Date.now();
-  const then = new Date(dateStr).getTime();
-  const diff = Math.floor((now - then) / 1000);
-  if (diff < 60) return 'just now';
-  if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
-  if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
-  if (diff < 604800) return Math.floor(diff / 86400) + 'd ago';
-  return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-}
+const ghostBtn = {
+  background: 'none', border: '1px solid var(--border-dark)',
+  color: 'var(--text-dim)', fontFamily: 'var(--font-retro)',
+  fontSize: '14px', padding: '2px 7px', cursor: 'pointer',
+};
