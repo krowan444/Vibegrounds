@@ -1,149 +1,93 @@
-import { useParams, Link } from 'react-router-dom';
-import { mockCreations, mockComments } from '../data/mockCreations';
-import { useState, useEffect } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { CATEGORY_ICONS } from '../components/CommunityWidgets';
-import { normalizeUrl, isValidUrl } from './UploadPage';
-import ReviewSection from '../components/ReviewSection';
 import SiteHeader from '../components/SiteHeader';
-
-const CATEGORIES = ['games', 'tools', 'art', 'experiments', 'websites', 'other'];
+import VoteWidget from '../components/VoteWidget';
+import ReviewSection from '../components/ReviewSection';
+import ReportButton from '../components/ReportButton';
+import CreationCard from '../components/CreationCard';
+import Notice from '../components/Notice';
+import { compactNumber, shortDate, hostOf } from '../lib/format';
 
 export default function CreationPage() {
   const { id } = useParams();
-  const { user } = useAuth();
-  const [creation, setCreation] = useState(null);
-  const [isMock, setIsMock] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [votes, setVotes] = useState(0);
-  const [voted, setVoted] = useState(null);
+  const { user, isStaff } = useAuth();
+  const navigate = useNavigate();
 
-  // Edit state
-  const [isEditing, setIsEditing] = useState(false);
-  const [editForm, setEditForm] = useState({ title: '', description: '', project_url: '', category: '' });
-  const [editLoading, setEditLoading] = useState(false);
-  const [editError, setEditError] = useState('');
-  const [editSuccess, setEditSuccess] = useState('');
+  const [c, setC] = useState(null);
+  const [author, setAuthor] = useState(null);
+  const [more, setMore] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+  const [error, setError] = useState('');
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const viewed = useRef(false);
 
   useEffect(() => {
-    const fetchCreation = async () => {
-      setLoading(true);
+    let alive = true;
+    setLoading(true);
+    setNotFound(false);
+    (async () => {
+      const { data, error: err } = await supabase
+        .from('creations_public').select('*').eq('id', id).maybeSingle();
 
-      // Check if it's a numeric ID (mock) or UUID (real)
-      const numId = parseInt(id);
-      if (!isNaN(numId) && numId > 0 && numId <= mockCreations.length) {
-        const mock = mockCreations.find(c => c.id === numId) || mockCreations[0];
-        setCreation(mock);
-        setVotes(mock.votes);
-        setIsMock(true);
-        setLoading(false);
-        return;
+      if (!alive) return;
+      if (err || !data) { setNotFound(true); setLoading(false); return; }
+      setC(data);
+
+      // count the view once per mount
+      if (!viewed.current) {
+        viewed.current = true;
+        supabase.rpc('register_view', { p_creation: id });
       }
 
-      // Try Supabase
-      const { data, error } = await supabase
-        .from('creations')
-        .select('*, profiles(username)')
-        .eq('id', id)
-        .single();
+      const [prof, others] = await Promise.all([
+        supabase.from('profiles_public').select('*').eq('id', data.creator_id).maybeSingle(),
+        supabase.from('creations_public').select('*')
+          .eq('category', data.category).neq('id', id)
+          .order('score', { ascending: false }).limit(4),
+      ]);
 
-      if (data && !error) {
-        setCreation(data);
-        setVotes(0);
-        setIsMock(false);
-      } else {
-        // Fallback to first mock
-        setCreation(mockCreations[0]);
-        setIsMock(true);
-        setVotes(mockCreations[0].votes);
-      }
+      if (!alive) return;
+      setAuthor(prof.data || null);
+      setMore(others.data || []);
       setLoading(false);
-    };
-    fetchCreation();
+    })();
+    return () => { alive = false; };
   }, [id]);
 
-  const handleVote = (type) => {
-    if (voted === type) {
-      setVoted(null);
-      setVotes(isMock ? creation.votes : 0);
-    } else {
-      setVoted(type);
-      setVotes(type === 'up' ? (isMock ? creation.votes + 1 : 1) : (isMock ? creation.votes - 1 : -1));
-    }
+  const isOwner = user && c && user.id === c.creator_id;
+
+  const remove = async () => {
+    const { error: err } = await supabase.from('creations').delete().eq('id', c.id);
+    if (err) setError(err.message);
+    else navigate('/portal');
   };
 
-  // Owner check
-  const isOwner = !isMock && user && creation?.creator_id === user.id;
-
-  // Start editing
-  const startEdit = () => {
-    setEditForm({
-      title: creation.title || '',
-      description: creation.description || '',
-      project_url: creation.project_url || '',
-      category: creation.category || 'other'
-    });
-    setEditError('');
-    setEditSuccess('');
-    setIsEditing(true);
-  };
-
-  // Save edit
-  const handleEditSave = async (e) => {
-    e.preventDefault();
-    setEditError('');
-    setEditSuccess('');
-    setEditLoading(true);
-
-    try {
-      if (!editForm.title.trim()) throw new Error('Title is required');
-
-      const normalizedUrl = normalizeUrl(editForm.project_url);
-      if (!normalizedUrl || !isValidUrl(normalizedUrl)) {
-        throw new Error('Please enter a valid website address (e.g. customaihoodies.com)');
-      }
-
-      const { data, error: updateErr } = await supabase
-        .from('creations')
-        .update({
-          title: editForm.title.trim(),
-          description: editForm.description.trim(),
-          project_url: normalizedUrl,
-          category: editForm.category
-        })
-        .eq('id', id)
-        .eq('creator_id', user.id) // extra safety: only own posts
-        .select('*, profiles(username)')
-        .single();
-
-      if (updateErr) throw updateErr;
-
-      // Update UI immediately
-      setCreation(data);
-      setEditSuccess('✅ Post updated successfully!');
-      setTimeout(() => {
-        setIsEditing(false);
-        setEditSuccess('');
-      }, 1500);
-    } catch (err) {
-      setEditError(err.message || 'Failed to save changes');
-    } finally {
-      setEditLoading(false);
-    }
-  };
-
-  if (loading || !creation) {
+  if (loading) {
     return (
       <>
         <SiteHeader compact />
-        <div className="creation-detail">
+        <div className="vg-page"><div className="vg-loading">⏳ Loading...</div></div>
+      </>
+    );
+  }
+
+  if (notFound) {
+    return (
+      <>
+        <SiteHeader compact />
+        <div className="vg-page">
           <div className="retro-panel">
-            <div className="retro-panel-body" style={{
-              fontFamily: 'var(--font-retro)', fontSize: '20px', color: 'var(--orange)',
-              textAlign: 'center', padding: '40px'
-            }}>
-              ⏳ Loading...
+            <div className="section-header"><h2>👻 Not Found</h2></div>
+            <div className="vg-empty">
+              <p>This submission doesn&#39;t exist, or it was removed by a moderator.</p>
+              <p style={{ marginTop: '10px' }}>
+                <Link to="/portal" style={{ color: 'var(--orange)', fontWeight: 'bold' }}>
+                  ← Back to the Portal
+                </Link>
+              </p>
             </div>
           </div>
         </div>
@@ -151,270 +95,264 @@ export default function CreationPage() {
     );
   }
 
-  // Get creator info
-  const creatorName = isMock ? creation.creator : (creation.profiles?.username || 'Unknown');
-  const category = creation.category || 'other';
-  const categoryIcon = CATEGORY_ICONS[category] || '✨';
-  const moreBySameCreator = isMock
-    ? mockCreations.filter(c => c.creator === creation.creator && c.id !== creation.id)
-    : [];
-
   return (
     <>
       <SiteHeader compact />
 
-      <div className="creation-detail">
-        <div className="creation-detail-header">
-          <h1 className="creation-detail-title">{creation.title}</h1>
-          <div className="creation-detail-creator">
-            Created by{' '}
-            <Link to={`/profile/${encodeURIComponent(creatorName)}`}>{creatorName}</Link>
-            {' '} — <Link to={`/category/${category}`}>{categoryIcon} {category}</Link>
-            {isOwner && !isEditing && (
-              <button
-                onClick={startEdit}
-                style={{
-                  background: 'none', border: '1px solid var(--border-dark)',
-                  color: 'var(--orange)', fontFamily: 'var(--font-retro)', fontSize: '14px',
-                  padding: '2px 8px', cursor: 'pointer', marginLeft: '10px',
-                  borderRadius: '2px'
-                }}
-              >
-                ✏️ Edit
-              </button>
-            )}
-          </div>
-        </div>
+      <div className="vg-page">
+        <Notice tone="error">{error}</Notice>
 
-        {/* EDIT FORM */}
-        {isEditing && isOwner && (
-          <div className="retro-panel" style={{ marginBottom: '16px' }}>
-            <div className="section-header">
-              <h2>✏️ Edit Post</h2>
-            </div>
-            <form onSubmit={handleEditSave} style={{ padding: '12px' }}>
-              {editError && (
-                <div style={{
-                  background: '#331111', border: '2px solid #cc3333',
-                  padding: '8px 12px', marginBottom: '12px',
-                  fontFamily: 'var(--font-retro)', fontSize: '16px', color: '#ff6666'
-                }}>
-                  ⚠️ {editError}
-                </div>
-              )}
-              {editSuccess && (
-                <div style={{
-                  background: '#113311', border: '2px solid #33cc33',
-                  padding: '8px 12px', marginBottom: '12px',
-                  fontFamily: 'var(--font-retro)', fontSize: '16px', color: '#66ff66'
-                }}>
-                  {editSuccess}
-                </div>
-              )}
+        <div style={{
+          display: 'grid', gap: '14px',
+          gridTemplateColumns: 'minmax(0, 1fr) minmax(240px, 300px)',
+          alignItems: 'start',
+        }} className="vg-creation-layout">
 
-              <div className="retro-form-group">
-                <label>Title</label>
-                <input
-                  type="text"
-                  value={editForm.title}
-                  onChange={e => setEditForm({ ...editForm, title: e.target.value })}
-                  required
-                  disabled={editLoading}
-                  style={{
-                    width: '100%', padding: '6px 8px',
-                    background: 'var(--bg-input)', border: '2px solid var(--border-dark)',
-                    color: 'var(--text-primary)', fontFamily: 'var(--font-retro)', fontSize: '16px'
-                  }}
-                />
+          {/* ── main column ── */}
+          <div>
+            <div className="retro-panel">
+              <div className="section-header">
+                <h2>{c.category_icon} {c.title}</h2>
               </div>
 
-              <div className="retro-form-group" style={{ marginTop: '8px' }}>
-                <label>Description</label>
-                <textarea
-                  value={editForm.description}
-                  onChange={e => setEditForm({ ...editForm, description: e.target.value })}
-                  disabled={editLoading}
-                  style={{
-                    width: '100%', minHeight: '80px', padding: '6px 8px',
-                    background: 'var(--bg-input)', border: '2px solid var(--border-dark)',
-                    color: 'var(--text-primary)', fontFamily: 'var(--font-retro)', fontSize: '16px',
-                    resize: 'vertical'
-                  }}
-                />
+              {/* Preview */}
+              <div style={{
+                position: 'relative', background: 'var(--bg-dark)',
+                borderBottom: '2px solid var(--border-panel)',
+                aspectRatio: '16 / 9', display: 'flex',
+                alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+              }}>
+                {c.thumbnail_url
+                  ? <img src={c.thumbnail_url} alt={c.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  : <span style={{ fontSize: '64px', opacity: 0.4 }}>{c.category_icon}</span>}
               </div>
 
-              <div className="retro-form-group" style={{ marginTop: '8px' }}>
-                <label>Project URL</label>
-                <input
-                  type="text"
-                  value={editForm.project_url}
-                  onChange={e => setEditForm({ ...editForm, project_url: e.target.value })}
-                  required
-                  disabled={editLoading}
-                  style={{
-                    width: '100%', padding: '6px 8px',
-                    background: 'var(--bg-input)', border: '2px solid var(--border-dark)',
-                    color: 'var(--text-primary)', fontFamily: 'var(--font-retro)', fontSize: '16px'
-                  }}
-                />
-                <div style={{ fontFamily: 'var(--font-retro)', fontSize: '13px', color: 'var(--text-dim)', marginTop: '2px' }}>
-                  https:// will be added automatically if missing
-                </div>
-              </div>
-
-              <div className="retro-form-group" style={{ marginTop: '8px' }}>
-                <label>Category</label>
-                <select
-                  value={editForm.category}
-                  onChange={e => setEditForm({ ...editForm, category: e.target.value })}
-                  disabled={editLoading}
-                  style={{
-                    width: '100%', padding: '6px 8px',
-                    background: 'var(--bg-input)', border: '2px solid var(--border-dark)',
-                    color: 'var(--text-primary)', fontFamily: 'var(--font-retro)', fontSize: '16px'
-                  }}
+              {/* Launch */}
+              <div style={{ padding: '12px', textAlign: 'center' }}>
+                <a
+                  href={c.project_url}
+                  target="_blank"
+                  rel="noopener noreferrer nofollow"
+                  className="retro-cta"
+                  style={{ display: 'inline-block', fontSize: '12px' }}
                 >
-                  {CATEGORIES.map(c => (
-                    <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>
+                  ▶ LAUNCH IT
+                </a>
+                <div style={{
+                  fontFamily: 'var(--font-retro)', fontSize: '15px',
+                  color: 'var(--text-dim)', marginTop: '7px', wordBreak: 'break-all',
+                }}>
+                  opens {hostOf(c.project_url)} in a new tab
+                </div>
+              </div>
+
+              {/* Description */}
+              <div style={{
+                padding: '12px', borderTop: '1px solid var(--border-dark)',
+                fontFamily: 'var(--font-retro)', fontSize: '18px',
+                color: 'var(--text-primary)', lineHeight: 1.4, whiteSpace: 'pre-wrap',
+              }}>
+                {c.description || <span style={{ color: 'var(--text-dim)' }}>No description given.</span>}
+              </div>
+
+              {/* Tags */}
+              {c.tags?.length > 0 && (
+                <div style={{ padding: '0 12px 12px', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                  {c.tags.map((t) => (
+                    <Link
+                      key={t}
+                      to={`/portal?q=${encodeURIComponent(t)}`}
+                      style={{
+                        fontFamily: 'var(--font-retro)', fontSize: '15px',
+                        color: 'var(--text-secondary)', background: 'var(--bg-input)',
+                        border: '1px solid var(--border-dark)', padding: '2px 8px',
+                        textDecoration: 'none',
+                      }}
+                    >
+                      #{t}
+                    </Link>
                   ))}
-                </select>
+                </div>
+              )}
+
+              {/* Meta bar */}
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap',
+                padding: '9px 12px', borderTop: '1px solid var(--border-dark)',
+                fontFamily: 'var(--font-retro)', fontSize: '15px', color: 'var(--text-dim)',
+              }}>
+                <span>👁 {compactNumber(c.view_count)} views</span>
+                <span>💬 {c.review_count}</span>
+                <span>📅 {shortDate(c.created_at)}</span>
+                <Link to={`/category/${c.category}`} style={{ color: 'var(--blue-link)' }}>
+                  {c.category_icon} {c.category_name}
+                </Link>
+
+                <span style={{ marginLeft: 'auto', display: 'flex', gap: '6px', alignItems: 'center' }}>
+                  {isOwner && (
+                    <>
+                      <Link
+                        to={`/profile/${c.creator_username}`}
+                        style={{
+                          fontFamily: 'var(--font-retro)', fontSize: '14px',
+                          color: 'var(--orange)', border: '1px solid var(--border-dark)',
+                          padding: '2px 7px', textDecoration: 'none',
+                        }}
+                      >
+                        ✏️ edit
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmOpen(true)}
+                        style={{
+                          background: 'none', border: '1px solid var(--border-dark)',
+                          color: 'var(--red)', fontFamily: 'var(--font-retro)',
+                          fontSize: '14px', padding: '2px 7px', cursor: 'pointer',
+                        }}
+                      >
+                        🗑 delete
+                      </button>
+                    </>
+                  )}
+                  {!isOwner && <ReportButton targetType="creation" targetId={c.id} />}
+                </span>
               </div>
 
-              <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-                <button
-                  type="submit"
-                  disabled={editLoading}
-                  style={{
-                    background: 'var(--orange)', color: '#000', border: '2px solid var(--orange-dim)',
-                    fontFamily: 'var(--font-pixel)', fontSize: '9px', padding: '8px 20px',
-                    cursor: editLoading ? 'wait' : 'pointer', textTransform: 'uppercase',
-                    fontWeight: 'bold', opacity: editLoading ? 0.6 : 1
-                  }}
-                >
-                  {editLoading ? 'SAVING...' : '💾 SAVE CHANGES'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setIsEditing(false); setEditError(''); setEditSuccess(''); }}
-                  disabled={editLoading}
-                  style={{
-                    background: 'transparent', color: 'var(--text-dim)',
-                    border: '2px solid var(--border-dark)',
-                    fontFamily: 'var(--font-pixel)', fontSize: '9px', padding: '8px 20px',
-                    cursor: 'pointer', textTransform: 'uppercase'
-                  }}
-                >
-                  CANCEL
-                </button>
+              {confirmOpen && (
+                <div style={{ padding: '12px', borderTop: '2px solid var(--red)', background: '#2a0e0e' }}>
+                  <div style={{ fontFamily: 'var(--font-retro)', fontSize: '18px', color: '#ffaaaa' }}>
+                    Delete “{c.title}” permanently? Your 10 coins are not refunded.
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '9px' }}>
+                    <button
+                      type="button" onClick={remove}
+                      style={{
+                        background: 'var(--red)', color: '#fff', border: '2px solid #881111',
+                        fontFamily: 'var(--font-pixel)', fontSize: '9px', padding: '7px 14px', cursor: 'pointer',
+                      }}
+                    >
+                      YES, DELETE IT
+                    </button>
+                    <button
+                      type="button" onClick={() => setConfirmOpen(false)}
+                      style={{
+                        background: 'transparent', color: 'var(--text-dim)',
+                        border: '2px solid var(--border-dark)', fontFamily: 'var(--font-pixel)',
+                        fontSize: '9px', padding: '7px 14px', cursor: 'pointer',
+                      }}
+                    >
+                      CANCEL
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div style={{ marginTop: '14px' }}>
+              <ReviewSection creationId={c.id} />
+            </div>
+          </div>
+
+          {/* ── sidebar ── */}
+          <div>
+            <VoteWidget
+              creation={c}
+              onVoted={(d) => setC((prev) => ({ ...prev, score: d.score, vote_count: d.vote_count }))}
+            />
+
+            {/* Author card */}
+            {author && (
+              <div className="retro-panel" style={{ marginTop: '14px' }}>
+                <div className="section-header"><h2>👤 Creator</h2></div>
+                <div className="retro-panel-body" style={{ textAlign: 'center' }}>
+                  <Link to={`/profile/${author.username}`}>
+                    {author.avatar_url
+                      ? <img src={author.avatar_url} alt="" style={{ width: '56px', height: '56px', objectFit: 'cover', border: '2px solid var(--border-dark)' }} />
+                      : <span style={{ fontSize: '40px' }}>👾</span>}
+                  </Link>
+                  <div style={{ marginTop: '6px' }}>
+                    <Link
+                      to={`/profile/${author.username}`}
+                      style={{ fontFamily: 'var(--font-retro)', fontSize: '20px', color: 'var(--orange)', fontWeight: 'bold' }}
+                    >
+                      {author.username}
+                    </Link>
+                  </div>
+                  <div style={{
+                    fontFamily: 'var(--font-retro)', fontSize: '16px',
+                    color: author.rank_colour || 'var(--text-dim)',
+                  }}>
+                    {author.rank_title} · level {author.level}
+                  </div>
+                  <div style={{
+                    fontFamily: 'var(--font-retro)', fontSize: '15px',
+                    color: 'var(--text-dim)', marginTop: '5px',
+                  }}>
+                    {author.submission_count} submissions · {author.badge_count} badges
+                  </div>
+                  {author.bio && (
+                    <div style={{
+                      fontFamily: 'var(--font-retro)', fontSize: '16px',
+                      color: 'var(--text-secondary)', marginTop: '7px',
+                    }}>
+                      {author.bio}
+                    </div>
+                  )}
+                </div>
               </div>
-            </form>
-          </div>
-        )}
+            )}
 
-        {/* Preview Area — category icon only, no broken thumbnails */}
-        <div
-          className="creation-detail-preview"
-          style={{
-            background: isMock ? (creation.color + '11') : '#222',
-            borderColor: isMock ? creation.color : '#555'
-          }}
-        >
-          {isMock
-            ? <span style={{ fontSize: '80px' }}>{creation.creatorAvatar}</span>
-            : <span style={{ fontSize: '80px' }}>{categoryIcon}</span>
-          }
-        </div>
+            {/* Staff tools */}
+            {isStaff && (
+              <div className="retro-panel" style={{ marginTop: '14px', borderColor: 'var(--red)' }}>
+                <div className="section-header"><h2>🛡️ Staff</h2></div>
+                <div className="retro-panel-body" style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const reason = window.prompt('Reason for removal?', 'Breaks the community rules');
+                      if (reason === null) return;
+                      await supabase.rpc('admin_set_creation_status', {
+                        p_creation: c.id, p_status: 'removed', p_reason: reason,
+                      });
+                      navigate('/admin');
+                    }}
+                    style={{
+                      background: 'var(--red)', color: '#fff', border: '2px solid #881111',
+                      fontFamily: 'var(--font-pixel)', fontSize: '8px', padding: '6px 10px', cursor: 'pointer',
+                    }}
+                  >
+                    REMOVE
+                  </button>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await supabase.rpc('admin_set_featured', {
+                        p_creation: c.id, p_featured: !c.is_featured,
+                      });
+                      setC((p) => ({ ...p, is_featured: !p.is_featured }));
+                    }}
+                    style={{
+                      background: 'transparent', color: 'var(--yellow)',
+                      border: '2px solid var(--border-dark)', fontFamily: 'var(--font-pixel)',
+                      fontSize: '8px', padding: '6px 10px', cursor: 'pointer',
+                    }}
+                  >
+                    {c.is_featured ? 'UNFEATURE' : 'FEATURE'}
+                  </button>
+                </div>
+              </div>
+            )}
 
-        {/* Project Link for real creations */}
-        {!isMock && creation.project_url && (
-          <div style={{ textAlign: 'center', padding: '8px' }}>
-            <a
-              href={creation.project_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="retro-cta"
-              style={{ display: 'inline-block' }}
-            >
-              🚀 LAUNCH PROJECT
-            </a>
-          </div>
-        )}
-
-        {/* Actions */}
-        <div className="creation-detail-actions">
-          <button
-            className={`vote-btn ${voted === 'up' ? 'active' : ''}`}
-            onClick={() => handleVote('up')}
-          >
-            👍 <span className="vote-count">{votes}</span>
-          </button>
-          <button
-            className={`vote-btn ${voted === 'down' ? 'active' : ''}`}
-            onClick={() => handleVote('down')}
-          >
-            👎
-          </button>
-          {isMock && (
-            <span className="view-count">👁 {creation.views.toLocaleString()} views</span>
-          )}
-        </div>
-
-        {/* Description */}
-        <div className="retro-panel" style={{ marginBottom: '16px' }}>
-          <div className="section-header">
-            <h2>📝 Description</h2>
-          </div>
-          <div className="creation-detail-desc">
-            {creation.description}
-            {isMock && (
-              <>
-                <br /><br />
-                This is an AI-powered creation built with love and pure vibes.
-                Try it out, vote it up, and share it with your friends!
-              </>
+            {/* More like this */}
+            {more.length > 0 && (
+              <div className="retro-panel" style={{ marginTop: '14px' }}>
+                <div className="section-header"><h2>🎯 More {c.category_name}</h2></div>
+                {more.map((m) => <CreationCard key={m.id} creation={m} variant="row" />)}
+              </div>
             )}
           </div>
         </div>
-
-        {/* More by Creator (mock only for now) */}
-        {moreBySameCreator.length > 0 && (
-          <div className="retro-panel" style={{ marginBottom: '16px' }}>
-            <div className="section-header">
-              <h2>🎨 More by {creatorName}</h2>
-            </div>
-            <div className="retro-panel-body">
-              {moreBySameCreator.map(c => (
-                <div key={c.id} className="creator-list-item">
-                  <span className="creator-list-avatar">{c.creatorAvatar}</span>
-                  <Link to={`/creation/${c.id}`} className="creator-list-name">{c.title}</Link>
-                  <span className="creator-list-stats">👍 {c.votes.toLocaleString()}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Reviews & Reactions */}
-        {!isMock && <ReviewSection creationId={id} />}
-
-        {/* Mock Comments fallback for demo creations */}
-        {isMock && (
-          <div className="retro-panel comments-section">
-            <div className="section-header">
-              <h2>💬 Comments ({mockComments.length})</h2>
-            </div>
-            {mockComments.map((comment) => (
-              <div key={comment.id} className="comment">
-                <div className="comment-avatar">{comment.avatar}</div>
-                <div className="comment-body">
-                  <div className="comment-user">{comment.user}</div>
-                  <div className="comment-text">{comment.text}</div>
-                  <div className="comment-date">{comment.date}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
     </>
   );

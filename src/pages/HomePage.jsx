@@ -1,442 +1,235 @@
 import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { mockCreations, dailyTop5, latestSubmissions, featuredCreators } from '../data/mockCreations';
 import { supabase } from '../lib/supabase';
-import { CreationCard, CATEGORY_ICONS } from '../components/CommunityWidgets';
+import { useAuth } from '../contexts/AuthContext';
 import SiteHeader from '../components/SiteHeader';
+import CreationCard from '../components/CreationCard';
+import DailyCheckIn from '../components/DailyCheckIn';
+import Notice from '../components/Notice';
+import { compactNumber } from '../lib/format';
 
 export default function HomePage() {
-  const featured = mockCreations.slice(0, 10);
-  const latestGames = mockCreations.filter(c => c.category === 'Game');
-  const topToday = [...mockCreations].sort((a, b) => b.votes - a.votes).slice(0, 5);
-
-  // Live latest creations from Supabase
-  const [liveCreations, setLiveCreations] = useState([]);
+  const { user, profile } = useAuth();
+  const [data, setData] = useState(null);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    const fetchLatest = async () => {
-      const { data } = await supabase
-        .from('creations')
-        .select('*, profiles(username)')
-        .order('created_at', { ascending: false })
-        .limit(12);
-      if (data) setLiveCreations(data);
-    };
-    fetchLatest();
+    let alive = true;
+    (async () => {
+      const [featured, latest, daily, weekly, alltime, cats, creators, counts] = await Promise.all([
+        supabase.from('creations_public').select('*').eq('is_featured', true)
+          .order('created_at', { ascending: false }).limit(4),
+        supabase.from('creations_public').select('*')
+          .order('created_at', { ascending: false }).limit(12),
+        supabase.from('chart_daily').select('*').order('rank').limit(5),
+        supabase.from('chart_weekly').select('*').order('rank').limit(5),
+        supabase.from('chart_alltime').select('*').order('rank').limit(5),
+        supabase.from('categories').select('*').eq('is_active', true).order('sort_order'),
+        supabase.from('creator_leaderboard').select('*').order('rank').limit(5),
+        supabase.from('creations_public').select('id', { count: 'exact', head: true }),
+      ]);
+
+      if (!alive) return;
+      const firstError = [featured, latest, daily, weekly, alltime, cats, creators]
+        .find((r) => r.error)?.error;
+      if (firstError) setError(firstError.message);
+
+      setData({
+        featured: featured.data || [],
+        latest: latest.data || [],
+        daily: daily.data || [],
+        weekly: weekly.data || [],
+        alltime: alltime.data || [],
+        categories: cats.data || [],
+        creators: creators.data || [],
+        total: counts.count || 0,
+      });
+    })();
+    return () => { alive = false; };
   }, []);
+
+  if (!data) {
+    return (
+      <>
+        <SiteHeader />
+        <div className="vg-page"><div className="vg-loading">⏳ Loading the Portal...</div></div>
+      </>
+    );
+  }
+
+  const isEmpty = data.total === 0;
 
   return (
     <>
-      {/* ── SITE HEADER ── */}
       <SiteHeader />
 
-      {/* ── NEWS TICKER ── */}
-      <div className="news-ticker">
-        <span className="news-ticker-date">March 6, 2026</span>
-        <span className="news-ticker-text">🎉 VibeGrounds Beta Launch! Upload your AI creations and join the community! 🎉</span>
-        <span className="news-ticker-posted">Posted by <a href="#">Admin</a></span>
-      </div>
+      <div className="vg-page">
+        <Notice tone="error">{error}</Notice>
 
-      {/* ── PORTAL 3-COLUMN LAYOUT ── */}
-      <div className="portal-layout">
+        <DailyCheckIn />
 
-        {/* ════ LEFT SIDEBAR ════ */}
-        <aside className="portal-sidebar-left">
-
-          {/* Latest Submissions */}
-          <div className="retro-panel">
-            <div className="retro-panel-header">
-              <span className="retro-panel-header-icon">⚡</span>
-              <h3>Latest Submissions</h3>
+        {/* Welcome / call to action */}
+        {!user ? (
+          <div className="vg-strip" style={{ borderColor: 'var(--orange)' }}>
+            <div style={{ fontFamily: 'var(--font-retro)', fontSize: '19px' }}>
+              <strong style={{ color: 'var(--orange)' }}>Made something weird?</strong>{' '}
+              <span style={{ color: 'var(--text-secondary)' }}>
+                Post it. 50 free coins when you join — that&#39;s 5 submissions.
+              </span>
             </div>
-            <div className="retro-panel-body">
-              <ol className="retro-list">
-                {latestSubmissions.map((title, i) => (
-                  <li key={i}>
-                    <span className="retro-list-rank">{i + 1}.</span>
-                    <Link to={`/creation/${i + 1}`} className="retro-list-link">{title}</Link>
-                  </li>
-                ))}
-              </ol>
+            <Link to="/auth?mode=signup" className="vg-daily-btn" style={{ textDecoration: 'none' }}>
+              JOIN VIBEGROUNDS
+            </Link>
+          </div>
+        ) : (
+          <div className="vg-strip">
+            <div style={{ fontFamily: 'var(--font-retro)', fontSize: '19px' }}>
+              Welcome back, <strong style={{ color: 'var(--orange)' }}>{profile?.username}</strong>
+              {profile?.rank_title && (
+                <span style={{ color: 'var(--text-dim)' }}> — {profile.rank_title}, level {profile.level}</span>
+              )}
+            </div>
+            <Link to="/upload" className="vg-daily-btn" style={{ textDecoration: 'none' }}>
+              🚀 SUBMIT SOMETHING
+            </Link>
+          </div>
+        )}
+
+        {isEmpty && (
+          <div className="retro-panel" style={{ marginBottom: '20px' }}>
+            <div className="section-header"><h2>🌱 The Grounds Are Brand New</h2></div>
+            <div className="vg-empty">
+              <p>Nothing has been posted yet. Someone has to go first.</p>
+              <p style={{ marginTop: '10px' }}>
+                <Link to="/upload" style={{ color: 'var(--orange)', fontWeight: 'bold' }}>
+                  Be the first submission →
+                </Link>
+              </p>
             </div>
           </div>
+        )}
 
-          {/* Daily Top 5 */}
-          <div className="retro-panel">
-            <div className="retro-panel-header">
-              <span className="retro-panel-header-icon">🏆</span>
-              <h3>Daily Top 5</h3>
+        {/* Categories */}
+        <div className="vg-section">
+          <div className="vg-section-head">
+            <h2>BROWSE THE GROUNDS</h2>
+            <span className="vg-sub">{compactNumber(data.total)} submissions and counting</span>
+          </div>
+          <div className="vg-cats">
+            {data.categories.map((c) => (
+              <Link
+                key={c.slug}
+                to={`/category/${c.slug}`}
+                className="vg-cat"
+                style={{ borderColor: c.color }}
+              >
+                <div className="vg-cat-icon">{c.icon}</div>
+                <div className="vg-cat-name" style={{ color: c.color }}>{c.name}</div>
+                <div className="vg-cat-count">{c.tagline}</div>
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        {/* Featured */}
+        {data.featured.length > 0 && (
+          <div className="vg-section">
+            <div className="vg-section-head">
+              <h2>⭐ STAFF PICKS</h2>
+              <span className="vg-sub">Hand-chosen by the crew</span>
             </div>
-            <div className="retro-panel-body">
-              <ol className="retro-list">
-                {dailyTop5.map((item) => (
-                  <li key={item.rank}>
-                    <span className="retro-list-rank">{item.rank}.</span>
-                    <Link to={`/creation/${item.rank}`}>{item.title}</Link>
-                  </li>
-                ))}
-              </ol>
+            <div className="vg-grid">
+              {data.featured.map((c) => <CreationCard key={c.id} creation={c} />)}
             </div>
           </div>
+        )}
 
-          {/* Community Poll */}
-          <div className="retro-panel">
-            <div className="retro-panel-header">
-              <span className="retro-panel-header-icon">🗳️</span>
-              <h3>VG Poll / Vote!</h3>
+        {/* Charts */}
+        {(data.daily.length || data.weekly.length || data.alltime.length) > 0 && (
+          <div className="vg-section">
+            <div className="vg-section-head">
+              <h2>📈 THE CHARTS</h2>
+              <Link to="/charts">See the full Top 100 →</Link>
             </div>
-            <div className="retro-panel-body">
-              <div className="retro-poll">
-                <div className="retro-poll-question">What's the coolest AI creation type?</div>
-                <label><input type="radio" name="poll" /> AI Tools</label>
-                <label><input type="radio" name="poll" /> Games</label>
-                <label><input type="radio" name="poll" /> Visualisers</label>
-                <label><input type="radio" name="poll" /> Experiments</label>
-                <label><input type="radio" name="poll" /> All of them!</label>
-                <button className="retro-poll-vote">Vote!</button>
-              </div>
+
+            <div style={{ display: 'grid', gap: '12px', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
+              <ChartBox title="☀️ Top Daily" to="/charts?chart=daily" rows={data.daily} />
+              <ChartBox title="📅 Top Weekly" to="/charts?chart=weekly" rows={data.weekly} />
+              <ChartBox title="👑 All-Time" to="/charts?chart=alltime" rows={data.alltime} />
             </div>
           </div>
+        )}
 
-          {/* Featured Creators */}
-          <div className="retro-panel">
-            <div className="retro-panel-header">
-              <span className="retro-panel-header-icon">👑</span>
-              <h3>Featured Creators</h3>
+        {/* Latest */}
+        {data.latest.length > 0 && (
+          <div className="vg-section">
+            <div className="vg-section-head">
+              <h2>🆕 FRESH OUT THE PORTAL</h2>
+              <Link to="/portal">Browse everything →</Link>
             </div>
-            <div className="retro-panel-body">
-              {featuredCreators.map((c) => (
-                <div key={c.username} className="creator-list-item">
-                  <span className="creator-list-avatar">{c.avatar}</span>
-                  <Link to={`/profile/${c.username}`} className="creator-list-name">{c.username}</Link>
-                  <span className="creator-list-stats">{c.uploads} ups</span>
-                </div>
-              ))}
+            <div className="vg-grid">
+              {data.latest.map((c) => <CreationCard key={c.id} creation={c} />)}
             </div>
           </div>
+        )}
 
-          {/* Upload CTA */}
-          <Link to="/upload" className="retro-cta">
-            🚀 Upload Your Creation!
-          </Link>
-
-          {/* Retro Ad 1 */}
-          <div className="retro-ad">
-            <span className="retro-ad-label">AD</span>
-            <img src="/images/ads/ad-ai-game.png" alt="Ad" />
-          </div>
-
-          {/* Retro Ad - Text Only */}
-          <div className="retro-ad">
-            <span className="retro-ad-label">AD</span>
-            <div className="retro-ad-text">
-              🤑 Make $1000<br/>With AI Tools<br/>★ Click Here ★
+        {/* Top creators */}
+        {data.creators.length > 0 && (
+          <div className="vg-section">
+            <div className="vg-section-head">
+              <h2>🏆 TOP CREATORS</h2>
+              <span className="vg-sub">Ranked by XP</span>
             </div>
-          </div>
-
-          {/* Retro Ad 2 */}
-          <div className="retro-ad">
-            <span className="retro-ad-label">AD</span>
-            <img src="/images/ads/ad-waifu.png" alt="Ad" />
-          </div>
-
-          {/* Retro Ad - Text Only */}
-          <div className="retro-ad">
-            <span className="retro-ad-label">AD</span>
-            <div className="retro-ad-text">
-              ⚡ Free Retro<br/>Game Assets<br/>★ Download Now ★
-            </div>
-          </div>
-
-        </aside>
-
-        {/* ════ CENTER COLUMN (MAIN CONTENT) ════ */}
-        <main className="portal-main">
-
-          {/* Latest Creations from Supabase */}
-          {liveCreations.length > 0 && (
             <div className="retro-panel">
-              <div className="section-header">
-                <h2>🆕 Latest Creations</h2>
-                <div className="section-header-links">
-                  {Object.entries(CATEGORY_ICONS).map(([cat, icon]) => (
-                    <span key={cat}>
-                      <Link to={`/category/${cat}`}>{icon} {cat.charAt(0).toUpperCase() + cat.slice(1)}</Link>
-                      {' '}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              <div className="creations-grid">
-                {liveCreations.map(c => <CreationCard key={c.id} creation={c} />)}
-              </div>
-            </div>
-          )}
-
-          {/* Featured VG Creations */}
-          <div className="retro-panel">
-            <div className="section-header">
-              <h2>⭐ Featured VG Creations!</h2>
-              <div className="section-header-links">
-                <Link to="/category/tools">🔧 Tools</Link>
-                <span style={{ color: '#666' }}>|</span>
-                <Link to="/category/games">🎮 Games</Link>
-                <span style={{ color: '#666' }}>|</span>
-                <Link to="/category/art">🎨 Art</Link>
-                <span style={{ color: '#666' }}>|</span>
-                <Link to="/category/experiments">🧪 More...</Link>
-              </div>
-            </div>
-            <div className="creations-grid">
-              {featured.map((creation) => (
+              {data.creators.map((c) => (
                 <Link
-                  to={`/creation/${creation.id}`}
-                  key={creation.id}
-                  className="creation-card"
+                  key={c.id}
+                  to={`/profile/${c.username}`}
+                  className="vg-row"
                 >
-                  <div
-                    className="creation-thumb"
-                    style={{ background: creation.color + '22', borderColor: creation.color }}
-                  >
-                    {creation.creatorAvatar}
+                  <div className="vg-rank">{c.rank}</div>
+                  <div className="vg-row-thumb">
+                    {c.avatar_url
+                      ? <img src={c.avatar_url} alt="" />
+                      : <span className="vg-thumb-fallback">👾</span>}
                   </div>
-                  <div className="creation-info">
-                    <div className="creation-title">{creation.title}</div>
-                    <div className="creation-desc">
-                      {creation.description}
+                  <div className="vg-row-body">
+                    <div className="vg-row-title">{c.username}</div>
+                    <div className="vg-row-meta">
+                      {c.rank_title} · level {c.level} · {c.submission_count} submission
+                      {c.submission_count === 1 ? '' : 's'} · {c.badge_count} badges
                     </div>
-                    <div className="creation-meta">
-                      <span>👍 {creation.votes.toLocaleString()}</span>
-                      <span>👁 {creation.views.toLocaleString()}</span>
-                    </div>
+                  </div>
+                  <div className="vg-row-score">
+                    <div style={{ color: 'var(--orange)' }}>{compactNumber(c.xp)}</div>
+                    <span>XP</span>
                   </div>
                 </Link>
               ))}
             </div>
           </div>
-
-          {/* Featured AI Games */}
-          <div className="retro-panel">
-            <div className="section-header">
-              <h2>🎮 Featured AI Games!</h2>
-              <div className="section-header-links">
-                <a href="#">Action</a>
-                <span style={{ color: '#666' }}>|</span>
-                <a href="#">Puzzle</a>
-                <span style={{ color: '#666' }}>|</span>
-                <a href="#">Adventure</a>
-                <span style={{ color: '#666' }}>|</span>
-                <a href="#">More...</a>
-              </div>
-            </div>
-            <div className="creations-grid">
-              {latestGames.map((creation) => (
-                <Link
-                  to={`/creation/${creation.id}`}
-                  key={creation.id}
-                  className="creation-card"
-                >
-                  <div
-                    className="creation-thumb"
-                    style={{ background: creation.color + '22', borderColor: creation.color }}
-                  >
-                    {creation.creatorAvatar}
-                  </div>
-                  <div className="creation-info">
-                    <div className="creation-title">{creation.title}</div>
-                    <div className="creation-desc">{creation.description}</div>
-                    <div className="creation-meta">
-                      <span>👍 {creation.votes.toLocaleString()}</span>
-                      <span>👁 {creation.views.toLocaleString()}</span>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          {/* Site News */}
-          <div className="retro-panel">
-            <div className="section-header">
-              <h2>ℹ️ Site News</h2>
-              <div className="section-header-links">
-                <a href="#">All News</a>
-              </div>
-            </div>
-            <div className="site-news-item">
-              <div className="site-news-avatar">🤖</div>
-              <div className="site-news-text">
-                <span className="news-author">VG-Bot</span>{' '}
-                <span className="news-title">"Welcome to VibeGrounds Beta!"</span>
-                <br />
-                We're officially live! Upload your AI creations, vote on your favorites,
-                and help us build the internet's weirdest creative community.
-              </div>
-            </div>
-            <div className="site-news-item">
-              <div className="site-news-avatar">👾</div>
-              <div className="site-news-text">
-                <span className="news-author">Admin</span>{' '}
-                <span className="news-title">"First Contest Announcement!"</span>
-                <br />
-                Build the most creative AI tool this week and win the first ever
-                VibeGrounds Creator Award! Submit now in the portal.
-              </div>
-            </div>
-            <div className="site-news-item">
-              <div className="site-news-avatar">🔥</div>
-              <div className="site-news-text">
-                <span className="news-author">P-Bot</span>{' '}
-                <span className="news-title">"Come check out this week's top 5!"</span>
-                <br />
-                The community has spoken. These AI creations are absolute fire.
-                Check out the Daily Top 5 in the sidebar!
-              </div>
-            </div>
-          </div>
-
-          {/* Top Creations Today */}
-          <div className="retro-panel">
-            <div className="section-header">
-              <h2>🔥 Top Creations Today</h2>
-            </div>
-            <div className="creations-grid">
-              {topToday.map((creation) => (
-                <Link
-                  to={`/creation/${creation.id}`}
-                  key={creation.id}
-                  className="creation-card"
-                >
-                  <div
-                    className="creation-thumb"
-                    style={{ background: creation.color + '22', borderColor: creation.color }}
-                  >
-                    {creation.creatorAvatar}
-                  </div>
-                  <div className="creation-info">
-                    <div className="creation-title">{creation.title}</div>
-                    <div className="creation-desc">{creation.description}</div>
-                    <div className="creation-meta">
-                      <span>👍 {creation.votes.toLocaleString()}</span>
-                      <span>👁 {creation.views.toLocaleString()}</span>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-
-        </main>
-
-        {/* ════ RIGHT SIDEBAR ════ */}
-        <aside className="portal-sidebar-right">
-
-          {/* Top Creators This Week */}
-          <div className="retro-panel">
-            <div className="retro-panel-header">
-              <span className="retro-panel-header-icon">🌟</span>
-              <h3>Top Creators</h3>
-            </div>
-            <div className="retro-panel-body">
-              {featuredCreators.slice(0, 5).map((c, i) => (
-                <div key={c.username} className="creator-list-item">
-                  <span className="retro-list-rank">{i + 1}.</span>
-                  <span className="creator-list-avatar">{c.avatar}</span>
-                  <Link to={`/profile/${c.username}`} className="creator-list-name">{c.username}</Link>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* VG Contests */}
-          <div className="retro-panel">
-            <div className="retro-panel-header">
-              <span className="retro-panel-header-icon">🏅</span>
-              <h3>VG Contests!</h3>
-            </div>
-            <div className="retro-panel-body">
-              <ol className="retro-list">
-                <li>
-                  <span className="retro-list-rank">1.</span>
-                  <a href="#">Best AI Tool 2026</a>
-                </li>
-                <li>
-                  <span className="retro-list-rank">2.</span>
-                  <a href="#">Weirdest Experiment</a>
-                </li>
-                <li>
-                  <span className="retro-list-rank">3.</span>
-                  <a href="#">Retro Game Jam</a>
-                </li>
-              </ol>
-            </div>
-          </div>
-
-          {/* VG Features */}
-          <div className="retro-panel">
-            <div className="retro-panel-header">
-              <span className="retro-panel-header-icon">⚡</span>
-              <h3>VG Features!</h3>
-            </div>
-            <div className="retro-panel-body">
-              <ol className="retro-list">
-                <li><a href="#">AI Art Gallery</a></li>
-                <li><a href="#">Code Playground</a></li>
-                <li><a href="#">Shader Demos</a></li>
-                <li><a href="#">Music Gen</a></li>
-                <li><a href="#">Game Builder</a></li>
-                <li><a href="#">Weird Stuff</a></li>
-              </ol>
-            </div>
-          </div>
-
-          {/* Retro Ad */}
-          <div className="retro-ad">
-            <span className="retro-ad-label">AD</span>
-            <div className="retro-ad-text">
-              💀 Create AI<br/>Girlfriends<br/>Instantly<br/>★ Click Here ★
-            </div>
-          </div>
-
-          {/* To-Do List (like NG) */}
-          <div className="retro-panel">
-            <div className="retro-panel-header">
-              <span className="retro-panel-header-icon">✅</span>
-              <h3>To-Do List</h3>
-            </div>
-            <div className="retro-panel-body" style={{ fontFamily: 'var(--font-retro)', fontSize: '16px' }}>
-              <div style={{ marginBottom: '4px' }}>Follow us! <a href="#">Twitter</a>, <a href="#">Discord</a></div>
-              <div style={{ marginBottom: '4px' }}>Join the <a href="#">Community</a></div>
-              <div style={{ marginBottom: '4px' }}>Earn some <a href="#">Badges</a></div>
-              <div>Try out <a href="#">AI Tools</a></div>
-            </div>
-          </div>
-
-          {/* Retro Ad - Text Only */}
-          <div className="retro-ad">
-            <span className="retro-ad-label">AD</span>
-            <div className="retro-ad-text">
-              🎮 Hot AI Waifu<br/>Generator<br/>★ Try Free ★
-            </div>
-          </div>
-
-        </aside>
+        )}
       </div>
-
-      {/* ── SITE FOOTER ── */}
-      <footer className="site-footer">
-        <div className="site-footer-links">
-          <a href="#">About</a>
-          <a href="#">Contact</a>
-          <a href="#">Terms</a>
-          <a href="#">Privacy</a>
-          <a href="#">API</a>
-          <a href="#">Discord</a>
-        </div>
-        <div className="site-footer-copyright">
-          © 2026 VibeGrounds.com — The Future of AI Creativity
-        </div>
-      </footer>
     </>
+  );
+}
+
+function ChartBox({ title, to, rows }) {
+  return (
+    <div className="retro-panel">
+      <div className="section-header"><h2>{title}</h2></div>
+      {rows.length === 0 ? (
+        <div className="vg-empty" style={{ padding: '20px', fontSize: '17px' }}>
+          Nothing has charted yet.
+        </div>
+      ) : (
+        rows.map((c) => <CreationCard key={c.id} creation={c} variant="rank" rank={c.rank} />)
+      )}
+      <div style={{ padding: '7px 10px', textAlign: 'right' }}>
+        <Link to={to} style={{ fontFamily: 'var(--font-retro)', fontSize: '16px', color: 'var(--blue-link)' }}>
+          full chart →
+        </Link>
+      </div>
+    </div>
   );
 }
