@@ -94,11 +94,25 @@ export function AuthProvider({ children }) {
 
     supabase.auth.getSession().then(async ({ data }) => {
       if (!active) return;
-      const s = data?.session ?? null;
+      let s = data?.session ?? null;
+      let verified = Boolean(s?.user?.email_confirmed_at || s?.user?.confirmed_at);
+
+      // A token minted before the user clicked their confirmation link still
+      // says "unverified", so the app would keep nagging them to confirm an
+      // email they already confirmed. Pull a fresh token once to check.
+      if (s && !verified) {
+        const { data: refreshed } = await supabase.auth.refreshSession();
+        if (refreshed?.session) {
+          s = refreshed.session;
+          verified = Boolean(s.user?.email_confirmed_at || s.user?.confirmed_at);
+        }
+      }
+
+      if (!active) return;
       setSession(s);
       setUser(s?.user ?? null);
       const prof = await loadProfile(s?.user?.id);
-      await claimBonusIfDue(prof, Boolean(s?.user?.email_confirmed_at || s?.user?.confirmed_at));
+      await claimBonusIfDue(prof, verified);
       if (active) setLoading(false);
     });
 
