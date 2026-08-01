@@ -144,8 +144,12 @@ export default function HomePage() {
           <div className="vg-col">
             <div className="vg-hero-ad">
               <div className="vg-ad-label">FEATURED</div>
-              <a href="/upload"><img src="/images/ads/ad-ai-game.png" alt="Build your first AI game" /></a>
-              <div className="vg-ad-caption">Built something? Post it and get scored.</div>
+              <a href="/advertise">
+                <img src="/images/ads/ad-prompt-jobs.png" alt="Prompt engineers wanted" />
+              </a>
+              <div className="vg-ad-caption">
+                This is the slot every visitor sees first.
+              </div>
               <a href="/advertise" className="vg-ad-pitch">
                 📣 Want your app featured here? <strong>Advertise on VibeGrounds →</strong>
               </a>
