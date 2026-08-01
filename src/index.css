@@ -1919,3 +1919,24 @@ body { background: var(--bg-darkest); overflow-y: auto; }
   .vg-3col { grid-template-columns: 1fr; }
   .vg-col-right { position: static; }
 }
+
+/* "advertise here" pitch under the featured slot */
+.vg-ad-pitch {
+  display: block; padding: 7px 8px;
+  border-top: 1px solid var(--border-dark);
+  background: rgba(232,163,23,.08);
+  font-family: var(--font-retro); font-size: 16px;
+  color: var(--text-secondary); text-decoration: none;
+}
+.vg-ad-pitch:hover { background: rgba(232,163,23,.18); color: var(--orange); }
+.vg-ad-pitch strong { color: var(--orange); }
+
+/* Logo used as a submission placeholder — sits back so it reads as
+   "no screenshot yet" rather than competing with real thumbnails. */
+.vg-thumb-placeholder {
+  width: 62% !important; height: auto !important;
+  object-fit: contain !important; opacity: .5;
+  margin: auto; display: block;
+}
+.vg-row-thumb .vg-thumb-placeholder,
+.vg-rail-thumb .vg-thumb-placeholder { width: 74% !important; opacity: .45; }
