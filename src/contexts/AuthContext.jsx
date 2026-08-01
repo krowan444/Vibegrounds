@@ -59,7 +59,7 @@ export function AuthProvider({ children }) {
       return null;
     }
 
-    const [{ data: prof, error }, { data: badgeRows }] = await Promise.all([
+    const [profRes, badgeRes] = await Promise.allSettled([
       supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
       supabase
         .from('user_badges_detailed')
@@ -68,7 +68,12 @@ export function AuthProvider({ children }) {
         .order('sort_order', { ascending: true }),
     ]);
 
-    if (error) console.warn('Profile load failed:', error.message);
+    const { data: prof, error } = profRes.status === 'fulfilled'
+      ? profRes.value : { data: null, error: profRes.reason };
+    const { data: badgeRows } = badgeRes.status === 'fulfilled'
+      ? badgeRes.value : { data: [] };
+
+    if (error) console.warn('Profile load failed:', error.message || error);
     setProfile(prof || null);
     setBadges(badgeRows || []);
     return prof || null;
@@ -114,6 +119,15 @@ export function AuthProvider({ children }) {
       const prof = await loadProfile(s?.user?.id);
       await claimBonusIfDue(prof, verified);
       if (active) setLoading(false);
+    }).catch((e) => {
+      // A stale or rejected token must not leave the whole app stuck
+      // behind a spinner. Fail open: treat it as signed out.
+      console.warn('Auth init failed:', e?.message || e);
+      if (!active) return;
+      setSession(null);
+      setUser(null);
+      setProfile(null);
+      setLoading(false);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, s) => {
