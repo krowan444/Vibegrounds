@@ -60,9 +60,8 @@
 }
 
 html, body, #root {
-  height: 100%;
+  min-height: 100%;
   width: 100%;
-  overflow: hidden;
 }
 
 body {
@@ -1851,3 +1850,14 @@ a:hover {
   .vg-rail { flex-direction: row; flex-wrap: wrap; }
   .vg-rail > * { flex: 1 1 280px; }
 }
+
+
+/* ============================================================
+   App shell — replaces the old fake Internet Explorer window.
+   That chrome ate ~180px of vertical space on every page.
+   ============================================================ */
+.vg-app {
+  min-height: 100vh;
+  background: var(--bg-darkest);
+}
+body { background: var(--bg-darkest); overflow-y: auto; }

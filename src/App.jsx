@@ -1,6 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
-import BrowserChrome from './components/BrowserChrome';
 
 import HomePage from './pages/HomePage';
 import CreationPage from './pages/CreationPage';
@@ -27,7 +26,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <BrowserChrome>
+        <div className="vg-app">
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/portal" element={<PortalPage />} />
@@ -56,7 +55,7 @@ export default function App() {
 
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-        </BrowserChrome>
+        </div>
       </AuthProvider>
     </BrowserRouter>
   );
