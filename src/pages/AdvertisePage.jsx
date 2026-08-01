@@ -87,8 +87,13 @@ export default function AdvertisePage() {
             </p>
             <p style={{ marginTop: '10px' }}>
               Email{' '}
-              <a href="mailto:hello@vibegrounds.com" style={{ color: 'var(--orange)', fontWeight: 'bold' }}>
-                hello@vibegrounds.com
+              {/* Personal address for now — swap to hello@vibegrounds.com once
+                  the domain transfer lands and forwarding is set up. */}
+              <a
+                href="mailto:kierandrowan@gmail.com?subject=Advertising%20on%20VibeGrounds"
+                style={{ color: 'var(--orange)', fontWeight: 'bold' }}
+              >
+                kierandrowan@gmail.com
               </a>
             </p>
             <p style={{ marginTop: '14px', fontSize: '16px', color: 'var(--text-dim)' }}>
