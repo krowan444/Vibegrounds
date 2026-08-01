@@ -154,29 +154,79 @@ your domain. Once custom SMTP is on, the send-rate limit can also be raised.
 
 ---
 
-## 8. Stripe (when you're ready to take money)
+## 8. Stripe — three steps left
 
-The database side is done. `08_pricing.sql` holds the packs and prices, and
-`create_purchase_intent()` builds a locked-in order that the client cannot tamper
-with. What's still needed:
+Both Edge Functions are **written and deployed** (v2, live):
 
-1. In Stripe, create a **Product** per pack with a **Price in each currency**
-   (GBP, USD, EUR, CAD, AUD).
-2. Store those price IDs:
-   ```sql
-   update public.coin_pack_prices
-      set stripe_price_id = 'price_xxx'
-    where pack_slug = 'starter' and currency = 'gbp';
-   ```
-3. Deploy two endpoints (Supabase Edge Functions or Vercel serverless):
-   - `create-checkout` — takes a `purchase_id`, reads the amount **from the
-     database**, returns a Stripe Checkout URL
-   - `stripe-webhook` — on `checkout.session.completed`, calls
-     `fulfil_coin_purchase(session_id)` with the service-role key
-4. Set `VITE_CHECKOUT_URL` in your env to the `create-checkout` URL.
+| Function | URL |
+|---|---|
+| `create-checkout` | `https://oqiityancoxnwhfsrcgx.supabase.co/functions/v1/create-checkout` |
+| `stripe-webhook` | `https://oqiityancoxnwhfsrcgx.supabase.co/functions/v1/stripe-webhook` |
 
-Until then the Buy buttons show a clear "not switched on yet" message rather
-than failing silently.
+No Stripe product catalogue is needed — checkout builds prices inline from
+`coin_pack_prices`, so the £5/$5/€5 pricing is driven entirely by your database.
+
+Right now `create-checkout` returns *"Card payments are not switched on yet"*
+because the secrets are missing. Three steps to finish:
+
+### a) Add the secrets
+
+**Supabase → Edge Functions → Secrets.** I deliberately did not set these —
+they're live credentials and yours to enter:
+
+```
+STRIPE_SECRET_KEY       sk_live_...  (or sk_test_... to trial it first)
+STRIPE_WEBHOOK_SECRET   whsec_...    (from step b)
+SITE_URL                https://vibegrounds.vercel.app
+STATEMENT_DESCRIPTOR    VIBEGROUNDS
+```
+
+### b) Point Stripe at the webhook
+
+**Stripe → Developers → Webhooks → Add endpoint**, URL as in the table above.
+Subscribe to: `checkout.session.completed`, `checkout.session.expired`,
+`charge.refunded`. Copy the signing secret it gives you into
+`STRIPE_WEBHOOK_SECRET`.
+
+### c) Switch on the Buy buttons
+
+Add to **Vercel → Environment Variables**, then redeploy:
+
+```
+VITE_CHECKOUT_URL  https://oqiityancoxnwhfsrcgx.supabase.co/functions/v1/create-checkout
+```
+
+### Test it before going live
+
+Use `sk_test_` keys and card `4242 4242 4242 4242`, any future expiry, any CVC.
+Buy a pack, then check the coins landed:
+
+```sql
+select * from public.coin_purchases order by created_at desc limit 5;
+select * from public.coin_transactions where reason = 'purchase' order by created_at desc;
+```
+
+### Why it's built this way
+
+- **Amounts never come from the browser.** The client sends only a
+  `purchase_id`; the function reads the price from the database. Otherwise
+  someone could request 400 coins for 1p and be billed exactly that.
+- **The webhook verifies Stripe's signature** before trusting anything. Without
+  it, anyone who found the URL could POST fake "payment succeeded" events and
+  mint themselves unlimited coins.
+- **Fulfilment is idempotent.** Stripe retries webhooks;
+  `fulfil_coin_purchase()` refuses to credit the same session twice.
+- **Statement descriptor is set to VIBEGROUNDS**, so customers recognise the
+  charge on their bank statement instead of seeing an unfamiliar trading name
+  and raising a chargeback.
+
+### On using a separate Stripe account
+
+Your connected account is **Learn AI Fast**. The descriptor above means
+customers see "VIBEGROUNDS" regardless, so this works. But a separate account
+gives you clean separation of payouts, reporting and tax. I can't create Stripe
+accounts — if you want one, create it yourself and swap `STRIPE_SECRET_KEY`;
+nothing else in the code needs to change.
 
 ### How the currency thing works
 
