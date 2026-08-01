@@ -10,14 +10,19 @@ import Notice from '../components/Notice';
  * so we just need to confirm state and hand over the free coins.
  */
 export default function VerifyEmailPage() {
-  const { user, profile, emailVerified, loading, refreshProfile, resendVerification } = useAuth();
+  const { user, profile, emailVerified, loading, refreshProfile, refreshSession, resendVerification } = useAuth();
   const [resent, setResent] = useState(false);
   const [error, setError] = useState('');
 
+  // This page is where a just-confirmed user lands, so their token still
+  // says "unverified". Nothing else is loading here, so it's the one safe
+  // place to pull a fresh token without stealing the auth lock.
   useEffect(() => {
+    if (loading) return;
     if (emailVerified) refreshProfile();
+    else if (user) refreshSession();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [emailVerified]);
+  }, [emailVerified, loading, user?.id]);
 
   const panel = (title, children) => (
     <>
