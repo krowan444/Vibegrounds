@@ -11,10 +11,18 @@ export default function CreationCard({ creation: c, variant = 'grid', rank }) {
   const score = Number(c.score) || 0;
   const icon = c.category_icon || '✨';
 
+  // No screenshot yet? Fall back to the VibeGrounds mark rather than a big
+  // category emoji — it reads as a placeholder instead of looking broken.
   const thumb = c.thumbnail_url ? (
     <img src={c.thumbnail_url} alt="" loading="lazy" />
   ) : (
-    <span className="vg-thumb-fallback" aria-hidden="true">{icon}</span>
+    <img
+      src="/images/logo.png"
+      alt=""
+      loading="lazy"
+      className="vg-thumb-placeholder"
+      aria-hidden="true"
+    />
   );
 
   if (variant === 'row' || variant === 'rank') {

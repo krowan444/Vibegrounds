@@ -28,9 +28,12 @@ export default function ChartRail({ title, icon, rows = [], to, emptyText = 'Not
                 {medal || rank}
               </span>
               <span className="vg-rail-thumb">
-                {c.thumbnail_url
-                  ? <img src={c.thumbnail_url} alt="" loading="lazy" />
-                  : <span>{c.category_icon || '✨'}</span>}
+                <img
+                  src={c.thumbnail_url || '/images/logo.png'}
+                  alt=""
+                  loading="lazy"
+                  className={c.thumbnail_url ? undefined : 'vg-thumb-placeholder'}
+                />
               </span>
               <span className="vg-rail-body">
                 <span className="vg-rail-title">{c.title}</span>
