@@ -43,7 +43,13 @@ export default function SiteHeader({ compact = false }) {
     <header className="site-header">
       <div className="site-header-top">
         <Link to="/" className="site-logo">
-          <img src="/images/logo.png" alt="VibeGrounds" style={compact ? { height: '50px' } : undefined} />
+          {/* Emblem only — the wordmark lives in type beside it, so the
+              full lockup would repeat itself here. */}
+          <img
+            src="/images/logo.png"
+            alt="VibeGrounds"
+            style={{ height: compact ? '44px' : '64px', width: 'auto', display: 'block' }}
+          />
           <div>
             <div className="site-logo-text" style={compact ? { fontSize: '10px' } : undefined}>VIBEGROUNDS</div>
             {!compact && <div className="site-logo-tagline">THE FUTURE OF AI CREATIVITY, TODAY!</div>}
