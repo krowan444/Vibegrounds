@@ -99,19 +99,15 @@ export function AuthProvider({ children }) {
 
     supabase.auth.getSession().then(async ({ data }) => {
       if (!active) return;
-      let s = data?.session ?? null;
-      let verified = Boolean(s?.user?.email_confirmed_at || s?.user?.confirmed_at);
+      const s = data?.session ?? null;
+      const verified = Boolean(s?.user?.email_confirmed_at || s?.user?.confirmed_at);
 
-      // A token minted before the user clicked their confirmation link still
-      // says "unverified", so the app would keep nagging them to confirm an
-      // email they already confirmed. Pull a fresh token once to check.
-      if (s && !verified) {
-        const { data: refreshed } = await supabase.auth.refreshSession();
-        if (refreshed?.session) {
-          s = refreshed.session;
-          verified = Boolean(s.user?.email_confirmed_at || s.user?.confirmed_at);
-        }
-      }
+      // NOTE: do not call refreshSession() here. supabase-js serialises auth
+      // operations behind a Navigator lock, and a manual refresh racing the
+      // client's own automatic one steals that lock — which aborts every
+      // query in flight ("Lock broken by another request"). The stale-token
+      // case only matters right after confirming an email, so the refresh
+      // lives on the /verify page instead, where nothing else is loading.
 
       if (!active) return;
       setSession(s);
@@ -231,6 +227,26 @@ export function AuthProvider({ children }) {
 
   const refreshProfile = useCallback(() => loadProfile(user?.id), [loadProfile, user?.id]);
 
+  /**
+   * Pull a fresh token. Only call this somewhere quiet (the /verify page) —
+   * doing it while other queries are running steals the auth lock and
+   * aborts them.
+   */
+  const refreshSession = useCallback(async () => {
+    try {
+      const { data } = await supabase.auth.refreshSession();
+      if (data?.session) {
+        setSession(data.session);
+        setUser(data.session.user);
+        await loadProfile(data.session.user.id);
+      }
+      return data?.session ?? null;
+    } catch (e) {
+      console.warn('Session refresh failed:', e?.message || e);
+      return null;
+    }
+  }, [loadProfile]);
+
   return (
     <AuthContext.Provider value={{
       session, user, profile, badges, loading,
@@ -238,7 +254,7 @@ export function AuthProvider({ children }) {
       coins: profile?.coins ?? 0,
       signUp, signIn, signOut,
       resendVerification, requestPasswordReset, updatePassword, updateEmail,
-      updateProfile, refreshProfile,
+      updateProfile, refreshProfile, refreshSession,
     }}>
       {children}
     </AuthContext.Provider>
