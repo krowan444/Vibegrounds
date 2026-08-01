@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase, retryOnAbort } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import SiteHeader from '../components/SiteHeader';
 import CreationCard from '../components/CreationCard';
@@ -21,17 +21,17 @@ export default function HomePage() {
     (async () => {
       const settle = (r) => (r.status === 'fulfilled' ? r.value : { data: [], error: r.reason });
       const R = (await Promise.allSettled([
-        supabase.from('creations_public').select('*').eq('is_featured', true)
-          .order('created_at', { ascending: false }).limit(4),
-        supabase.from('creations_public').select('*')
-          .order('created_at', { ascending: false }).limit(12),
-        supabase.from('chart_daily').select('*').order('rank').limit(10),
-        supabase.from('chart_weekly').select('*').order('rank').limit(10),
-        supabase.from('chart_alltime').select('*').order('rank').limit(100),
-        supabase.from('categories').select('*').eq('is_active', true).order('sort_order'),
-        supabase.from('creator_leaderboard').select('*').order('rank').limit(5),
-        supabase.from('creations_public').select('id', { count: 'exact', head: true }),
-        supabase.from('profiles_public').select('id', { count: 'exact', head: true }),
+        retryOnAbort(() => supabase.from('creations_public').select('*').eq('is_featured', true)
+          .order('created_at', { ascending: false }).limit(4)),
+        retryOnAbort(() => supabase.from('creations_public').select('*')
+          .order('created_at', { ascending: false }).limit(12)),
+        retryOnAbort(() => supabase.from('chart_daily').select('*').order('rank').limit(10)),
+        retryOnAbort(() => supabase.from('chart_weekly').select('*').order('rank').limit(10)),
+        retryOnAbort(() => supabase.from('chart_alltime').select('*').order('rank').limit(100)),
+        retryOnAbort(() => supabase.from('categories').select('*').eq('is_active', true).order('sort_order')),
+        retryOnAbort(() => supabase.from('creator_leaderboard').select('*').order('rank').limit(5)),
+        retryOnAbort(() => supabase.from('creations_public').select('id', { count: 'exact', head: true })),
+        retryOnAbort(() => supabase.from('profiles_public').select('id', { count: 'exact', head: true })),
       ])).map(settle);
 
       const [featured, latest, daily, weekly, alltime, cats, creators, cCount, uCount] = R;
@@ -141,6 +141,9 @@ export default function HomePage() {
               <div className="vg-ad-label">FEATURED</div>
               <a href="/upload"><img src="/images/ads/ad-ai-game.png" alt="Build your first AI game" /></a>
               <div className="vg-ad-caption">Built something? Post it and get scored.</div>
+              <a href="/advertise" className="vg-ad-pitch">
+                📣 Want your app featured here? <strong>Advertise on VibeGrounds →</strong>
+              </a>
             </div>
 
             {!user ? (
@@ -240,9 +243,12 @@ export default function HomePage() {
                       {c.rank === 1 ? '🥇' : c.rank === 2 ? '🥈' : c.rank === 3 ? '🥉' : c.rank}
                     </span>
                     <span className="vg-rail-thumb">
-                      {c.thumbnail_url
-                        ? <img src={c.thumbnail_url} alt="" loading="lazy" />
-                        : <span>{c.category_icon || '✨'}</span>}
+                      <img
+                        src={c.thumbnail_url || '/images/logo.png'}
+                        alt=""
+                        loading="lazy"
+                        className={c.thumbnail_url ? undefined : 'vg-thumb-placeholder'}
+                      />
                     </span>
                     <span className="vg-rail-body">
                       <span className="vg-rail-title">{c.title}</span>
