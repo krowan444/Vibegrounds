@@ -1,80 +1,108 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { supabase, retryOnAbort } from '../lib/supabase';
 import SiteHeader from '../components/SiteHeader';
-import CreationCard from '../components/CreationCard';
-import ChartRail from '../components/ChartRail';
 import AdSlot from '../components/AdSlot';
 import Notice from '../components/Notice';
+import { scoreColor, timeAgo, compactNumber } from '../lib/format';
 
-const SORTS = [
-  { id: 'new',    label: 'Newest',      column: 'created_at', asc: false },
-  { id: 'top',    label: 'Top Rated',   column: 'score',      asc: false },
-  { id: 'viewed', label: 'Most Viewed', column: 'view_count', asc: false },
-  { id: 'talked', label: 'Most Talked', column: 'review_count', asc: false },
-];
+/** A long, scrollable ranked column — the heart of the Portal. */
+function ChartColumn({ title, icon, rows, to, empty, showAge }) {
+  return (
+    <div className="vg-rail-box vg-rail-scroll">
+      <div className="vg-rail-head" style={{ position: 'sticky', top: 0, zIndex: 2 }}>
+        <span>{icon} {title}</span>
+        {to && <Link to={to}>full</Link>}
+      </div>
 
-const PAGE_SIZE = 24;
+      {rows.length === 0 ? (
+        <div className="vg-rail-empty">{empty}</div>
+      ) : (
+        rows.map((c, i) => {
+          const rank = c.rank ?? i + 1;
+          const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : null;
+          return (
+            <Link key={c.id} to={`/creation/${c.id}`} className="vg-rail-row">
+              <span className={`vg-rail-rank ${medal ? 'medal' : ''}`}>{medal || rank}</span>
+              <span className="vg-rail-thumb">
+                <img
+                  src={c.thumbnail_url || '/images/logo.png'}
+                  alt=""
+                  loading="lazy"
+                  className={c.thumbnail_url ? undefined : 'vg-thumb-placeholder'}
+                />
+              </span>
+              <span className="vg-rail-body">
+                <span className="vg-rail-title">{c.title}</span>
+                <span className="vg-rail-by">
+                  by {c.creator_username}
+                  {showAge && ` · ${timeAgo(c.created_at)}`}
+                </span>
+              </span>
+              <span className="vg-rail-score" style={{ color: scoreColor(c.score) }}>
+                {Number(c.score).toFixed(2)}
+              </span>
+            </Link>
+          );
+        })
+      )}
+    </div>
+  );
+}
 
 export default function PortalPage() {
   const [params, setParams] = useSearchParams();
-  const sortId = params.get('sort') || 'new';
   const category = params.get('cat') || '';
   const query = params.get('q') || '';
 
-  const sort = SORTS.find((s) => s.id === sortId) || SORTS[0];
-
   const [categories, setCategories] = useState([]);
-  const [rows, setRows] = useState([]);
-  const [page, setPage] = useState(0);
+  const [newest, setNewest] = useState([]);
+  const [monthly, setMonthly] = useState([]);
+  const [alltime, setAlltime] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [search, setSearch] = useState(query);
-  const [rail, setRail] = useState({ daily: [], alltime: [] });
 
   useEffect(() => {
-    supabase.from('categories').select('*').eq('is_active', true).order('sort_order')
-      .then(({ data }) => setCategories(data || []));
+    retryOnAbort(() =>
+      supabase.from('categories').select('*').eq('is_active', true).order('sort_order'),
+    ).then(({ data }) => setCategories(data || []));
   }, []);
 
-  // Charts in the rail follow whichever category you're browsing, so
-  // "best in Games" is always one glance away.
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      const daily = supabase.from('chart_daily').select('*').order('rank').limit(5);
-      let top = supabase.from('creations_public').select('*')
-        .gte('vote_count', 5).order('score', { ascending: false }).limit(5);
-      if (category) top = top.eq('category', category);
-      const [d, a] = await Promise.all([daily, top]);
-      if (alive) setRail({ daily: d.data || [], alltime: a.data || [] });
-    })();
-    return () => { alive = false; };
-  }, [category]);
-
-  const load = useCallback(async (pageIndex) => {
+  const load = useCallback(async () => {
     setLoading(true);
-    let q = supabase
-      .from('creations_public')
-      .select('*', { count: 'exact' })
-      .order(sort.column, { ascending: sort.asc })
-      .range(pageIndex * PAGE_SIZE, pageIndex * PAGE_SIZE + PAGE_SIZE - 1);
 
-    if (category) q = q.eq('category', category);
-    if (query) q = q.or(`title.ilike.%${query}%,description.ilike.%${query}%`);
+    // Filters apply to all three columns so the whole page stays coherent.
+    const apply = (q) => {
+      let out = q;
+      if (category) out = out.eq('category', category);
+      if (query) out = out.or(`title.ilike.%${query}%,description.ilike.%${query}%`);
+      return out;
+    };
 
-    const { data, error: err, count } = await q;
-    if (err) setError(err.message);
-    else {
-      setError('');
-      setRows(data || []);
-      setTotal(count || 0);
-    }
+    const settle = (r) => (r.status === 'fulfilled' ? r.value : { data: [], error: r.reason });
+    const [n, m, a, c] = (await Promise.allSettled([
+      retryOnAbort(() => apply(supabase.from('creations_public').select('*'))
+        .order('created_at', { ascending: false }).limit(50)),
+      retryOnAbort(() => apply(supabase.from('chart_monthly').select('*'))
+        .order('rank').limit(100)),
+      retryOnAbort(() => apply(supabase.from('chart_alltime').select('*'))
+        .order('rank').limit(100)),
+      retryOnAbort(() => apply(supabase.from('creations_public').select('id', { count: 'exact', head: true }))),
+    ])).map(settle);
+
+    const firstError = [n, m, a].find((r) => r.error)?.error;
+    setError(firstError ? `Could not load everything: ${firstError.message || firstError}` : '');
+
+    setNewest(n.data || []);
+    setMonthly(m.data || []);
+    setAlltime(a.data || []);
+    setTotal(c.count || 0);
     setLoading(false);
-  }, [sort.column, sort.asc, category, query]);
+  }, [category, query]);
 
-  useEffect(() => { setPage(0); load(0); }, [load]);
+  useEffect(() => { load(); }, [load]);
 
   const setParam = (key, value) => {
     const next = new URLSearchParams(params);
@@ -82,7 +110,6 @@ export default function PortalPage() {
     setParams(next);
   };
 
-  const pages = Math.ceil(total / PAGE_SIZE);
   const activeCat = categories.find((c) => c.slug === category);
 
   return (
@@ -93,7 +120,7 @@ export default function PortalPage() {
         <div className="vg-section-head">
           <h2>🌀 THE PORTAL</h2>
           <span className="vg-sub">
-            Everything anyone has ever posted. {total} submission{total === 1 ? '' : 's'}
+            {compactNumber(total)} submission{total === 1 ? '' : 's'}
             {activeCat && ` in ${activeCat.name}`}
             {query && ` matching “${query}”`}
           </span>
@@ -101,7 +128,6 @@ export default function PortalPage() {
 
         <Notice tone="error">{error}</Notice>
 
-        {/* Search */}
         <form
           className="vg-strip"
           onSubmit={(e) => { e.preventDefault(); setParam('q', search.trim()); }}
@@ -110,7 +136,7 @@ export default function PortalPage() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search titles and descriptions..."
+            placeholder="Search the Portal..."
             style={{
               flex: '1 1 240px', padding: '7px 10px', background: 'var(--bg-input)',
               border: '2px solid var(--border-dark)', color: 'var(--text-primary)',
@@ -125,7 +151,6 @@ export default function PortalPage() {
           )}
         </form>
 
-        {/* Category filter */}
         <div className="vg-tabs">
           <button
             type="button"
@@ -146,78 +171,40 @@ export default function PortalPage() {
           ))}
         </div>
 
-        {/* Sort */}
-        <div className="vg-tabs">
-          {SORTS.map((s) => (
-            <button
-              key={s.id}
-              type="button"
-              className={`vg-tab ${sortId === s.id ? 'is-active' : ''}`}
-              onClick={() => setParam('sort', s.id)}
-            >
-              {s.label.toUpperCase()}
-            </button>
-          ))}
-        </div>
-
-        <div className="vg-layout">
-          <div>
         {loading ? (
-          <div className="vg-loading">⏳ Loading submissions...</div>
-        ) : rows.length === 0 ? (
-          <div className="vg-empty">
-            <p>Nothing here{query ? ' matches that search' : ' yet'}.</p>
-            <p style={{ marginTop: '10px' }}>
-              <Link to="/upload" style={{ color: 'var(--orange)', fontWeight: 'bold' }}>
-                Post the first one →
-              </Link>
-            </p>
-          </div>
+          <div className="vg-loading">⏳ Loading the Portal...</div>
         ) : (
-          <>
-            <div className="vg-grid">
-              {rows.map((c) => <CreationCard key={c.id} creation={c} />)}
+          <div className="vg-3col vg-3col-even">
+            {/* LEFT — newest */}
+            <div className="vg-col">
+              <ChartColumn
+                title="Newest 50" icon="🆕" rows={newest} showAge
+                to="/charts?chart=daily"
+                empty="Nothing posted yet. Be the first."
+              />
             </div>
 
-            {pages > 1 && (
-              <div className="vg-tabs" style={{ marginTop: '16px', justifyContent: 'center' }}>
-                <button
-                  type="button" className="vg-tab" disabled={page === 0}
-                  onClick={() => { const p = page - 1; setPage(p); load(p); window.scrollTo(0, 0); }}
-                >
-                  ← PREV
-                </button>
-                <span style={{
-                  fontFamily: 'var(--font-retro)', fontSize: '17px',
-                  color: 'var(--text-dim)', padding: '7px 10px',
-                }}>
-                  page {page + 1} of {pages}
-                </span>
-                <button
-                  type="button" className="vg-tab" disabled={page + 1 >= pages}
-                  onClick={() => { const p = page + 1; setPage(p); load(p); window.scrollTo(0, 0); }}
-                >
-                  NEXT →
-                </button>
-              </div>
-            )}
-          </>
-        )}
-          </div>
+            {/* MIDDLE — this month */}
+            <div className="vg-col">
+              <ChartColumn
+                title="Top 100 This Month" icon="🗓️" rows={monthly}
+                to="/charts?chart=monthly"
+                empty="Nothing charted this month yet."
+              />
+              <AdSlot index={0} />
+            </div>
 
-          <aside className="vg-rail">
-            <AdSlot index={0} />
-            <ChartRail title="Top Daily" icon="☀️" rows={rail.daily} to="/charts?chart=daily" />
-            <ChartRail
-              title={activeCat ? `Best in ${activeCat.name}` : 'All-Time Best'}
-              icon="👑"
-              rows={rail.alltime}
-              to={`/charts?chart=alltime${category ? `&cat=${category}` : ''}`}
-              emptyText="Needs 5 votes to chart."
-            />
-            <AdSlot index={1} sticky />
-          </aside>
-        </div>
+            {/* RIGHT — all time */}
+            <div className="vg-col">
+              <ChartColumn
+                title="All-Time Top 100" icon="👑" rows={alltime}
+                to="/charts?chart=alltime"
+                empty="Nothing charted yet."
+              />
+              <AdSlot index={1} />
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

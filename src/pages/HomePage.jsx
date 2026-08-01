@@ -6,6 +6,7 @@ import SiteHeader from '../components/SiteHeader';
 import CreationCard from '../components/CreationCard';
 import ChartRail, { CreatorRail } from '../components/ChartRail';
 import AdSlot from '../components/AdSlot';
+import JokeAd from '../components/JokeAd';
 import DailyCheckIn from '../components/DailyCheckIn';
 import Notice from '../components/Notice';
 import { compactNumber, timeAgo } from '../lib/format';
@@ -132,7 +133,11 @@ export default function HomePage() {
               title="Top 10 This Week" icon="📅" rows={d.weekly} to="/charts?chart=weekly"
               emptyText="Nothing charted this week yet."
             />
+            <JokeAd index={6} />
             <CreatorRail rows={d.creators} />
+            <JokeAd index={7} />
+            <JokeAd index={0} />
+            <JokeAd index={1} />
           </div>
 
           {/* MIDDLE — featured ad, then the sections */}
