@@ -19,8 +19,10 @@ export default function HomePage() {
   useEffect(() => {
     let alive = true;
     (async () => {
-      const [featured, latest, daily, weekly, monthly, alltime, cats, creators, counts] =
-        await Promise.all([
+      // allSettled, not all: one failing query must never leave the page
+      // stuck on the loading spinner forever. Render what we have.
+      const settle = (r) => (r.status === 'fulfilled' ? r.value : { data: [], error: r.reason });
+      const results = (await Promise.allSettled([
           supabase.from('creations_public').select('*').eq('is_featured', true)
             .order('created_at', { ascending: false }).limit(4),
           supabase.from('creations_public').select('*')
@@ -32,12 +34,18 @@ export default function HomePage() {
           supabase.from('categories').select('*').eq('is_active', true).order('sort_order'),
           supabase.from('creator_leaderboard').select('*').order('rank').limit(5),
           supabase.from('creations_public').select('id', { count: 'exact', head: true }),
-        ]);
+        ])).map(settle);
+
+      const [featured, latest, daily, weekly, monthly, alltime, cats, creators, counts] = results;
 
       if (!alive) return;
-      const firstError = [featured, latest, daily, weekly, alltime, cats, creators]
-        .find((r) => r.error)?.error;
-      if (firstError) setError(firstError.message);
+      const firstError = results.find((r) => r.error)?.error;
+      if (firstError) {
+        setError(
+          `Could not load everything: ${firstError.message || firstError}. ` +
+          `If this persists, the site may be pointed at the wrong database.`,
+        );
+      }
 
       setData({
         featured: featured.data || [],
@@ -50,7 +58,15 @@ export default function HomePage() {
         creators: creators.data || [],
         total: counts.count || 0,
       });
-    })();
+    })().catch((e) => {
+      // Never leave the spinner up. Show an empty page with the reason.
+      if (!alive) return;
+      setError(e?.message || 'Something went wrong loading the Portal.');
+      setData({
+        featured: [], latest: [], daily: [], weekly: [], monthly: [],
+        alltime: [], categories: [], creators: [], total: 0,
+      });
+    });
     return () => { alive = false; };
   }, []);
 
