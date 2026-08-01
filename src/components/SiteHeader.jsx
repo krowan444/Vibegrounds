@@ -146,7 +146,16 @@ export default function SiteHeader({ compact = false }) {
 
       <nav className="site-nav">
         {NAV.filter((n) => !compact || !n.wide).map((n) => (
-          <Link key={n.to} to={n.to} className={pathname === n.to ? 'active' : undefined}>
+          <Link
+            key={n.to}
+            to={n.to}
+            className={[
+              pathname === n.to ? 'active' : '',
+              // The Portal is where everything actually lives, so it gets
+              // pulled out of the row rather than sitting in the queue.
+              n.to === '/portal' && pathname !== '/portal' ? 'vg-nav-portal' : '',
+            ].filter(Boolean).join(' ') || undefined}
+          >
             {n.label}
           </Link>
         ))}
