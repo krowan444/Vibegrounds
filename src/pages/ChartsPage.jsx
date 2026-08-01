@@ -82,27 +82,45 @@ function RankRow({ row }) {
 export default function ChartsPage() {
   const [params, setParams] = useSearchParams();
   const active = CHARTS.find((c) => c.id === params.get('chart')) || CHARTS[0];
+  const category = params.get('cat') || '';
 
   const [rows, setRows] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    supabase.from('categories').select('*').eq('is_active', true).order('sort_order')
+      .then(({ data }) => setCategories(data || []));
+  }, []);
 
   useEffect(() => {
     let alive = true;
     setLoading(true);
     (async () => {
-      const { data, error: err } = await supabase
-        .from(active.view)
-        .select('*')
+      let q = supabase.from(active.view).select('*');
+      // Filtering by category means the view's own rank column no longer
+      // applies, so re-rank client-side below.
+      if (category) q = q.eq('category', category);
+      const { data, error: err } = await q
         .order('rank', { ascending: true })
         .limit(100);
       if (!alive) return;
       if (err) setError(err.message);
-      else { setError(''); setRows(data || []); }
+      else {
+        setError('');
+        setRows((data || []).map((r, i) => (category ? { ...r, rank: i + 1 } : r)));
+      }
       setLoading(false);
     })();
     return () => { alive = false; };
-  }, [active.view]);
+  }, [active.view, category]);
+
+  const setParam = (key, value) => {
+    const next = new URLSearchParams(params);
+    if (value) next.set(key, value); else next.delete(key);
+    setParams(next);
+  };
 
   return (
     <>
@@ -116,7 +134,7 @@ export default function ChartsPage() {
               <button
                 key={c.id}
                 type="button"
-                onClick={() => setParams({ chart: c.id })}
+                onClick={() => setParam('chart', c.id)}
                 style={{
                   background: active.id === c.id ? 'var(--orange)' : 'transparent',
                   color: active.id === c.id ? '#000' : 'var(--text-secondary)',
@@ -126,6 +144,27 @@ export default function ChartsPage() {
                 }}
               >
                 {c.icon} {c.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Per-category charts — "#1 in Games all time" is its own trophy */}
+          <div style={{ display: 'flex', gap: '3px', padding: '8px', flexWrap: 'wrap', borderBottom: '1px solid var(--border-dark)' }}>
+            <button
+              type="button"
+              className={`vg-tab ${!category ? 'is-active' : ''}`}
+              onClick={() => setParam('cat', '')}
+            >
+              ALL CATEGORIES
+            </button>
+            {categories.map((c) => (
+              <button
+                key={c.slug}
+                type="button"
+                className={`vg-tab ${category === c.slug ? 'is-active' : ''}`}
+                onClick={() => setParam('cat', c.slug)}
+              >
+                {c.icon} {c.name.toUpperCase()}
               </button>
             ))}
           </div>

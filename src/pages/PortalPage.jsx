@@ -3,6 +3,8 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import SiteHeader from '../components/SiteHeader';
 import CreationCard from '../components/CreationCard';
+import ChartRail from '../components/ChartRail';
+import AdSlot from '../components/AdSlot';
 import Notice from '../components/Notice';
 
 const SORTS = [
@@ -29,11 +31,27 @@ export default function PortalPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [search, setSearch] = useState(query);
+  const [rail, setRail] = useState({ daily: [], alltime: [] });
 
   useEffect(() => {
     supabase.from('categories').select('*').eq('is_active', true).order('sort_order')
       .then(({ data }) => setCategories(data || []));
   }, []);
+
+  // Charts in the rail follow whichever category you're browsing, so
+  // "best in Games" is always one glance away.
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const daily = supabase.from('chart_daily').select('*').order('rank').limit(5);
+      let top = supabase.from('creations_public').select('*')
+        .gte('vote_count', 5).order('score', { ascending: false }).limit(5);
+      if (category) top = top.eq('category', category);
+      const [d, a] = await Promise.all([daily, top]);
+      if (alive) setRail({ daily: d.data || [], alltime: a.data || [] });
+    })();
+    return () => { alive = false; };
+  }, [category]);
 
   const load = useCallback(async (pageIndex) => {
     setLoading(true);
@@ -142,6 +160,8 @@ export default function PortalPage() {
           ))}
         </div>
 
+        <div className="vg-layout">
+          <div>
         {loading ? (
           <div className="vg-loading">⏳ Loading submissions...</div>
         ) : rows.length === 0 ? (
@@ -183,6 +203,21 @@ export default function PortalPage() {
             )}
           </>
         )}
+          </div>
+
+          <aside className="vg-rail">
+            <AdSlot index={0} />
+            <ChartRail title="Top Daily" icon="☀️" rows={rail.daily} to="/charts?chart=daily" />
+            <ChartRail
+              title={activeCat ? `Best in ${activeCat.name}` : 'All-Time Best'}
+              icon="👑"
+              rows={rail.alltime}
+              to={`/charts?chart=alltime${category ? `&cat=${category}` : ''}`}
+              emptyText="Needs 5 votes to chart."
+            />
+            <AdSlot index={1} sticky />
+          </aside>
+        </div>
       </div>
     </>
   );
