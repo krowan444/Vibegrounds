@@ -257,11 +257,21 @@ export default function UploadPage() {
             </div>
 
             <div className="retro-form-group">
-              <label>5. Thumbnail image URL <span style={{ color: 'var(--text-dim)' }}>(optional)</span></label>
+              <label>
+                5. Custom thumbnail{' '}
+                <span style={{ color: 'var(--text-dim)' }}>(optional — leave blank and we&#39;ll screenshot it)</span>
+              </label>
               <input
-                type="text" placeholder="link to a screenshot — makes a big difference"
+                type="text" placeholder="only if you want your own artwork instead of a screenshot"
                 value={form.thumbnail_url} onChange={set('thumbnail_url')} disabled={loading}
               />
+              <div style={{
+                fontFamily: 'var(--font-retro)', fontSize: '15px',
+                color: 'var(--text-dim)', marginTop: '4px',
+              }}>
+                We grab a live screenshot of your link automatically. It can take a
+                few minutes to appear the first time.
+              </div>
             </div>
 
             <div className="retro-form-group">

@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import SiteHeader from '../components/SiteHeader';
 import CreationCard from '../components/CreationCard';
 import Notice from '../components/Notice';
+import SubmitCta from '../components/SubmitCta';
 import { compactNumber } from '../lib/format';
 
 export default function CategoryPage() {
@@ -125,6 +126,8 @@ export default function CategoryPage() {
                 {latest.map((c) => <CreationCard key={c.id} creation={c} />)}
               </div>
             </div>
+
+            <SubmitCta text={`Got something for ${meta.name}? Put it on the board.`} />
           </>
         )}
       </div>

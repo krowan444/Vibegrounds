@@ -10,6 +10,7 @@ import JokeAd from '../components/JokeAd';
 import DailyCheckIn from '../components/DailyCheckIn';
 import Notice from '../components/Notice';
 import { compactNumber, timeAgo } from '../lib/format';
+import { thumbFor, onThumbError, LOGO_FALLBACK } from '../lib/thumbnail';
 
 export default function HomePage() {
   const { user, profile } = useAuth();
@@ -253,10 +254,11 @@ export default function HomePage() {
                     </span>
                     <span className="vg-rail-thumb">
                       <img
-                        src={c.thumbnail_url || '/images/logo.png'}
+                        src={thumbFor(c, 120)}
                         alt=""
                         loading="lazy"
-                        className={c.thumbnail_url ? undefined : 'vg-thumb-placeholder'}
+                        onError={onThumbError}
+                        className={thumbFor(c, 120) === LOGO_FALLBACK ? 'vg-thumb-placeholder' : undefined}
                       />
                     </span>
                     <span className="vg-rail-body">

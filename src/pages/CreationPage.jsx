@@ -9,6 +9,7 @@ import ReportButton from '../components/ReportButton';
 import CreationCard from '../components/CreationCard';
 import Notice from '../components/Notice';
 import { compactNumber, shortDate, hostOf } from '../lib/format';
+import { thumbFor, onThumbError, LOGO_FALLBACK } from '../lib/thumbnail';
 
 export default function CreationPage() {
   const { id } = useParams();
@@ -122,9 +123,13 @@ export default function CreationPage() {
                 aspectRatio: '16 / 9', display: 'flex',
                 alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
               }}>
-                {c.thumbnail_url
-                  ? <img src={c.thumbnail_url} alt={c.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  : <span style={{ fontSize: '64px', opacity: 0.4 }}>{c.category_icon}</span>}
+                <img
+                  src={thumbFor(c, 900)}
+                  alt={c.title}
+                  onError={onThumbError}
+                  className={thumbFor(c, 900) === LOGO_FALLBACK ? 'vg-thumb-placeholder' : undefined}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
               </div>
 
               {/* Launch */}

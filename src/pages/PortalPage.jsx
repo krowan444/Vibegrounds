@@ -4,7 +4,9 @@ import { supabase, retryOnAbort } from '../lib/supabase';
 import SiteHeader from '../components/SiteHeader';
 import AdSlot from '../components/AdSlot';
 import Notice from '../components/Notice';
+import SubmitCta from '../components/SubmitCta';
 import { scoreColor, timeAgo, compactNumber } from '../lib/format';
+import { thumbFor, onThumbError, LOGO_FALLBACK } from '../lib/thumbnail';
 
 /** A long, scrollable ranked column — the heart of the Portal. */
 function ChartColumn({ title, icon, rows, to, empty, showAge }) {
@@ -26,10 +28,11 @@ function ChartColumn({ title, icon, rows, to, empty, showAge }) {
               <span className={`vg-rail-rank ${medal ? 'medal' : ''}`}>{medal || rank}</span>
               <span className="vg-rail-thumb">
                 <img
-                  src={c.thumbnail_url || '/images/logo.png'}
+                  src={thumbFor(c, 120)}
                   alt=""
                   loading="lazy"
-                  className={c.thumbnail_url ? undefined : 'vg-thumb-placeholder'}
+                  onError={onThumbError}
+                  className={thumbFor(c, 120) === LOGO_FALLBACK ? 'vg-thumb-placeholder' : undefined}
                 />
               </span>
               <span className="vg-rail-body">
@@ -170,6 +173,8 @@ export default function PortalPage() {
             </button>
           ))}
         </div>
+
+        <SubmitCta />
 
         {loading ? (
           <div className="vg-loading">⏳ Loading the Portal...</div>

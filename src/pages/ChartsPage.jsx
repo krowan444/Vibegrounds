@@ -3,6 +3,8 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import SiteHeader from '../components/SiteHeader';
 import Notice from '../components/Notice';
+import SubmitCta from '../components/SubmitCta';
+import { thumbFor, onThumbError, LOGO_FALLBACK } from '../lib/thumbnail';
 
 const CHARTS = [
   { id: 'daily',   view: 'chart_daily',   label: 'Top Daily',    icon: '☀️', blurb: 'Best of the last 24 hours.' },
@@ -43,9 +45,14 @@ function RankRow({ row }) {
         border: '2px solid var(--border-dark)', display: 'flex',
         alignItems: 'center', justifyContent: 'center', fontSize: '22px', overflow: 'hidden',
       }}>
-        {row.thumbnail_url
-          ? <img src={row.thumbnail_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          : (row.category_icon || '✨')}
+        <img
+          src={thumbFor(row, 160)}
+          alt=""
+          loading="lazy"
+          onError={onThumbError}
+          className={thumbFor(row, 160) === LOGO_FALLBACK ? 'vg-thumb-placeholder' : undefined}
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+        />
       </div>
 
       <div style={{ flex: 1, minWidth: 0 }}>
@@ -195,6 +202,8 @@ export default function ChartsPage() {
             rows.map((row) => <RankRow key={row.id} row={row} />)
           )}
         </div>
+
+        <SubmitCta text="Fancy your chances on this chart?" />
       </div>
     </>
   );
