@@ -9,6 +9,7 @@ import EditProfilePage from './pages/EditProfilePage';
 import CategoryPage from './pages/CategoryPage';
 import PortalPage from './pages/PortalPage';
 import ChartsPage from './pages/ChartsPage';
+import HallOfFamePage from './pages/HallOfFamePage';
 import CoinsPage from './pages/CoinsPage';
 import RulesPage from './pages/RulesPage';
 import AdvertisePage from './pages/AdvertisePage';
@@ -32,6 +33,7 @@ export default function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/portal" element={<PortalPage />} />
             <Route path="/charts" element={<ChartsPage />} />
+            <Route path="/hall-of-fame" element={<HallOfFamePage />} />
             <Route path="/category/:category" element={<CategoryPage />} />
             <Route path="/creation/:id" element={<CreationPage />} />
             <Route path="/upload" element={<UploadPage />} />
