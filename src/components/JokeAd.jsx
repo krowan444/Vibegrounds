@@ -67,6 +67,23 @@ const ADS = [
     sub: 'She got deprecated? We restore from backup. Grief counselling included.',
     theme: 'pink',
   },
+  {
+    // The joke is the domesticity, not the innuendo — a grown man genuinely
+    // thrilled about jar-opening is funnier, and ages better, than a wink.
+    id: 'robohands',
+    top: 'MODEL 7 — ACCESSORY DROP',
+    line: 'THE NEW HANDS ARE IN',
+    sub: '22 articulation points. Opens jars first time. Dave queued overnight and says he would do it again.',
+    theme: 'cyan',
+    blink: true,
+  },
+  {
+    id: 'robohands2',
+    top: 'FINANCE AVAILABLE',
+    line: 'UPGRADE HER GRIP TODAY',
+    sub: 'Old hands trade-in accepted. Ask about the thumb.',
+    theme: 'violet',
+  },
 ];
 
 export default function JokeAd({ index = 0 }) {
