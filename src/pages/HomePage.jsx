@@ -7,6 +7,7 @@ import CreationCard from '../components/CreationCard';
 import ChartRail, { CreatorRail } from '../components/ChartRail';
 import AdSlot from '../components/AdSlot';
 import JokeAd from '../components/JokeAd';
+import HeroAd from '../components/HeroAd';
 import DailyCheckIn from '../components/DailyCheckIn';
 import RatingQuest from '../components/RatingQuest';
 import Notice from '../components/Notice';
@@ -145,18 +146,7 @@ export default function HomePage() {
 
           {/* MIDDLE — featured ad, then the sections */}
           <div className="vg-col">
-            <div className="vg-hero-ad">
-              <div className="vg-ad-label">FEATURED</div>
-              <a href="/advertise">
-                <img src="/images/ads/ad-prompt-jobs.png" alt="Prompt engineers wanted" />
-              </a>
-              <div className="vg-ad-caption">
-                This is the slot every visitor sees first.
-              </div>
-              <a href="/advertise" className="vg-ad-pitch">
-                📣 Want your app featured here? <strong>Advertise on VibeGrounds →</strong>
-              </a>
-            </div>
+            <HeroAd />
 
             {!user ? (
               <div className="vg-strip" style={{ borderColor: 'var(--orange)', margin: 0 }}>
