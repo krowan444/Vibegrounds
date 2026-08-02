@@ -160,6 +160,15 @@ export default function SiteHeader({ compact = false }) {
           </Link>
         ))}
         {!compact && <Link to="/rules">Rules</Link>}
+        {/* Always one obvious way to post, from any page. Signed-out users
+            get sent to signup rather than a wall. */}
+        <Link
+          to={user ? '/upload' : '/auth?mode=signup'}
+          className="vg-nav-submit"
+          title={user ? 'Post a creation — 10 coins' : 'Join and get 50 free coins'}
+        >
+          + Submit
+        </Link>
       </nav>
     </header>
   );

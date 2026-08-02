@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { scoreColor } from '../lib/format';
+import { thumbFor, onThumbError, LOGO_FALLBACK } from '../lib/thumbnail';
 
 /**
  * The sidebar charts — the thing that made the old Portal addictive.
@@ -29,10 +30,11 @@ export default function ChartRail({ title, icon, rows = [], to, emptyText = 'Not
               </span>
               <span className="vg-rail-thumb">
                 <img
-                  src={c.thumbnail_url || '/images/logo.png'}
+                  src={thumbFor(c, 120)}
                   alt=""
                   loading="lazy"
-                  className={c.thumbnail_url ? undefined : 'vg-thumb-placeholder'}
+                  onError={onThumbError}
+                  className={thumbFor(c, 120) === LOGO_FALLBACK ? 'vg-thumb-placeholder' : undefined}
                 />
               </span>
               <span className="vg-rail-body">

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { compactNumber, timeAgo, scoreColor } from '../lib/format';
+import { thumbFor, onThumbError, LOGO_FALLBACK } from '../lib/thumbnail';
 
 /**
  * The single unit of the Portal. Used on Home, Portal, Category and
@@ -11,17 +12,18 @@ export default function CreationCard({ creation: c, variant = 'grid', rank }) {
   const score = Number(c.score) || 0;
   const icon = c.category_icon || '✨';
 
-  // No screenshot yet? Fall back to the VibeGrounds mark rather than a big
-  // category emoji — it reads as a placeholder instead of looking broken.
-  const thumb = c.thumbnail_url ? (
-    <img src={c.thumbnail_url} alt="" loading="lazy" />
-  ) : (
+  // Live screenshot of whatever they submitted, falling back to the
+  // VibeGrounds mark if the page can't be shot.
+  const src = thumbFor(c, 400);
+  const isPlaceholder = src === LOGO_FALLBACK;
+  const thumb = (
     <img
-      src="/images/logo.png"
+      src={src}
       alt=""
       loading="lazy"
-      className="vg-thumb-placeholder"
-      aria-hidden="true"
+      onError={onThumbError}
+      className={isPlaceholder ? 'vg-thumb-placeholder' : undefined}
+      aria-hidden={isPlaceholder || undefined}
     />
   );
 
