@@ -1961,9 +1961,9 @@ body { background: var(--bg-darkest); overflow-y: auto; }
 
 .site-nav a {
   position: relative;
-  font-size: 8px !important;
-  padding: 6px 9px !important;
-  letter-spacing: .4px;
+  font-size: 9px !important;
+  padding: 7px 11px !important;
+  letter-spacing: .5px;
   border-right: 1px solid rgba(0,0,0,.4);
   transition: background .15s, color .15s, transform .1s;
 }
@@ -2050,7 +2050,7 @@ body { background: var(--bg-darkest); overflow-y: auto; }
 }
 
 @media (max-width: 700px) {
-  .site-nav a { font-size: 7px !important; padding: 6px 7px !important; }
+  .site-nav a { font-size: 8px !important; padding: 6px 8px !important; }
   .site-nav a.vg-nav-submit { margin-left: 0; }
 }
 
