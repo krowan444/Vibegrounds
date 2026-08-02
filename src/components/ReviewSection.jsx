@@ -193,6 +193,19 @@ export default function ReviewSection({ creationId }) {
                 <span style={{ fontFamily: 'var(--font-retro)', fontSize: '14px', color: 'var(--text-dim)' }}>
                   {body.length}/1000
                 </span>
+                {/* The 80-character threshold is enforced server-side by the
+                    reward_review trigger, so this bar mirrors it rather than
+                    inventing its own rule. */}
+                <span
+                  style={{
+                    fontFamily: 'var(--font-retro)', fontSize: '14px',
+                    color: body.trim().length >= 80 ? '#66bb6a' : 'var(--text-dim)',
+                  }}
+                >
+                  {body.trim().length >= 80
+                    ? '🪙 earns 3 coins'
+                    : `🪙 ${80 - body.trim().length} more characters to earn 3 coins`}
+                </span>
               </div>
             </form>
           )}
