@@ -35,21 +35,23 @@ export default function AdvertisePage() {
             color: 'var(--text-primary)', lineHeight: 1.55,
           }}>
             <p>
-              Made a tool, a game, or something people who build things would actually
-              want? Put it in front of them.
+              <strong style={{ color: 'var(--orange)' }}>Straight with you:</strong> it&#39;s
+              far too early to sell you anything. VibeGrounds launched days ago and
+              the audience is tiny. Anyone quoting you a rate at this size is
+              selling you nothing.
             </p>
             <p style={{ marginTop: '8px', color: 'var(--text-secondary)' }}>
-              VibeGrounds is read by people who make software for fun — the sort who try
-              things, share them, and tell other people. Small audience, unusually
-              high signal.
+              This page exists so you know the slots are here, and so you can put your
+              name down early. When there&#39;s an audience worth advertising to,
+              the people who asked first get told first — and get it cheap.
             </p>
           </div>
         </div>
 
         <div className="vg-section" style={{ marginTop: '16px' }}>
           <div className="vg-section-head">
-            <h2>WHERE YOUR AD GOES</h2>
-            <span className="vg-sub">Three slots, clearly labelled</span>
+            <h2>WHERE YOUR AD WILL GO</h2>
+            <span className="vg-sub">Three slots, clearly labelled — not yet for sale</span>
           </div>
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
             {SLOTS.map((s) => (
@@ -82,8 +84,10 @@ export default function AdvertisePage() {
             color: 'var(--text-secondary)', lineHeight: 1.55,
           }}>
             <p>
-              We&#39;re early, so pricing is a conversation rather than a rate card —
-              tell us what you&#39;ve built and what you want out of it.
+              No rate card, because there shouldn&#39;t be one yet. Tell us what
+              you&#39;ve built and we&#39;ll be honest about whether we can do anything
+              useful for you — including saying &quot;not yet, come back in a few
+              months&quot;.
             </p>
             <p style={{ marginTop: '10px' }}>
               Email{' '}

@@ -5,11 +5,18 @@ import SiteHeader from '../components/SiteHeader';
 import AdSlot from '../components/AdSlot';
 import Notice from '../components/Notice';
 import SubmitCta from '../components/SubmitCta';
-import { scoreColor, timeAgo, compactNumber } from '../lib/format';
+import { timeAgo, compactNumber, scoreLabel, scoreLabelColor, isUnrated } from '../lib/format';
 import { thumbFor, onThumbError, LOGO_FALLBACK } from '../lib/thumbnail';
 
-/** A long, scrollable ranked column — the heart of the Portal. */
-function ChartColumn({ title, icon, rows, to, empty, showAge }) {
+/**
+ * A long, scrollable column — the heart of the Portal.
+ *
+ * `ranked` matters: a medal means "this beat the others". On a list sorted by
+ * recency it means nothing at all, and handing 🥇 to whoever posted last
+ * cheapens the medals on the charts that are actually earned. Recency columns
+ * get plain numbers.
+ */
+function ChartColumn({ title, icon, rows, to, empty, showAge, ranked = true }) {
   return (
     <div className="vg-rail-box vg-rail-scroll">
       <div className="vg-rail-head" style={{ position: 'sticky', top: 0, zIndex: 2 }}>
@@ -22,7 +29,9 @@ function ChartColumn({ title, icon, rows, to, empty, showAge }) {
       ) : (
         rows.map((c, i) => {
           const rank = c.rank ?? i + 1;
-          const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : null;
+          const medal = ranked && rank <= 3
+            ? (rank === 1 ? '🥇' : rank === 2 ? '🥈' : '🥉')
+            : null;
           return (
             <Link key={c.id} to={`/creation/${c.id}`} className="vg-rail-row">
               <span className={`vg-rail-rank ${medal ? 'medal' : ''}`}>{medal || rank}</span>
@@ -42,8 +51,12 @@ function ChartColumn({ title, icon, rows, to, empty, showAge }) {
                   {showAge && ` · ${timeAgo(c.created_at)}`}
                 </span>
               </span>
-              <span className="vg-rail-score" style={{ color: scoreColor(c.score) }}>
-                {Number(c.score).toFixed(2)}
+              <span
+                className="vg-rail-score"
+                style={{ color: scoreLabelColor(c) }}
+                title={isUnrated(c) ? 'Not rated yet — be the first' : undefined}
+              >
+                {scoreLabel(c)}
               </span>
             </Link>
           );
@@ -115,6 +128,12 @@ export default function PortalPage() {
 
   const activeCat = categories.find((c) => c.slug === category);
 
+  // Below this many submissions, three ranked columns would all show the same
+  // rows and the site reads as empty rather than new. Ten is roughly where a
+  // scrollable column stops looking like a stub.
+  const SPARSE_THRESHOLD = 10;
+  const sparse = newest.length < SPARSE_THRESHOLD;
+
   return (
     <>
       <SiteHeader />
@@ -179,35 +198,59 @@ export default function PortalPage() {
         {loading ? (
           <div className="vg-loading">⏳ Loading the Portal...</div>
         ) : (
-          <div className="vg-3col vg-3col-even">
-            {/* LEFT — newest */}
-            <div className="vg-col">
-              <ChartColumn
-                title="Newest 50" icon="🆕" rows={newest} showAge
-                to="/charts?chart=daily"
-                empty="Nothing posted yet. Be the first."
-              />
-            </div>
+          /*
+           * Three columns of the same handful of submissions reads as broken,
+           * not busy — the reader clocks instantly that all three charts are
+           * the same two rows. Below the threshold we show one honest column;
+           * the three-column wall arrives when there is enough to fill it.
+           */
+          <div className={sparse ? 'vg-1col' : 'vg-3col vg-3col-even'}>
+            {sparse ? (
+              <div className="vg-col">
+                <ChartColumn
+                  title="Everything, newest first" icon="🆕" rows={newest} showAge
+                  ranked={false}
+                  empty="Nothing posted yet. Be the first."
+                />
+                <div className="vg-rail-note">
+                  The daily, monthly and all-time charts open up once there are a
+                  few more submissions to rank. <Link to="/upload">Add yours →</Link>
+                </div>
+                <AdSlot index={0} />
+              </div>
+            ) : (
+              <>
+                {/* LEFT — newest. Recency, so no medals. */}
+                <div className="vg-col">
+                  <ChartColumn
+                    title="Newest 50" icon="🆕" rows={newest} showAge
+                    ranked={false}
+                    to="/charts?chart=daily"
+                    empty="Nothing posted yet. Be the first."
+                  />
+                </div>
 
-            {/* MIDDLE — this month */}
-            <div className="vg-col">
-              <ChartColumn
-                title="Top 100 This Month" icon="🗓️" rows={monthly}
-                to="/charts?chart=monthly"
-                empty="Nothing charted this month yet."
-              />
-              <AdSlot index={0} />
-            </div>
+                {/* MIDDLE — this month */}
+                <div className="vg-col">
+                  <ChartColumn
+                    title="Top 100 This Month" icon="🗓️" rows={monthly}
+                    to="/charts?chart=monthly"
+                    empty="Nothing charted this month yet."
+                  />
+                  <AdSlot index={0} />
+                </div>
 
-            {/* RIGHT — all time */}
-            <div className="vg-col">
-              <ChartColumn
-                title="All-Time Top 100" icon="👑" rows={alltime}
-                to="/charts?chart=alltime"
-                empty="Nothing charted yet."
-              />
-              <AdSlot index={1} />
-            </div>
+                {/* RIGHT — all time */}
+                <div className="vg-col">
+                  <ChartColumn
+                    title="All-Time Top 100" icon="👑" rows={alltime}
+                    to="/charts?chart=alltime"
+                    empty="Nothing charted yet."
+                  />
+                  <AdSlot index={1} />
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>

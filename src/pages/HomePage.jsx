@@ -9,7 +9,7 @@ import AdSlot from '../components/AdSlot';
 import JokeAd from '../components/JokeAd';
 import DailyCheckIn from '../components/DailyCheckIn';
 import Notice from '../components/Notice';
-import { compactNumber, timeAgo } from '../lib/format';
+import { compactNumber, timeAgo, scoreLabel, scoreLabelColor } from '../lib/format';
 import { thumbFor, onThumbError, LOGO_FALLBACK } from '../lib/thumbnail';
 
 export default function HomePage() {
@@ -265,8 +265,8 @@ export default function HomePage() {
                       <span className="vg-rail-title">{c.title}</span>
                       <span className="vg-rail-by">by {c.creator_username}</span>
                     </span>
-                    <span className="vg-rail-score" style={{ color: 'var(--yellow)' }}>
-                      {Number(c.score).toFixed(2)}
+                    <span className="vg-rail-score" style={{ color: scoreLabelColor(c) }}>
+                      {scoreLabel(c)}
                     </span>
                   </Link>
                 ))

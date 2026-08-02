@@ -5,6 +5,7 @@ import SiteHeader from '../components/SiteHeader';
 import Notice from '../components/Notice';
 import SubmitCta from '../components/SubmitCta';
 import { thumbFor, onThumbError, LOGO_FALLBACK } from '../lib/thumbnail';
+import { scoreLabel, scoreLabelColor, isUnrated } from '../lib/format';
 
 const CHARTS = [
   { id: 'daily',   view: 'chart_daily',   label: 'Top Daily',    icon: '☀️', blurb: 'Best of the last 24 hours.' },
@@ -74,12 +75,12 @@ function RankRow({ row }) {
       <div style={{ textAlign: 'right', flexShrink: 0 }}>
         <div style={{
           fontFamily: 'var(--font-pixel)', fontSize: '14px',
-          color: scoreColor(Number(row.score)),
+          color: scoreLabelColor(row),
         }}>
-          {Number(row.score).toFixed(2)}
+          {scoreLabel(row)}
         </div>
         <div style={{ fontFamily: 'var(--font-retro)', fontSize: '14px', color: 'var(--text-dim)' }}>
-          {row.vote_count} vote{row.vote_count === 1 ? '' : 's'}
+          {isUnrated(row) ? 'no votes yet' : `${row.vote_count} vote${row.vote_count === 1 ? '' : 's'}`}
         </div>
       </div>
     </div>
