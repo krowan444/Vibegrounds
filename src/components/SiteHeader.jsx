@@ -13,6 +13,7 @@ const NAV = [
   { to: '/category/art',       label: 'Art',   wide: true },
   { to: '/category/audio',     label: 'Audio', wide: true },
   { to: '/charts',             label: 'Top 100' },
+  { to: '/hall-of-fame',       label: 'Hall of Fame', wide: true },
   { to: '/forum',              label: 'Forum' },
 ];
 
@@ -52,7 +53,10 @@ export default function SiteHeader({ compact = false }) {
           />
           <div>
             <div className="site-logo-text" style={compact ? { fontSize: '10px' } : undefined}>VIBEGROUNDS</div>
-            {!compact && <div className="site-logo-tagline">THE FUTURE OF AI CREATIVITY, TODAY!</div>}
+            {/* The old line ("the future of AI creativity, today!") described a
+                category, not a reason to be here. This one states the actual
+                promise: post it, and strangers will score it. */}
+            {!compact && <div className="site-logo-tagline">POST IT. GET SCORED. CLIMB THE CHARTS.</div>}
           </div>
         </Link>
 

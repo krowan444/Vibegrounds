@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { scoreColor } from '../lib/format';
+import { scoreLabel, scoreLabelColor, isUnrated } from '../lib/format';
 import { thumbFor, onThumbError, LOGO_FALLBACK } from '../lib/thumbnail';
 
 /**
@@ -41,8 +41,12 @@ export default function ChartRail({ title, icon, rows = [], to, emptyText = 'Not
                 <span className="vg-rail-title">{c.title}</span>
                 <span className="vg-rail-by">by {c.creator_username}</span>
               </span>
-              <span className="vg-rail-score" style={{ color: scoreColor(c.score) }}>
-                {Number(c.score).toFixed(2)}
+              <span
+                className="vg-rail-score"
+                style={{ color: scoreLabelColor(c) }}
+                title={isUnrated(c) ? 'Not rated yet — be the first' : undefined}
+              >
+                {scoreLabel(c)}
               </span>
             </Link>
           );

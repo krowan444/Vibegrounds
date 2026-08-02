@@ -73,11 +73,13 @@ export default function VoteWidget({ creation, onVoted }) {
 
   return (
     <div className="vote-widget">
-      <div className="vote-score" style={{ color: scoreColor(score) }}>
-        {score.toFixed(2)}
+      <div className="vote-score" style={{ color: count === 0 ? '#6f6f6f' : scoreColor(score) }}>
+        {count === 0 ? '–' : score.toFixed(2)}
       </div>
       <div className="vote-score-meta">
-        out of 5 · {count} vote{count === 1 ? '' : 's'}
+        {count === 0
+          ? 'Not rated yet — cast the first vote'
+          : `out of 5 · ${count} vote${count === 1 ? '' : 's'}`}
       </div>
 
       {isOwn ? (

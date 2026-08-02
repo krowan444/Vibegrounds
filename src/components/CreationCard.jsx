@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { compactNumber, timeAgo, scoreColor } from '../lib/format';
+import { compactNumber, timeAgo, scoreLabel, scoreLabelColor, isUnrated } from '../lib/format';
 import { thumbFor, onThumbError, LOGO_FALLBACK } from '../lib/thumbnail';
 
 /**
@@ -9,7 +9,7 @@ import { thumbFor, onThumbError, LOGO_FALLBACK } from '../lib/thumbnail';
  * variant: "grid" (default) | "row" | "rank"
  */
 export default function CreationCard({ creation: c, variant = 'grid', rank }) {
-  const score = Number(c.score) || 0;
+  const unrated = isUnrated(c);
   const icon = c.category_icon || '✨';
 
   // Live screenshot of whatever they submitted, falling back to the
@@ -43,8 +43,8 @@ export default function CreationCard({ creation: c, variant = 'grid', rank }) {
           </div>
         </div>
         <div className="vg-row-score">
-          <div style={{ color: scoreColor(score) }}>{score.toFixed(2)}</div>
-          <span>{c.vote_count} vote{c.vote_count === 1 ? '' : 's'}</span>
+          <div style={{ color: scoreLabelColor(c) }}>{scoreLabel(c)}</div>
+          <span>{unrated ? 'no votes yet' : `${c.vote_count} vote${c.vote_count === 1 ? '' : 's'}`}</span>
         </div>
       </Link>
     );
@@ -67,8 +67,12 @@ export default function CreationCard({ creation: c, variant = 'grid', rank }) {
       </div>
 
       <div className="vg-card-foot">
-        <span className="vg-card-score" style={{ color: scoreColor(score) }}>
-          ★ {score.toFixed(2)}
+        <span
+          className="vg-card-score"
+          style={{ color: scoreLabelColor(c) }}
+          title={unrated ? 'Not rated yet — be the first' : undefined}
+        >
+          {unrated ? 'UNRATED' : `★ ${scoreLabel(c)}`}
         </span>
         <span className="vg-card-stats">
           👁 {compactNumber(c.view_count)} · 💬 {compactNumber(c.review_count)}
