@@ -40,6 +40,28 @@ export function scoreColor(score) {
   return '#8d8d8d';
 }
 
+/**
+ * A submission nobody has voted on has no score — it has an absence of one.
+ * Printing "0.00" next to it reads as "everyone hated this", which is the
+ * opposite of true and actively discourages the first vote. Anything unvoted
+ * gets a dash and the muted colour instead.
+ */
+export function isUnrated(creation) {
+  return !creation || Number(creation.vote_count) === 0;
+}
+
+/** The number to print in a score slot, or "–" when there is nothing to print. */
+export function scoreLabel(creation) {
+  if (isUnrated(creation)) return '–';
+  return Number(creation.score).toFixed(2);
+}
+
+/** Colour for that slot — unrated is deliberately quiet, not alarming. */
+export function scoreLabelColor(creation) {
+  if (isUnrated(creation)) return '#6f6f6f';
+  return scoreColor(creation.score);
+}
+
 export const TIER_COLORS = {
   common:    '#9e9e9e',
   uncommon:  '#66bb6a',
