@@ -8,6 +8,7 @@ import ChartRail, { CreatorRail } from '../components/ChartRail';
 import AdSlot from '../components/AdSlot';
 import JokeAd from '../components/JokeAd';
 import DailyCheckIn from '../components/DailyCheckIn';
+import RatingQuest from '../components/RatingQuest';
 import Notice from '../components/Notice';
 import { compactNumber, timeAgo, scoreLabel, scoreLabelColor } from '../lib/format';
 import { thumbFor, onThumbError, LOGO_FALLBACK } from '../lib/thumbnail';
@@ -90,6 +91,7 @@ export default function HomePage() {
       <div className="vg-page">
         <Notice tone="error">{error}</Notice>
         <DailyCheckIn />
+        <RatingQuest />
 
         {/* live activity strip */}
         {newest && (
