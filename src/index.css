@@ -2109,6 +2109,64 @@ body { background: var(--bg-darkest); overflow-y: auto; }
   .vg-hof-thumb { display: none; }
 }
 
+/* ============================================================
+   DAILY RATING QUEST — the habit loop that works at any size.
+   ============================================================ */
+.vg-quest {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 14px; flex-wrap: wrap;
+  border: 2px solid var(--border-panel);
+  border-left: 4px solid #4fc3f7;
+  background: var(--bg-panel);
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+.vg-quest-done { border-left-color: #2f7d32; }
+
+.vg-quest-text {
+  flex: 1; min-width: 240px;
+  font-family: var(--font-retro);
+  font-size: 18px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.vg-quest-bar {
+  height: 10px;
+  background: var(--bg-dark);
+  border: 1px solid var(--border-dark);
+  margin-top: 6px;
+  overflow: hidden;
+}
+.vg-quest-bar span {
+  display: block; height: 100%;
+  background: linear-gradient(90deg, #4fc3f7, #2f8fc4);
+  transition: width .3s ease;
+}
+.vg-quest-count {
+  font-family: var(--font-pixel);
+  font-size: 8px;
+  color: var(--text-dim);
+  margin-top: 5px;
+  letter-spacing: .5px;
+}
+
+.vg-quest-btn {
+  font-family: var(--font-pixel); font-size: 9px; letter-spacing: 1px;
+  padding: 9px 15px; white-space: nowrap; cursor: pointer;
+  text-decoration: none; color: #04222f;
+  background: linear-gradient(180deg, #7fd8ff, #4fc3f7);
+  border: 1px solid #2f8fc4;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.35);
+}
+.vg-quest-btn:hover { filter: brightness(1.12); color: #04222f; text-decoration: none; }
+.vg-quest-btn:disabled { opacity: .55; cursor: default; }
+.vg-quest-btn-quiet {
+  background: transparent; color: var(--text-dim);
+  border: 1px solid var(--border-dark); box-shadow: none;
+}
+.vg-quest-btn-quiet:hover { color: var(--orange); }
+
 /* Single-column Portal, used while there is too little to fill three. */
 .vg-1col {
   display: block;
