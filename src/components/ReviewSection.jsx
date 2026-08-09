@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { supabase, retryOnAbort } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import ReportButton from './ReportButton';
 import Notice from './Notice';
@@ -27,10 +27,14 @@ export default function ReviewSection({ creationId }) {
   const [editBody, setEditBody] = useState('');
 
   const load = useCallback(async () => {
+    // Both wrapped: an unwrapped query here could hang forever, and every
+    // action below refreshes through this function. That is what left the
+    // review button stuck on "POSTING..." after the review had already saved.
     const [r, re] = await Promise.all([
-      supabase.from('reviews_public').select('*')
-        .eq('creation_id', creationId).order('created_at', { ascending: false }),
-      supabase.from('reactions').select('reaction_type, user_id').eq('creation_id', creationId),
+      retryOnAbort(() => supabase.from('reviews_public').select('*')
+        .eq('creation_id', creationId).order('created_at', { ascending: false })),
+      retryOnAbort(() => supabase.from('reactions').select('reaction_type, user_id')
+        .eq('creation_id', creationId)),
     ]);
 
     setReviews(r.data || []);
@@ -75,17 +79,19 @@ export default function ReviewSection({ creationId }) {
     setBusy(true);
     setError('');
     try {
-      const { error: err } = await supabase.from('reviews').insert({
+      const { error: err } = await retryOnAbort(() => supabase.from('reviews').insert({
         creation_id: creationId,
         author_id: user.id,
         body: body.trim(),
-      });
+      }));
       if (err) throw new Error(err.message);
       setBody('');
-      await load();
+      // Release the button first. Refreshing the list is a nicety — blocking
+      // the button on it is what made a successful post look like a failure.
+      setBusy(false);
+      load().catch(() => {});
     } catch (e2) {
       setError(e2.message);
-    } finally {
       setBusy(false);
     }
   };
@@ -93,23 +99,27 @@ export default function ReviewSection({ creationId }) {
   const saveEdit = async (id) => {
     setBusy(true);
     try {
-      const { error: err } = await supabase.from('reviews')
+      const { error: err } = await retryOnAbort(() => supabase.from('reviews')
         .update({ body: editBody.trim(), updated_at: new Date().toISOString() })
-        .eq('id', id).eq('author_id', user.id);
+        .eq('id', id).eq('author_id', user.id));
       if (err) throw new Error(err.message);
       setEditing(null);
-      await load();
+      setBusy(false);
+      load().catch(() => {});
     } catch (e) {
       setError(e.message);
-    } finally {
       setBusy(false);
     }
   };
 
   const remove = async (id) => {
     if (!window.confirm('Delete this comment?')) return;
-    await supabase.from('reviews').delete().eq('id', id);
-    await load();
+    try {
+      await retryOnAbort(() => supabase.from('reviews').delete().eq('id', id));
+    } catch (e) {
+      setError(e.message || 'Could not delete that.');
+    }
+    load().catch(() => {});
   };
 
   return (
