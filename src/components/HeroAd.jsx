@@ -1,47 +1,85 @@
 import { Link } from 'react-router-dom';
+import { thumbFor, onThumbError, LOGO_FALLBACK } from '../lib/thumbnail';
+import { scoreLabel, scoreLabelColor, isUnrated } from '../lib/format';
 
 /**
- * The front-page banner — the cheerful 2004 prize advert, not the scary one.
+ * The front page's biggest slot.
  *
- * The other great banner format of that era wasn't the fake virus warning, it
- * was the sparkling gold "CONGRATULATIONS, YOU'RE THE 1,000,000th VISITOR!"
- * one. Warm, ridiculous, and everyone clicked it once.
+ * This used to hold a joke advert, and visitors told us the page looked scammy
+ * — fair, since a fake ad in the most prominent position is the first thing a
+ * stranger judges the site by. Now it showcases whatever is marked featured:
+ * real work, by a real member, that they can click straight into.
  *
- * The gag here is a compliment rather than a threat: your thing compiled, and
- * that's genuinely worth a small celebration. It flatters the audience instead
- * of poking them, which suits a site trying to get people to post.
+ * That is a better advert for VibeGrounds than any advert could be. The "this
+ * space is available" line sits underneath, small and honest, rather than the
+ * slot pretending to be sold.
  *
- * All CSS, so it costs nothing to load and stays sharp at any size.
+ * If nothing is featured yet it degrades to a plain, clearly-labelled house
+ * card instead of a fake one.
  */
-export default function HeroAd() {
+export default function HeroAd({ creation }) {
+  if (!creation) {
+    return (
+      <div className="vg-hero-ad">
+        <div className="vg-featured-empty">
+          <div className="vg-featured-kicker">FEATURED SLOT</div>
+          <h2>Nothing featured yet</h2>
+          <p>
+            Staff picks land here — the front page&#39;s biggest slot, given to
+            something worth looking at rather than sold to the highest bidder.
+          </p>
+          <Link to="/portal" className="vg-featured-btn">BROWSE THE PORTAL</Link>
+        </div>
+      </div>
+    );
+  }
+
+  const src = thumbFor(creation, 900);
+  const placeholder = src === LOGO_FALLBACK;
+
   return (
     <div className="vg-hero-ad">
-      <div className="vg-ad-label">ADVERTISEMENT</div>
-
-      <Link to="/advertise" className="vg-prize" aria-label="Joke advert — click to learn about advertising here">
-        <span className="vg-prize-corner vg-prize-tl">✦</span>
-        <span className="vg-prize-corner vg-prize-tr">✦</span>
-        <span className="vg-prize-corner vg-prize-bl">✦</span>
-        <span className="vg-prize-corner vg-prize-br">✦</span>
-
-        <div className="vg-prize-top blink">★ ★ ★ CONGRATULATIONS ★ ★ ★</div>
-
-        <div className="vg-prize-headline">IT COMPILED</div>
-
-        <div className="vg-prize-sub">
-          You are the <b>1,000,000th</b> person today to run it and quietly hope.
+      <div className="vg-featured">
+        <div className="vg-featured-kicker">
+          <span className="vg-featured-star">★</span> STAFF PICK
         </div>
 
-        <div className="vg-prize-btn">🏆 CLAIM YOUR PRIZE 🏆</div>
+        <Link to={`/creation/${creation.id}`} className="vg-featured-shot">
+          <img
+            src={src}
+            alt={creation.title}
+            onError={onThumbError}
+            className={placeholder ? 'vg-thumb-placeholder' : undefined}
+          />
+        </Link>
 
-        <div className="vg-prize-small">
-          The prize is the feeling. The feeling is the prize. No prize will be posted.
+        <div className="vg-featured-body">
+          <Link to={`/creation/${creation.id}`} className="vg-featured-title">
+            {creation.title}
+          </Link>
+          <div className="vg-featured-by">
+            by <strong>{creation.creator_username}</strong>
+            {creation.category_name && <> · {creation.category_icon} {creation.category_name}</>}
+          </div>
+
+          {creation.description && (
+            <p className="vg-featured-desc">{creation.description}</p>
+          )}
+
+          <div className="vg-featured-foot">
+            <span className="vg-featured-score" style={{ color: scoreLabelColor(creation) }}>
+              {isUnrated(creation) ? 'UNRATED' : `★ ${scoreLabel(creation)}`}
+            </span>
+            <Link to={`/creation/${creation.id}`} className="vg-featured-btn">
+              {isUnrated(creation) ? 'BE THE FIRST TO RATE IT' : 'HAVE A LOOK'}
+            </Link>
+          </div>
         </div>
-      </Link>
+      </div>
 
       <a href="/advertise" className="vg-ad-pitch">
-        📣 This is the slot every visitor sees first.{' '}
-        <strong>Put something real here →</strong>
+        This slot showcases a staff pick, not a paid ad.{' '}
+        <strong>Real ad space is available →</strong>
       </a>
     </div>
   );
