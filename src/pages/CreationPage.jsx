@@ -6,6 +6,7 @@ import SiteHeader from '../components/SiteHeader';
 import VoteWidget from '../components/VoteWidget';
 import ReviewSection from '../components/ReviewSection';
 import ReportButton from '../components/ReportButton';
+import ShareBar from '../components/ShareBar';
 import CreationCard from '../components/CreationCard';
 import Notice from '../components/Notice';
 import { compactNumber, shortDate, hostOf } from '../lib/format';
@@ -264,6 +265,8 @@ export default function CreationPage() {
               creation={c}
               onVoted={(d) => setC((prev) => ({ ...prev, score: d.score, vote_count: d.vote_count }))}
             />
+
+            <ShareBar creation={c} />
 
             {/* Author card */}
             {author && (
