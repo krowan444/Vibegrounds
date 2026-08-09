@@ -66,7 +66,17 @@ export function withTimeout(promise, ms, label = 'request') {
  * that callers using `.data || []` degrade to an empty section instead of
  * taking the whole page down.
  */
-export async function retryOnAbort(run, attempts = 2, timeoutMs = 12000) {
+/*
+ * 12s proved too tight in practice. A single query against this project
+ * answers in well under a second, but the home page fires nine at once and a
+ * cold free-tier instance can take far longer to serve that burst — which
+ * showed up as "Could not load everything" with empty charts on first load.
+ *
+ * 22s is long enough to ride out a cold start and short enough that a genuinely
+ * dead request still gives up rather than hanging forever, which was the
+ * original bug.
+ */
+export async function retryOnAbort(run, attempts = 2, timeoutMs = 22000) {
   let last;
   for (let i = 0; i < attempts; i++) {
     try {
