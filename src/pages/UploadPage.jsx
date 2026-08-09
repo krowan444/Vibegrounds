@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../lib/supabase';
+import { supabase, retryOnAbort, withTimeout } from '../lib/supabase';
 import SiteHeader from '../components/SiteHeader';
 import Notice from '../components/Notice';
+import ShareBar from '../components/ShareBar';
 
 /** Normalise a URL: add https:// when the user leaves it off. */
 export function normalizeUrl(raw) {
@@ -43,15 +44,16 @@ const BLANK = {
   project_url: '', thumbnail_url: '', tags: '', is_nsfw: false,
 };
 
+
 export default function UploadPage() {
   const { user, profile, coins, emailVerified, canPost, refreshProfile } = useAuth();
-  const navigate = useNavigate();
 
   const [categories, setCategories] = useState([]);
   const [cost, setCost] = useState(10);
   const [form, setForm] = useState(BLANK);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [done, setDone] = useState(null);
 
   useEffect(() => {
     (async () => {
@@ -83,6 +85,64 @@ export default function UploadPage() {
       </div>
     </>
   );
+
+  /*
+   * The old flow redirected straight to the new creation page. That works when
+   * everything is fast, but gives no moment of "yes, that worked" — and if the
+   * redirect is slow, the user is left wondering whether anything happened at
+   * all. An explicit confirmation costs one click and removes the doubt.
+   */
+  if (done) {
+    return (
+      <>
+        <SiteHeader compact />
+        <div className="upload-page">
+          <div className="vg-posted">
+            <div className="vg-posted-tick">✅</div>
+            <h2>That&#39;s live on the Portal</h2>
+            <p className="vg-posted-title">{done.title || form.title}</p>
+            <p className="vg-posted-sub">
+              It&#39;s published and can be rated right now — no approval queue, nothing
+              pending. {cost} coins have come off your balance.
+            </p>
+            <p className="vg-posted-note">
+              Your thumbnail is a live screenshot of your link, so it may show the
+              VibeGrounds logo for a few minutes until it&#39;s generated. That&#39;s normal.
+            </p>
+
+            {/* The best moment anyone will ever have for sharing this is right
+                now, seconds after posting. Not buried on a page they might
+                revisit later. */}
+            {done.id && (
+              <div className="vg-posted-share">
+                <div className="vg-posted-share-head">
+                  Tell someone — nobody can rate it if nobody sees it
+                </div>
+                <ShareBar creation={done} compact />
+              </div>
+            )}
+            <div className="vg-posted-actions">
+              {done.id && (
+                <Link to={`/creation/${done.id}`} className="vg-posted-btn">
+                  VIEW YOUR SUBMISSION
+                </Link>
+              )}
+              <Link to="/portal" className="vg-posted-btn vg-posted-btn-quiet">
+                BACK TO THE PORTAL
+              </Link>
+              <button
+                type="button"
+                className="vg-posted-btn vg-posted-btn-quiet"
+                onClick={() => { setDone(null); setForm(BLANK); }}
+              >
+                POST ANOTHER
+              </button>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   if (!user) {
     return gate('🔒 Sign In Required', (
@@ -142,23 +202,44 @@ export default function UploadPage() {
       const tags = form.tags
         .split(',').map((t) => t.trim().toLowerCase()).filter(Boolean).slice(0, 8);
 
-      const { data, error: rpcError } = await supabase.rpc('submit_creation', {
-        p_title: form.title.trim(),
-        p_description: form.description.trim(),
-        p_category: form.category,
-        p_project_url: url,
-        p_thumbnail: normalizeUrl(form.thumbnail_url),
-        p_tags: tags,
-        p_is_nsfw: form.is_nsfw,
-      });
+      // A user reported the button spinning forever. The submission itself is
+      // fine — it's the network call that can stall on a broken auth lock. So:
+      // retry once on that specific failure, and hard-stop after 25s rather
+      // than leaving someone staring at "SUBMITTING..." with no idea what
+      // happened. An honest error beats an infinite spinner every time.
+      const { data, error: rpcError } = await withTimeout(
+        retryOnAbort(() => supabase.rpc('submit_creation', {
+          p_title: form.title.trim(),
+          p_description: form.description.trim(),
+          p_category: form.category,
+          p_project_url: url,
+          p_thumbnail: normalizeUrl(form.thumbnail_url),
+          p_tags: tags,
+          p_is_nsfw: form.is_nsfw,
+        })),
+        25000,
+      );
 
-      if (rpcError) throw new Error(translate(rpcError.message));
+      if (rpcError) {
+        // Keep the raw message in the console so a bug report is diagnosable.
+        console.error('submit_creation failed:', rpcError);
+        throw new Error(translate(rpcError.message));
+      }
 
-      await refreshProfile();
       const created = Array.isArray(data) ? data[0] : data;
-      navigate(created?.id ? `/creation/${created.id}` : '/portal');
+      setDone(created || {});
+
+      // Deliberately NOT awaited. Refreshing the wallet is a nicety; blocking
+      // the confirmation screen on it was how the original hang happened.
+      Promise.resolve(refreshProfile()).catch(() => {});
     } catch (err) {
-      setError(err.message || 'Something went wrong.');
+      console.error('submission error:', err);
+      setError(
+        err?.timedOut
+          ? 'That took too long to respond. Your submission may still have gone through — '
+            + 'check your profile before trying again, so you are not charged twice.'
+          : (err.message || 'Something went wrong. Nothing was charged.'),
+      );
     } finally {
       setLoading(false);
     }
