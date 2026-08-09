@@ -10,6 +10,7 @@ import CategoryPage from './pages/CategoryPage';
 import PortalPage from './pages/PortalPage';
 import ChartsPage from './pages/ChartsPage';
 import HallOfFamePage from './pages/HallOfFamePage';
+import SiteFooter from './components/SiteFooter';
 import CoinsPage from './pages/CoinsPage';
 import RulesPage from './pages/RulesPage';
 import AdvertisePage from './pages/AdvertisePage';
@@ -59,6 +60,7 @@ export default function App() {
 
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          <SiteFooter />
         </div>
       </AuthProvider>
     </BrowserRouter>
