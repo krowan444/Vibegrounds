@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { thumbFor, onThumbError, LOGO_FALLBACK } from '../lib/thumbnail';
 import { scoreLabel, scoreLabelColor, isUnrated } from '../lib/format';
@@ -17,8 +18,29 @@ import { scoreLabel, scoreLabelColor, isUnrated } from '../lib/format';
  * If nothing is featured yet it degrades to a plain, clearly-labelled house
  * card instead of a fake one.
  */
-export default function HeroAd({ creation }) {
-  if (!creation) {
+export default function HeroAd({ creation, creations }) {
+  /*
+   * With more than one staff pick the slot becomes a carousel, rotating every
+   * six seconds so each featured creator gets front-page time rather than
+   * whoever happens to be first forever.
+   *
+   * Rotation pauses on hover — nothing more annoying than a banner changing
+   * under your cursor as you go to click it.
+   */
+  const picks = (creations && creations.length ? creations : (creation ? [creation] : []));
+  const [index, setIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
+
+  useEffect(() => {
+    if (picks.length < 2 || paused) return undefined;
+    const t = setInterval(() => setIndex((i) => (i + 1) % picks.length), 6000);
+    return () => clearInterval(t);
+  }, [picks.length, paused]);
+
+  // Guard against the list shrinking under us (a pick being un-featured).
+  const current = picks[index % picks.length];
+
+  if (!current) {
     return (
       <div className="vg-hero-ad">
         <div className="vg-featured-empty">
@@ -34,44 +56,68 @@ export default function HeroAd({ creation }) {
     );
   }
 
-  const src = thumbFor(creation, 900);
+  const src = thumbFor(current, 900);
   const placeholder = src === LOGO_FALLBACK;
 
   return (
     <div className="vg-hero-ad">
-      <div className="vg-featured">
+      <div
+        className="vg-featured"
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+      >
         <div className="vg-featured-kicker">
           <span className="vg-featured-star">★</span> STAFF PICK
+          {picks.length > 1 && (
+            <span className="vg-featured-count">{index + 1} / {picks.length}</span>
+          )}
         </div>
 
-        <Link to={`/creation/${creation.id}`} className="vg-featured-shot">
+        <Link to={`/creation/${current.id}`} className="vg-featured-shot">
           <img
+            key={current.id}
             src={src}
-            alt={creation.title}
+            alt={current.title}
             onError={onThumbError}
-            className={placeholder ? 'vg-thumb-placeholder' : undefined}
+            className={placeholder ? 'vg-thumb-placeholder' : 'vg-featured-fade'}
           />
         </Link>
 
         <div className="vg-featured-body">
-          <Link to={`/creation/${creation.id}`} className="vg-featured-title">
-            {creation.title}
+          <Link to={`/creation/${current.id}`} className="vg-featured-title">
+            {current.title}
           </Link>
           <div className="vg-featured-by">
-            by <strong>{creation.creator_username}</strong>
-            {creation.category_name && <> · {creation.category_icon} {creation.category_name}</>}
+            by <strong>{current.creator_username}</strong>
+            {current.category_name && <> · {current.category_icon} {current.category_name}</>}
           </div>
 
-          {creation.description && (
-            <p className="vg-featured-desc">{creation.description}</p>
+          {current.description && (
+            <p className="vg-featured-desc">{current.description}</p>
+          )}
+
+          {picks.length > 1 && (
+            <div className="vg-featured-dots" role="tablist" aria-label="Featured picks">
+              {picks.map((p, i) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  className={`vg-featured-dot ${i === index ? 'is-on' : ''}`}
+                  onClick={() => setIndex(i)}
+                  aria-label={`Show ${p.title}`}
+                  aria-selected={i === index}
+                  role="tab"
+                />
+              ))}
+            </div>
           )}
 
           <div className="vg-featured-foot">
-            <span className="vg-featured-score" style={{ color: scoreLabelColor(creation) }}>
-              {isUnrated(creation) ? 'UNRATED' : `★ ${scoreLabel(creation)}`}
+            <span className="vg-featured-score" style={{ color: scoreLabelColor(current) }}>
+              {isUnrated(current) ? 'UNRATED' : `★ ${scoreLabel(current)}`}
             </span>
-            <Link to={`/creation/${creation.id}`} className="vg-featured-btn">
-              {isUnrated(creation) ? 'BE THE FIRST TO RATE IT' : 'HAVE A LOOK'}
+            <Link to={`/creation/${current.id}`} className="vg-featured-btn">
+              {isUnrated(current) ? 'BE THE FIRST TO RATE IT' : 'HAVE A LOOK'}
             </Link>
           </div>
         </div>
