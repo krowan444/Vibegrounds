@@ -29,11 +29,24 @@ export default function HeroAd({ creation, creations }) {
    */
   const picks = (creations && creations.length ? creations : (creation ? [creation] : []));
   const [index, setIndex] = useState(0);
+  const [prev, setPrev] = useState(null);
   const [paused, setPaused] = useState(false);
+
+  // Remember the slide we just left so it can sit still underneath while the
+  // new one slides in over the top of it, rather than both moving at once.
+  const goTo = (next) => {
+    setPrev((p) => (next === index ? p : index));
+    setIndex(next);
+  };
 
   useEffect(() => {
     if (picks.length < 2 || paused) return undefined;
-    const t = setInterval(() => setIndex((i) => (i + 1) % picks.length), 6000);
+    const t = setInterval(() => {
+      setIndex((i) => {
+        setPrev(i);
+        return (i + 1) % picks.length;
+      });
+    }, 6000);
     return () => clearInterval(t);
   }, [picks.length, paused]);
 
@@ -92,7 +105,7 @@ export default function HeroAd({ creation, creations }) {
                 onError={onThumbError}
                 className={[
                   'vg-featured-slide',
-                  i === index ? 'is-on' : '',
+                  i === index ? 'is-on' : (i === prev ? 'is-prev' : ''),
                   psrc === LOGO_FALLBACK ? 'vg-thumb-placeholder' : '',
                 ].filter(Boolean).join(' ')}
               />
@@ -120,7 +133,7 @@ export default function HeroAd({ creation, creations }) {
                   key={p.id}
                   type="button"
                   className={`vg-featured-dot ${i === index ? 'is-on' : ''}`}
-                  onClick={() => setIndex(i)}
+                  onClick={() => goTo(i)}
                   aria-label={`Show ${p.title}`}
                   aria-selected={i === index}
                   role="tab"
