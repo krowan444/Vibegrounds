@@ -32,20 +32,51 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 });
 
 /**
- * Retry a Supabase query once if it was aborted rather than genuinely failing.
- * Aborts are transient (tab contention, navigation); real errors are not, and
- * are returned unchanged so callers still see them.
+ * Reject a promise that never settles.
+ *
+ * This is the important one. An aborted request rejects, so the retry below
+ * catches it — but a request stalled behind auth work simply never comes back,
+ * and `await` on it waits forever. That is what left the home page stuck on
+ * "Loading the Portal..." until a manual refresh, and what left the submit
+ * button spinning after a post had already gone through.
+ *
+ * A request that hangs is indistinguishable from one that failed, so we treat
+ * it as one.
  */
-export async function retryOnAbort(run, attempts = 2) {
+export function withTimeout(promise, ms, label = 'request') {
+  let timer;
+  return Promise.race([
+    Promise.resolve(promise).finally(() => clearTimeout(timer)),
+    new Promise((_, reject) => {
+      timer = setTimeout(() => {
+        const e = new Error(`TIMED_OUT: ${label} took longer than ${ms}ms`);
+        e.timedOut = true;
+        reject(e);
+      }, ms);
+    }),
+  ]);
+}
+
+/**
+ * Retry a Supabase query if it was aborted or stalled, rather than genuinely
+ * failing. Aborts and hangs are transient (tab contention, token refresh);
+ * real errors are not, and are returned unchanged so callers still see them.
+ *
+ * Never throws on timeout — it returns the usual `{ data, error }` shape so
+ * that callers using `.data || []` degrade to an empty section instead of
+ * taking the whole page down.
+ */
+export async function retryOnAbort(run, attempts = 2, timeoutMs = 12000) {
   let last;
   for (let i = 0; i < attempts; i++) {
     try {
-      const res = await run();
+      const res = await withTimeout(run(), timeoutMs);
       const msg = res?.error?.message || '';
       if (!/abort|lock broken/i.test(msg)) return res;
       last = res;
     } catch (e) {
-      if (!/abort|lock broken/i.test(e?.message || '')) throw e;
+      const transient = e?.timedOut || /abort|lock broken/i.test(e?.message || '');
+      if (!transient) throw e;
       last = { data: null, error: e };
     }
     await new Promise((r) => setTimeout(r, 250 * (i + 1)));
