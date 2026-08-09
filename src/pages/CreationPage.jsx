@@ -197,8 +197,10 @@ export default function CreationPage() {
                 <span style={{ marginLeft: 'auto', display: 'flex', gap: '6px', alignItems: 'center' }}>
                   {isOwner && (
                     <>
+                      {/* Was pointing at the author's profile, so there was no
+                          way to fix a typo in your own post. */}
                       <Link
-                        to={`/profile/${c.creator_username}`}
+                        to={`/creation/${c.id}/edit`}
                         style={{
                           fontFamily: 'var(--font-retro)', fontSize: '14px',
                           color: 'var(--orange)', border: '1px solid var(--border-dark)',
