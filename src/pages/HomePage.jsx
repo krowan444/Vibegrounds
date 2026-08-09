@@ -146,7 +146,7 @@ export default function HomePage() {
 
           {/* MIDDLE — featured ad, then the sections */}
           <div className="vg-col">
-            <HeroAd creation={d.featured[0]} />
+            <HeroAd creations={d.featured} />
 
             {!user ? (
               <div className="vg-strip" style={{ borderColor: 'var(--orange)', margin: 0 }}>
