@@ -151,18 +151,50 @@ export function AuthProvider({ children }) {
       setLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, s) => {
+    /*
+     * This callback must stay synchronous. It is the whole bug.
+     *
+     * supabase-js runs it *inside* its auth lock, so a Supabase call awaited in
+     * here waits on a lock the callback itself is holding. That deadlocks the
+     * client, and every query issued afterwards hangs forever — which is
+     * exactly what "click any page, it says Loading and never finishes until I
+     * refresh" was. Refreshing appeared to fix it only because a reload builds
+     * a brand new client and throws the jammed one away.
+     *
+     * The event fires on sign-in, token refresh and tab focus, so in normal use
+     * you would hit it within a minute or two of browsing — matching the
+     * report that it happens on essentially every navigation.
+     *
+     * So: set React state synchronously here, and push the profile work onto a
+     * later task, by which point the lock has been released.
+     */
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, s) => {
       if (!active) return;
       setSession(s ?? null);
       setUser(s?.user ?? null);
+
       if (event === 'SIGNED_OUT') {
         bonusAttempted.current = false;
         setProfile(null);
         setBadges([]);
         return;
       }
-      const prof = await loadProfile(s?.user?.id);
-      await claimBonusIfDue(prof, Boolean(s?.user?.email_confirmed_at || s?.user?.confirmed_at));
+
+      const uid = s?.user?.id;
+      const verified = Boolean(s?.user?.email_confirmed_at || s?.user?.confirmed_at);
+
+      setTimeout(async () => {
+        if (!active) return;
+        try {
+          const prof = await withTimeout(loadProfile(uid), 8000, 'loadProfile');
+          if (!active) return;
+          await withTimeout(claimBonusIfDue(prof, verified), 8000, 'claimBonus');
+        } catch (e) {
+          // Never fatal — the session is already set, so the user stays signed
+          // in even if their profile row is slow to arrive.
+          console.warn('Profile refresh degraded:', e?.message || e);
+        }
+      }, 0);
     });
 
     return () => { active = false; clearTimeout(failsafe); subscription.unsubscribe(); };
