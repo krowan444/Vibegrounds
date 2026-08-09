@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { supabase, retryOnAbort } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { scoreColor } from '../lib/format';
 
@@ -51,10 +51,10 @@ export default function VoteWidget({ creation, onVoted }) {
     setBusy(true);
     setError('');
     try {
-      const { data, error: err } = await supabase.rpc('cast_vote', {
+      const { data, error: err } = await retryOnAbort(() => supabase.rpc('cast_vote', {
         p_creation: creation.id,
         p_value: value,
-      });
+      }));
       if (err) throw new Error(translate(err.message));
       setScore(Number(data.score));
       setCount(data.vote_count);
