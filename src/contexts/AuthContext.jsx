@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase, withTimeout } from '../lib/supabase';
 
 const AuthContext = createContext(null);
 
@@ -97,7 +97,23 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     let active = true;
 
-    supabase.auth.getSession().then(async ({ data }) => {
+    /*
+     * Belt and braces. Everything below is wrapped in a timeout, but if any
+     * unforeseen path still fails to settle, this releases the app after 8
+     * seconds regardless. Nothing renders until `loading` clears, so a single
+     * stuck promise here takes the entire site down — which is precisely what
+     * "stuck on Loading the Portal until I refresh" was.
+     *
+     * Failing open (treating it as signed out) is right: a logged-out visitor
+     * who can browse beats a logged-in one who can't see anything.
+     */
+    const failsafe = setTimeout(() => {
+      if (!active) return;
+      console.warn('Auth init exceeded 8s — releasing the UI as signed out.');
+      setLoading(false);
+    }, 8000);
+
+    withTimeout(supabase.auth.getSession(), 6000, 'getSession').then(async ({ data }) => {
       if (!active) return;
       const s = data?.session ?? null;
       const verified = Boolean(s?.user?.email_confirmed_at || s?.user?.confirmed_at);
@@ -112,14 +128,23 @@ export function AuthProvider({ children }) {
       if (!active) return;
       setSession(s);
       setUser(s?.user ?? null);
-      const prof = await loadProfile(s?.user?.id);
-      await claimBonusIfDue(prof, verified);
-      if (active) setLoading(false);
+
+      // Profile and bonus are nice-to-haves; neither should be able to hold
+      // the whole app behind the spinner if it stalls.
+      try {
+        const prof = await withTimeout(loadProfile(s?.user?.id), 8000, 'loadProfile');
+        await withTimeout(claimBonusIfDue(prof, verified), 8000, 'claimBonus');
+      } catch (e) {
+        console.warn('Profile load degraded:', e?.message || e);
+      }
+
+      if (active) { clearTimeout(failsafe); setLoading(false); }
     }).catch((e) => {
-      // A stale or rejected token must not leave the whole app stuck
+      // A stale, rejected, or stalled token must not leave the whole app stuck
       // behind a spinner. Fail open: treat it as signed out.
       console.warn('Auth init failed:', e?.message || e);
       if (!active) return;
+      clearTimeout(failsafe);
       setSession(null);
       setUser(null);
       setProfile(null);
@@ -140,7 +165,7 @@ export function AuthProvider({ children }) {
       await claimBonusIfDue(prof, Boolean(s?.user?.email_confirmed_at || s?.user?.confirmed_at));
     });
 
-    return () => { active = false; subscription.unsubscribe(); };
+    return () => { active = false; clearTimeout(failsafe); subscription.unsubscribe(); };
   }, [loadProfile, claimBonusIfDue]);
 
   // ── auth actions ──────────────────────────────────────────
