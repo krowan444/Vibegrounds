@@ -73,17 +73,34 @@ export default function HeroAd({ creation, creations }) {
           )}
         </div>
 
+        {/*
+          Every pick's screenshot is rendered and stacked; only the active one
+          is opaque. Swapping a single <img> src (or remounting it) makes the
+          browser tear down and reload the image, which is what read as a blink.
+          Keeping them all mounted lets one genuinely cross-fade into the next,
+          and means the images are already loaded when their turn comes.
+        */}
         <Link to={`/creation/${current.id}`} className="vg-featured-shot">
-          <img
-            key={current.id}
-            src={src}
-            alt={current.title}
-            onError={onThumbError}
-            className={placeholder ? 'vg-thumb-placeholder' : 'vg-featured-fade'}
-          />
+          {picks.map((p, i) => {
+            const psrc = thumbFor(p, 900);
+            return (
+              <img
+                key={p.id}
+                src={psrc}
+                alt={i === index ? p.title : ''}
+                aria-hidden={i !== index || undefined}
+                onError={onThumbError}
+                className={[
+                  'vg-featured-slide',
+                  i === index ? 'is-on' : '',
+                  psrc === LOGO_FALLBACK ? 'vg-thumb-placeholder' : '',
+                ].filter(Boolean).join(' ')}
+              />
+            );
+          })}
         </Link>
 
-        <div className="vg-featured-body">
+        <div className="vg-featured-body" key={current.id}>
           <Link to={`/creation/${current.id}`} className="vg-featured-title">
             {current.title}
           </Link>
