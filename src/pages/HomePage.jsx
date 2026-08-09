@@ -146,7 +146,7 @@ export default function HomePage() {
 
           {/* MIDDLE — featured ad, then the sections */}
           <div className="vg-col">
-            <HeroAd />
+            <HeroAd creation={d.featured[0]} />
 
             {!user ? (
               <div className="vg-strip" style={{ borderColor: 'var(--orange)', margin: 0 }}>
@@ -188,14 +188,16 @@ export default function HomePage() {
               </div>
             </div>
 
-            {d.featured.length > 0 && (
+            {/* The first pick is already the hero above, so skip it here
+                rather than showing the same submission twice. */}
+            {d.featured.length > 1 && (
               <div className="vg-section" style={{ marginBottom: 0 }}>
                 <div className="vg-section-head">
-                  <h2>⭐ STAFF PICKS</h2>
+                  <h2>⭐ MORE STAFF PICKS</h2>
                   <span className="vg-sub">Hand-chosen</span>
                 </div>
                 <div className="vg-grid vg-grid-tight">
-                  {d.featured.map((c) => <CreationCard key={c.id} creation={c} />)}
+                  {d.featured.slice(1).map((c) => <CreationCard key={c.id} creation={c} />)}
                 </div>
               </div>
             )}
