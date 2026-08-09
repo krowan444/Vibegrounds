@@ -2120,24 +2120,75 @@ body { background: var(--bg-darkest); overflow-y: auto; }
 }
 
 .vg-featured-kicker {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
   font-family: var(--font-pixel); font-size: 9px; letter-spacing: 1.5px;
   color: #2a1800; background: linear-gradient(90deg, var(--orange-bright), var(--orange));
   padding: 7px 10px;
 }
+.vg-featured-count { font-size: 8px; color: #6a3d00; letter-spacing: 1px; }
+
+/* Slide-over. Every pick is stacked in the same box; the incoming one starts
+   off to the right and glides across the top of the outgoing one, which sits
+   still underneath. Waiting slides are parked off-frame with no transition,
+   so only the arriving card ever animates. */
+.vg-featured-slide {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%; object-fit: cover;
+  transform: translateX(102%);
+  z-index: 1;
+  pointer-events: none;
+  box-shadow: -12px 0 22px rgba(0, 0, 0, .55);
+}
+.vg-featured-slide.is-prev {
+  transform: translateX(0);
+  z-index: 2;
+  box-shadow: none;
+}
+.vg-featured-slide.is-on {
+  transform: translateX(0);
+  z-index: 3;
+  pointer-events: auto;
+  transition: transform 1s cubic-bezier(.22, .61, .36, 1);
+  will-change: transform;
+}
+
+/* The copy underneath swaps instantly, which jars against a 0.9s fade above.
+   A short rise softens the hand-off. */
+.vg-featured-body { animation: vgFeatRise .55s ease-out; }
+@keyframes vgFeatRise {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.vg-featured-dots { display: flex; gap: 6px; margin-top: 7px; }
+.vg-featured-dot {
+  width: 26px; height: 6px; padding: 0; cursor: pointer;
+  background: var(--border-dark); border: 1px solid var(--border-panel);
+}
+.vg-featured-dot.is-on { background: var(--orange); border-color: var(--orange-dim); }
+.vg-featured-dot:hover { background: var(--orange-dim); }
+
+@media (prefers-reduced-motion: reduce) {
+  .vg-featured-slide.is-on { transition: none; }
+  .vg-featured-body { animation: none; }
+}
 .vg-featured-star { color: #6a3d00; }
 
+/* 16:9 left too much dead space under the screenshot in the box. A shallower
+   crop keeps the image readable while tightening the whole slot. */
 .vg-featured-shot {
-  display: block; width: 100%; aspect-ratio: 16 / 9;
+  position: relative;
+  display: block; width: 100%; aspect-ratio: 21 / 9;
   overflow: hidden; background: var(--bg-dark);
   border-bottom: 2px solid var(--border-panel);
 }
 .vg-featured-shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.vg-featured-shot:hover img { filter: brightness(1.08); }
+.vg-featured-shot:hover img.is-on { filter: brightness(1.08); }
 
-.vg-featured-body { padding: 12px 14px 14px; }
+.vg-featured-body { padding: 9px 12px 10px; }
 
 .vg-featured-title {
-  font-family: var(--font-retro); font-size: 26px; line-height: 1.15;
+  font-family: var(--font-retro); font-size: 23px; line-height: 1.15;
   color: var(--blue-link); font-weight: bold; text-decoration: none;
   display: inline-block;
 }
@@ -2150,15 +2201,15 @@ body { background: var(--bg-darkest); overflow-y: auto; }
 .vg-featured-by strong { color: var(--orange); }
 
 .vg-featured-desc {
-  font-family: var(--font-retro); font-size: 18px; line-height: 1.45;
-  color: var(--text-primary); margin-top: 8px;
-  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+  font-family: var(--font-retro); font-size: 17px; line-height: 1.4;
+  color: var(--text-primary); margin-top: 5px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
 .vg-featured-foot {
   display: flex; align-items: center; justify-content: space-between;
-  gap: 10px; flex-wrap: wrap; margin-top: 12px;
+  gap: 10px; flex-wrap: wrap; margin-top: 9px;
 }
 .vg-featured-score { font-family: var(--font-pixel); font-size: 12px; }
 
@@ -2387,6 +2438,25 @@ body { background: var(--bg-darkest); overflow-y: auto; }
   border: 1px solid var(--border-dark); box-shadow: none;
 }
 .vg-quest-btn-quiet:hover { color: var(--orange); }
+
+/* Edit-submission screen */
+.vg-edit-hint {
+  font-family: var(--font-retro); font-size: 14px;
+  color: var(--text-dim); margin-top: 3px; line-height: 1.35;
+}
+.vg-edit-actions {
+  display: flex; align-items: center; gap: 10px;
+  flex-wrap: wrap; margin-top: 6px;
+}
+.vg-edit-cancel {
+  font-family: var(--font-retro); font-size: 17px;
+  color: var(--text-dim); text-decoration: none;
+}
+.vg-edit-cancel:hover { color: var(--orange); text-decoration: underline; }
+.vg-edit-note {
+  font-family: var(--font-retro); font-size: 15px;
+  color: var(--text-dim); margin-top: 10px; line-height: 1.4;
+}
 
 /* ============================================================
    SHARE BAR — the growth loop.
