@@ -5,12 +5,15 @@ import { useAuth } from '../contexts/AuthContext';
 import SiteHeader from '../components/SiteHeader';
 import Notice from '../components/Notice';
 import { REPORT_REASONS } from '../components/ReportButton';
+import { timeAgo } from '../lib/format';
+import { LOGO_FALLBACK, onThumbError } from '../lib/thumbnail';
 
 const TABS = [
   { id: 'overview', label: 'Overview', icon: '📊' },
   { id: 'reports',  label: 'Reports',  icon: '🚩' },
   { id: 'users',    label: 'Users',    icon: '👥' },
   { id: 'content',  label: 'Content',  icon: '🎨' },
+  { id: 'shots',    label: 'Screenshots', icon: '🖼️' },
   { id: 'log',      label: 'Mod Log',  icon: '📜' },
 ];
 
@@ -130,6 +133,7 @@ export default function AdminPage() {
             {tab === 'reports'  && <Reports say={say} onError={oops} />}
             {tab === 'users'    && <Users say={say} onError={oops} isAdmin={isAdmin} />}
             {tab === 'content'  && <Content say={say} onError={oops} />}
+            {tab === 'shots'    && <Screenshots say={say} onError={oops} />}
             {tab === 'log'      && <ModLog onError={oops} />}
           </div>
         </div>
@@ -632,6 +636,101 @@ function Content({ say, onError }) {
         </table>
       </div>
     </>
+  );
+}
+
+// ── SCREENSHOT APPROVALS ─────────────────────────────────────
+/**
+ * Members can upload their own screenshot instead of the automatic one,
+ * but it does not go live until it has been looked at. This is that queue.
+ *
+ * The two images are shown side by side deliberately — the question is not
+ * "is this image acceptable" in isolation, it is "is this a better picture
+ * of the same thing", and you can only answer that by comparing.
+ */
+function Screenshots({ say, onError }) {
+  const [rows, setRows] = useState(null);
+  const [busy, setBusy] = useState(null);
+
+  const load = useCallback(async () => {
+    const { data, error } = await supabase.from('pending_thumbnails').select('*');
+    if (error) return onError(error);
+    setRows(data || []);
+  }, [onError]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const decide = async (id, approve) => {
+    const note = approve
+      ? null
+      : window.prompt('Reason for rejecting (shown to the poster, optional):') || null;
+    setBusy(id);
+    const { error } = await supabase.rpc('review_thumbnail', {
+      p_creation: id, p_approve: approve, p_note: note,
+    });
+    setBusy(null);
+    if (error) return onError(error);
+    say(approve ? 'Screenshot approved and now live.' : 'Screenshot rejected.');
+    load();
+  };
+
+  if (rows === null) return <div className="vg-loading">⏳ Loading...</div>;
+
+  if (!rows.length) {
+    return (
+      <div className="vg-empty" style={{ padding: '30px', fontFamily: 'var(--font-retro)', fontSize: '17px' }}>
+        Nothing waiting. Custom screenshots appear here when members upload them.
+      </div>
+    );
+  }
+
+  return (
+    <div className="vg-shot-queue">
+      {rows.map((r) => (
+        <div key={r.id} className="vg-shot-item">
+          <div className="vg-shot-item-head">
+            <Link to={`/creation/${r.id}`} className="vg-shot-item-title">{r.title}</Link>
+            <span className="vg-shot-item-by">
+              by <Link to={`/profile/${r.creator_username}`}>{r.creator_username}</Link>
+              {' · '}{timeAgo(r.submitted_at)}
+            </span>
+          </div>
+
+          <div className="vg-shot-compare">
+            <div>
+              <div className="vg-shot-label">Currently showing</div>
+              <img src={r.current_thumbnail || LOGO_FALLBACK} alt="" onError={onThumbError} />
+            </div>
+            <div>
+              <div className="vg-shot-label vg-shot-label-new">Proposed</div>
+              <img src={r.proposed_thumbnail} alt="" />
+            </div>
+          </div>
+
+          <div className="vg-shot-buttons">
+            <button
+              type="button"
+              onClick={() => decide(r.id, true)}
+              disabled={busy === r.id}
+              style={btn('#33cc33')}
+            >
+              ✔ Approve
+            </button>
+            <button
+              type="button"
+              onClick={() => decide(r.id, false)}
+              disabled={busy === r.id}
+              style={btn('#cc3333', '#fff')}
+            >
+              ✖ Reject
+            </button>
+            <a href={r.project_url} target="_blank" rel="noreferrer noopener" style={btn('#555', '#fff')}>
+              Visit site
+            </a>
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 
