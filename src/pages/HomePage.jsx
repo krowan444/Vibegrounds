@@ -8,6 +8,7 @@ import ChartRail, { CreatorRail } from '../components/ChartRail';
 import AdSlot from '../components/AdSlot';
 import JokeAd from '../components/JokeAd';
 import HeroAd from '../components/HeroAd';
+import MemeRail from '../components/MemeRail';
 import DailyCheckIn from '../components/DailyCheckIn';
 import RatingQuest from '../components/RatingQuest';
 import Notice from '../components/Notice';
@@ -27,7 +28,10 @@ export default function HomePage() {
       const R = (await Promise.allSettled([
         retryOnAbort(() => supabase.from('creations_public').select('*').eq('is_featured', true)
           .order('created_at', { ascending: false }).limit(4)),
+        // Memes are excluded from the main strip — they have their own rail
+        // further down, and mixing them in here buries the actual projects.
         retryOnAbort(() => supabase.from('creations_public').select('*')
+          .neq('category', 'memes')
           .order('created_at', { ascending: false }).limit(12)),
         retryOnAbort(() => supabase.from('chart_daily').select('*').order('rank').limit(10)),
         retryOnAbort(() => supabase.from('chart_weekly').select('*').order('rank').limit(10)),
@@ -36,9 +40,12 @@ export default function HomePage() {
         retryOnAbort(() => supabase.from('creator_leaderboard').select('*').order('rank').limit(5)),
         retryOnAbort(() => supabase.from('creations_public').select('id', { count: 'exact', head: true })),
         retryOnAbort(() => supabase.from('profiles_public').select('id', { count: 'exact', head: true })),
+        // chart_memes_safe excludes anything flagged 18+ in SQL, so nothing
+        // rude can reach the front page even if this component slips up.
+        retryOnAbort(() => supabase.from('chart_memes_safe').select('*').order('rank').limit(12)),
       ])).map(settle);
 
-      const [featured, latest, daily, weekly, alltime, cats, creators, cCount, uCount] = R;
+      const [featured, latest, daily, weekly, alltime, cats, creators, cCount, uCount, memes] = R;
       if (!alive) return;
 
       const firstError = R.find((r) => r.error)?.error;
@@ -54,6 +61,7 @@ export default function HomePage() {
         creators: creators.data || [],
         total: cCount.count || 0,
         members: uCount.count || 0,
+        memes: memes.data || [],
       });
     })().catch((e) => {
       if (!alive) return;
@@ -225,6 +233,11 @@ export default function HomePage() {
                 </div>
               </div>
             )}
+
+            {/* The meme board's shop window. Sits under the projects because
+                it is the lighter thing, but above the ad because it is the
+                more useful one. */}
+            <MemeRail memes={d.memes} />
 
             <AdSlot index={1} />
           </div>
