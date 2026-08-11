@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { supabase, retryOnAbort } from '../lib/supabase';
+import { supabase, retryOnAbort, withTimeout } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import SiteHeader from '../components/SiteHeader';
 import Notice from '../components/Notice';
@@ -31,6 +31,16 @@ export default function EditCreationPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [saved, setSaved] = useState(false);
+
+  // Custom screenshot, submitted for approval rather than applied directly.
+  const shotRef = useRef(null);
+  const [shotFile, setShotFile] = useState(null);
+  const [shotPreview, setShotPreview] = useState('');
+  const [shotBusy, setShotBusy] = useState('');
+  const [shotError, setShotError] = useState('');
+  const [shotDone, setShotDone] = useState(false);
+
+  useEffect(() => () => { if (shotPreview) URL.revokeObjectURL(shotPreview); }, [shotPreview]);
 
   useEffect(() => {
     let alive = true;
@@ -98,6 +108,65 @@ export default function EditCreationPage() {
     return gate('🚫 Not Yours', <p>You can only edit submissions you posted.</p>);
   }
 
+  const SHOT_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
+  const SHOT_MAX = 3 * 1024 * 1024;
+
+  const takeShot = (f) => {
+    if (!f) return;
+    if (!SHOT_TYPES.includes(f.type)) { setShotError('PNG, JPG or WEBP only.'); return; }
+    if (f.size > SHOT_MAX) {
+      setShotError(`That is ${(f.size / 1024 / 1024).toFixed(1)} MB. The limit is 3 MB.`);
+      return;
+    }
+    setShotError('');
+    setShotFile(f);
+    if (shotPreview) URL.revokeObjectURL(shotPreview);
+    setShotPreview(URL.createObjectURL(f));
+  };
+
+  const sendShot = async () => {
+    if (!shotFile) return;
+    setShotError('');
+    try {
+      setShotBusy('Uploading...');
+      const ext = (shotFile.name.match(/\.[a-z0-9]+$/i) || ['.png'])[0].toLowerCase();
+      const path = `${user.id}/${id}-${Date.now()}${ext}`;
+
+      const { error: upErr } = await withTimeout(
+        supabase.storage.from('thumbnails').upload(path, shotFile, {
+          cacheControl: '31536000', contentType: shotFile.type, upsert: false,
+        }),
+        45000, 'thumbUpload',
+      );
+      if (upErr) throw new Error(upErr.message);
+
+      const { data: pub } = supabase.storage.from('thumbnails').getPublicUrl(path);
+      if (!pub?.publicUrl) throw new Error('Could not work out the image address.');
+
+      setShotBusy('Submitting for approval...');
+      const { error: rpcErr } = await withTimeout(
+        retryOnAbort(() => supabase.rpc('submit_thumbnail', {
+          p_creation: id,
+          p_url: pub.publicUrl,
+        })),
+        25000,
+      );
+      if (rpcErr) {
+        if (/ALREADY_PENDING/.test(rpcErr.message)) throw new Error('You already have a screenshot waiting for review.');
+        if (/NOT_YOURS/.test(rpcErr.message)) throw new Error('That is not your submission.');
+        throw new Error(rpcErr.message);
+      }
+
+      setShotBusy('');
+      setShotDone(true);
+      setOriginal((o) => ({ ...o, pending_thumbnail_status: 'pending' }));
+    } catch (e) {
+      console.error('thumbnail submit failed:', e);
+      setShotBusy('');
+      setShotError(e.message || 'Could not send that for approval.');
+    }
+  };
+
   const save = async (e) => {
     e.preventDefault();
     setError('');
@@ -124,7 +193,10 @@ export default function EditCreationPage() {
           description: form.description.trim(),
           category: form.category,
           project_url: url,
-          thumbnail_url: normalizeUrl(form.thumbnail_url),
+          // thumbnail_url is deliberately not written here. It is owned by
+          // the approval flow now, and saving the form would push back
+          // whatever was loaded when the page opened — silently undoing an
+          // approval that landed in between.
           tags,
           is_nsfw: form.is_nsfw,
         })
@@ -194,13 +266,73 @@ export default function EditCreationPage() {
 
             <div className="retro-form-group">
               <label>
-                5. Custom thumbnail{' '}
-                <span style={{ color: 'var(--text-dim)' }}>(optional — blank uses a screenshot)</span>
+                5. Custom screenshot{' '}
+                <span style={{ color: 'var(--text-dim)' }}>(optional — blank uses an auto screenshot)</span>
               </label>
-              <input
-                type="text" value={form.thumbnail_url} onChange={set('thumbnail_url')}
-                disabled={loading}
-              />
+
+              {/* Uploads are reviewed before they go live. The auto-generated
+                  screenshot keeps showing until then, so the card is never
+                  blank while it waits. */}
+              {original.pending_thumbnail_status === 'pending' || shotDone ? (
+                <div className="vg-shot-state vg-shot-pending">
+                  ⏳ <strong>Waiting for approval.</strong> Your screenshot will
+                  appear once it has been checked. The automatic one shows until then.
+                </div>
+              ) : (
+                <>
+                  {original.pending_thumbnail_status === 'rejected' && (
+                    <div className="vg-shot-state vg-shot-rejected">
+                      ✖ Your last screenshot was not approved
+                      {original.pending_thumbnail_note ? `: ${original.pending_thumbnail_note}` : '.'}
+                      {' '}You can try another.
+                    </div>
+                  )}
+                  {original.pending_thumbnail_status === 'approved' && (
+                    <div className="vg-shot-state vg-shot-approved">
+                      ✔ Your custom screenshot is live.
+                    </div>
+                  )}
+
+                  {shotError && <div className="vg-shot-state vg-shot-rejected">{shotError}</div>}
+
+                  <div
+                    className={`vg-dropzone ${shotPreview ? 'has-image' : ''}`}
+                    onClick={() => shotRef.current?.click()}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => { e.preventDefault(); takeShot(e.dataTransfer.files?.[0]); }}
+                  >
+                    {shotPreview ? (
+                      <>
+                        <img src={shotPreview} alt="Your screenshot" className="vg-dropzone-preview" />
+                        <span className="vg-dropzone-swap">Click to choose a different image</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="vg-dropzone-icon">🖼️</span>
+                        <strong>Upload your own screenshot</strong>
+                        <span className="vg-dropzone-sub">PNG, JPG or WEBP · up to 3 MB · checked before it goes live</span>
+                      </>
+                    )}
+                  </div>
+
+                  <input
+                    ref={shotRef} type="file" accept={SHOT_TYPES.join(',')} hidden
+                    onChange={(e) => takeShot(e.target.files?.[0])}
+                  />
+
+                  {shotFile && (
+                    <button
+                      type="button"
+                      className="retro-cta"
+                      style={{ marginTop: '8px' }}
+                      onClick={sendShot}
+                      disabled={!!shotBusy}
+                    >
+                      {shotBusy || '📤 SEND FOR APPROVAL'}
+                    </button>
+                  )}
+                </>
+              )}
             </div>
 
             <div className="retro-form-group">
