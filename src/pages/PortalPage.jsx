@@ -92,6 +92,10 @@ export default function PortalPage() {
     // Filters apply to all three columns so the whole page stays coherent.
     const apply = (q) => {
       let out = q;
+      // The Portal is the projects board. Memes live at /memes and would
+      // otherwise flood this by sheer volume — they are far cheaper to
+      // make. Browsing to the memes category explicitly still works.
+      if (category !== 'memes') out = out.neq('category', 'memes');
       if (category) out = out.eq('category', category);
       if (query) out = out.or(`title.ilike.%${query}%,description.ilike.%${query}%`);
       return out;
