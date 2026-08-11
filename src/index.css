@@ -2688,3 +2688,250 @@ body { background: var(--bg-darkest); overflow-y: auto; }
 .vg-joke-line.blink { animation: vgBlink 1.15s steps(2, start) infinite; }
 @keyframes vgBlink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: .35; } }
 @media (prefers-reduced-motion: reduce) { .vg-joke-line.blink { animation: none; } }
+
+/* ==========================================================
+   MEMES
+   The lightest thing on the site, so the styling stays out of
+   the way: image first, everything else small and quiet.
+   ========================================================== */
+
+/* --- NSFW cover ------------------------------------------ */
+/* The image is really in the DOM, just filtered. This is a
+   courtesy screen so nobody gets ambushed — not a security
+   control, since the source is readable either way. */
+.vg-nsfw-wrap { position: relative; display: block; }
+
+.vg-nsfw-blurred {
+  filter: blur(26px) saturate(.5) brightness(.7);
+  transform: scale(1.06); /* hides the soft edges the blur leaves */
+}
+
+.vg-nsfw-veil {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  background: rgba(10, 10, 18, .55);
+  border: 0; cursor: pointer; width: 100%;
+  font-family: var(--font-retro); color: #fff;
+}
+.vg-nsfw-veil:hover { background: rgba(10, 10, 18, .38); }
+
+.vg-nsfw-badge {
+  font-size: 15px; font-weight: bold; letter-spacing: 1px;
+  background: var(--red); color: #fff;
+  padding: 3px 10px; border-radius: 3px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.5);
+}
+.vg-nsfw-hint { font-size: 12px; color: #ddd; }
+
+.vg-nsfw-hide {
+  position: absolute; top: 6px; right: 6px;
+  font-family: var(--font-retro); font-size: 11px;
+  background: rgba(10,10,18,.8); color: #ddd;
+  border: 1px solid var(--border-dark); border-radius: 3px;
+  padding: 2px 7px; cursor: pointer;
+}
+.vg-nsfw-hide:hover { color: #fff; border-color: var(--orange); }
+
+/* --- Meme board ------------------------------------------ */
+.vg-memes-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap; margin-bottom: 14px;
+}
+.vg-memes-title { font-family: var(--font-retro); font-size: 26px; color: var(--orange); margin: 0; }
+.vg-memes-blurb { font-family: var(--font-retro); font-size: 14px; color: var(--text-secondary); margin: 4px 0 0; }
+.vg-memes-cta { flex-shrink: 0; }
+
+.vg-memes-tabs { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+.vg-memes-tab {
+  font-family: var(--font-retro); font-size: 14px;
+  background: var(--bg-panel); color: var(--text-secondary);
+  border: 1px solid var(--border-dark); border-radius: 3px;
+  padding: 6px 14px; cursor: pointer;
+}
+.vg-memes-tab:hover { color: var(--text-primary); border-color: var(--orange-dim); }
+.vg-memes-tab.is-on {
+  background: var(--orange); color: #14141e;
+  border-color: var(--orange-bright); font-weight: bold;
+}
+
+.vg-meme-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 14px;
+}
+
+.vg-meme-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  border-radius: 4px; overflow: hidden;
+  display: flex; flex-direction: column;
+}
+.vg-meme-card:hover { border-color: var(--orange-dim); }
+
+.vg-meme-shot {
+  display: block; position: relative;
+  background: var(--bg-darkest);
+  /* Memes are wildly different shapes, so the box is fixed and the
+     image is contained rather than cropped — cropping a meme
+     usually cuts off the punchline. */
+  height: 210px; overflow: hidden;
+}
+.vg-meme-img,
+.vg-meme-shot img { width: 100%; height: 210px; object-fit: contain; display: block; }
+
+.vg-meme-body { padding: 9px 10px 10px; display: flex; flex-direction: column; gap: 5px; }
+.vg-meme-name {
+  font-family: var(--font-retro); font-size: 15px; color: var(--text-bright);
+  text-decoration: none; line-height: 1.25;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.vg-meme-name:hover { color: var(--orange); }
+.vg-meme-meta { font-family: var(--font-retro); font-size: 12px; color: var(--text-dim); }
+.vg-meme-meta a { color: var(--text-secondary); text-decoration: none; }
+.vg-meme-meta a:hover { color: var(--orange); }
+
+.vg-meme-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; margin-top: 3px; flex-wrap: wrap;
+}
+.vg-meme-score { font-family: var(--font-retro); font-size: 13px; font-weight: bold; }
+
+.vg-memes-empty {
+  text-align: center; padding: 46px 20px;
+  font-family: var(--font-retro); color: var(--text-secondary);
+  background: var(--bg-panel); border: 1px solid var(--border-panel); border-radius: 4px;
+}
+.vg-memes-empty-icon { font-size: 42px; margin-bottom: 10px; }
+.vg-memes-empty h3 { color: var(--text-primary); margin: 0 0 6px; font-size: 19px; }
+.vg-memes-empty p { margin: 0 0 16px; font-size: 14px; }
+
+/* --- Front page rail ------------------------------------- */
+.vg-meme-rail-wrap {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  border-radius: 4px; padding: 10px 10px 12px; margin-bottom: 14px;
+}
+.vg-meme-rail-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; margin-bottom: 9px;
+}
+.vg-meme-rail-title { font-family: var(--font-retro); font-size: 16px; color: var(--orange); margin: 0; }
+.vg-meme-rail-tools { display: flex; align-items: center; gap: 6px; }
+.vg-meme-rail-all {
+  font-family: var(--font-retro); font-size: 12px;
+  color: var(--blue-link); text-decoration: none;
+}
+.vg-meme-rail-all:hover { color: var(--orange); }
+
+.vg-rail-btn {
+  font-family: var(--font-retro); font-size: 15px; line-height: 1;
+  background: var(--bg-panel-header); color: var(--text-secondary);
+  border: 1px solid var(--border-dark); border-radius: 3px;
+  width: 22px; height: 22px; cursor: pointer; padding: 0;
+}
+.vg-rail-btn:hover { color: var(--orange); border-color: var(--orange-dim); }
+
+.vg-meme-rail {
+  display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+}
+.vg-meme-rail::-webkit-scrollbar { height: 7px; }
+.vg-meme-rail::-webkit-scrollbar-thumb { background: var(--border-dark); border-radius: 4px; }
+
+.vg-meme-rail-card {
+  flex: 0 0 158px; scroll-snap-align: start;
+  display: flex; flex-direction: column; gap: 4px;
+  text-decoration: none; color: inherit;
+}
+.vg-meme-rail-shot {
+  display: block; height: 112px; overflow: hidden;
+  background: var(--bg-darkest);
+  border: 1px solid var(--border-dark); border-radius: 3px;
+}
+.vg-meme-rail-shot img { width: 100%; height: 112px; object-fit: cover; display: block; }
+.vg-meme-rail-card:hover .vg-meme-rail-shot { border-color: var(--orange); }
+
+.vg-meme-rail-name {
+  font-family: var(--font-retro); font-size: 12px; color: var(--text-primary);
+  line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.vg-meme-rail-card:hover .vg-meme-rail-name { color: var(--orange); }
+.vg-meme-rail-score { font-family: var(--font-retro); font-size: 11px; color: var(--text-dim); }
+
+.vg-meme-rail-more {
+  align-items: center; justify-content: center;
+  border: 1px dashed var(--border-dark); border-radius: 3px;
+  font-family: var(--font-retro); font-size: 12px; color: var(--text-secondary);
+  text-align: center; padding: 10px; gap: 6px;
+}
+.vg-meme-rail-more:hover { border-color: var(--orange); color: var(--orange); }
+.vg-meme-rail-more-icon { font-size: 21px; }
+
+/* --- Upload screen --------------------------------------- */
+.vg-meme-intro {
+  font-family: var(--font-retro); font-size: 14px;
+  color: var(--text-secondary); margin: 0 0 14px;
+}
+
+.vg-dropzone {
+  border: 2px dashed var(--border-dark); border-radius: 5px;
+  background: var(--bg-input);
+  padding: 30px 18px; margin-bottom: 18px;
+  display: flex; flex-direction: column; align-items: center; gap: 7px;
+  text-align: center; cursor: pointer;
+  font-family: var(--font-retro); color: var(--text-secondary);
+  transition: border-color .15s, background .15s;
+}
+.vg-dropzone:hover,
+.vg-dropzone.is-over { border-color: var(--orange); background: rgba(232, 163, 23, .06); }
+.vg-dropzone.has-image { padding: 12px; }
+.vg-dropzone-icon { font-size: 34px; }
+.vg-dropzone strong { color: var(--text-primary); font-size: 16px; }
+.vg-dropzone-sub { font-size: 12px; color: var(--text-dim); }
+.vg-dropzone-preview { max-width: 100%; max-height: 320px; border-radius: 3px; display: block; }
+.vg-dropzone-swap { font-size: 12px; color: var(--text-dim); margin-top: 8px; }
+
+.vg-nsfw-check {
+  display: flex; align-items: flex-start; gap: 9px;
+  font-family: var(--font-retro); font-size: 14px;
+  color: var(--text-primary); cursor: pointer; margin-bottom: 18px;
+}
+.vg-nsfw-check input { width: auto; margin-top: 3px; flex-shrink: 0; }
+.vg-nsfw-check span { display: flex; flex-direction: column; gap: 2px; }
+.vg-nsfw-check em { font-style: normal; font-size: 12px; color: var(--text-dim); }
+
+.vg-meme-post { width: 100%; }
+
+.vg-gate-body {
+  font-family: var(--font-retro); font-size: 17px;
+  color: var(--text-secondary); text-align: center;
+  padding: 30px; line-height: 1.5;
+  display: flex; flex-direction: column; align-items: center;
+}
+
+.vg-done { text-align: center; padding: 26px 20px 30px; font-family: var(--font-retro); }
+.vg-done-tick { font-size: 46px; margin-bottom: 8px; }
+.vg-done h3 { color: var(--text-bright); font-size: 21px; margin: 0 0 5px; }
+.vg-done-sub { color: var(--text-secondary); font-size: 14px; margin: 0 0 16px; }
+.vg-done-shot {
+  max-width: 100%; max-height: 260px; border-radius: 4px;
+  border: 1px solid var(--border-dark); margin: 0 auto 18px; display: block;
+}
+.vg-done-actions {
+  display: flex; gap: 10px; justify-content: center;
+  flex-wrap: wrap; margin-top: 16px;
+}
+.vg-done-alt {
+  font-family: var(--font-retro); font-size: 14px;
+  background: var(--bg-panel-header); color: var(--text-secondary);
+  border: 1px solid var(--border-dark); border-radius: 3px;
+  padding: 9px 16px; cursor: pointer; text-decoration: none;
+}
+.vg-done-alt:hover { color: var(--orange); border-color: var(--orange-dim); }
+
+@media (max-width: 640px) {
+  .vg-meme-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+  .vg-meme-shot, .vg-meme-img, .vg-meme-shot img { height: 165px; }
+  .vg-memes-cta { width: 100%; }
+}
