@@ -1,6 +1,6 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase, withTimeout } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import SiteHeader from '../components/SiteHeader';
 import VoteWidget from '../components/VoteWidget';
@@ -38,10 +38,33 @@ export default function CreationPage() {
       if (err || !data) { setNotFound(true); setLoading(false); return; }
       setC(data);
 
-      // count the view once per mount
-      if (!viewed.current) {
+      /*
+       * Count the view.
+       *
+       * This never worked. The call was written fire-and-forget without an
+       * await — but a supabase-js builder is a lazy thenable: it only sends
+       * the request when something calls .then() on it. Nothing did, so no
+       * request was ever made and every view_count in the database sat at
+       * zero while votes and comments piled up.
+       *
+       * Awaiting it fixes that. It stays inside the try/catch below so a
+       * failed count can never take the page down — a view is the least
+       * important thing on this screen.
+       *
+       * sessionStorage keeps a refresh from inflating the number. Per tab
+       * rather than per browser, so it forgives someone coming back
+       * tomorrow but not someone holding F5.
+       */
+      const seenKey = `vg_viewed_${id}`;
+      if (!viewed.current && !sessionStorage.getItem(seenKey)) {
         viewed.current = true;
-        supabase.rpc('register_view', { p_creation: id });
+        try {
+          sessionStorage.setItem(seenKey, '1');
+          await withTimeout(supabase.rpc('register_view', { p_creation: id }), 8000, 'registerView');
+          if (alive) setC((prev) => (prev ? { ...prev, view_count: (prev.view_count || 0) + 1 } : prev));
+        } catch (e) {
+          console.warn('View not counted:', e?.message || e);
+        }
       }
 
       const [prof, others] = await Promise.all([
@@ -153,7 +176,7 @@ export default function CreationPage() {
               </div>
 
               {/* Description */}
-              <div style={{
+              <div className="vg-desc-body" style={{
                 padding: '12px', borderTop: '1px solid var(--border-dark)',
                 fontFamily: 'var(--font-retro)', fontSize: '18px',
                 color: 'var(--text-primary)', lineHeight: 1.4, whiteSpace: 'pre-wrap',
