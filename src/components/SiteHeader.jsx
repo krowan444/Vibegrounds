@@ -12,6 +12,7 @@ const NAV = [
   { to: '/category/websites',  label: 'Websites' },
   { to: '/category/art',       label: 'Art',   wide: true },
   { to: '/category/audio',     label: 'Audio', wide: true },
+  { to: '/memes',              label: 'Memes' },
   { to: '/charts',             label: 'Top 100' },
   { to: '/hall-of-fame',       label: 'Hall of Fame', wide: true },
   { to: '/forum',              label: 'Forum' },
