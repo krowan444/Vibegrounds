@@ -12,6 +12,8 @@ import ChartsPage from './pages/ChartsPage';
 import HallOfFamePage from './pages/HallOfFamePage';
 import SiteFooter from './components/SiteFooter';
 import EditCreationPage from './pages/EditCreationPage';
+import MemesPage from './pages/MemesPage';
+import PostMemePage from './pages/PostMemePage';
 import CoinsPage from './pages/CoinsPage';
 import RulesPage from './pages/RulesPage';
 import AdvertisePage from './pages/AdvertisePage';
@@ -39,6 +41,8 @@ export default function App() {
             <Route path="/category/:category" element={<CategoryPage />} />
             <Route path="/creation/:id" element={<CreationPage />} />
             <Route path="/creation/:id/edit" element={<EditCreationPage />} />
+            <Route path="/memes" element={<MemesPage />} />
+            <Route path="/memes/post" element={<PostMemePage />} />
             <Route path="/upload" element={<UploadPage />} />
             <Route path="/coins" element={<CoinsPage />} />
             <Route path="/rules" element={<RulesPage />} />
