@@ -25,6 +25,8 @@ export default function ReviewSection({ creationId }) {
   const [error, setError] = useState('');
   const [editing, setEditing] = useState(null);
   const [editBody, setEditBody] = useState('');
+  const [replyTo, setReplyTo] = useState(null);
+  const [replyBody, setReplyBody] = useState('');
 
   const load = useCallback(async () => {
     // Both wrapped: an unwrapped query here could hang forever, and every
@@ -50,6 +52,22 @@ export default function ReviewSection({ creationId }) {
   }, [creationId, user]);
 
   useEffect(() => { load(); }, [load]);
+
+  /*
+   * Split the flat list into threads.
+   *
+   * `load` already returns everything newest-first, which is right for
+   * top-level comments and wrong for replies — so replies get reversed
+   * back into the order they were written. A reply whose parent has been
+   * deleted is promoted to a root rather than vanishing with it.
+   */
+  const roots = reviews.filter((r) => !r.parent_id || !reviews.some((p) => p.id === r.parent_id));
+  const repliesBy = reviews.reduce((acc, r) => {
+    if (!r.parent_id) return acc;
+    if (!reviews.some((p) => p.id === r.parent_id)) return acc;
+    (acc[r.parent_id] = acc[r.parent_id] || []).unshift(r);
+    return acc;
+  }, {});
 
   const toggleReaction = async (type) => {
     if (!canPost) return;
@@ -88,6 +106,28 @@ export default function ReviewSection({ creationId }) {
       setBody('');
       // Release the button first. Refreshing the list is a nicety — blocking
       // the button on it is what made a successful post look like a failure.
+      setBusy(false);
+      load().catch(() => {});
+    } catch (e2) {
+      setError(e2.message);
+      setBusy(false);
+    }
+  };
+
+  const postReply = async (parentId) => {
+    if (!replyBody.trim()) return;
+    setBusy(true);
+    setError('');
+    try {
+      const { error: err } = await retryOnAbort(() => supabase.from('reviews').insert({
+        creation_id: creationId,
+        author_id: user.id,
+        parent_id: parentId,
+        body: replyBody.trim(),
+      }));
+      if (err) throw new Error(err.message);
+      setReplyBody('');
+      setReplyTo(null);
       setBusy(false);
       load().catch(() => {});
     } catch (e2) {
@@ -226,10 +266,30 @@ export default function ReviewSection({ creationId }) {
             No reviews yet. Be the first to say something.
           </div>
         ) : (
-          reviews.map((r) => {
+          /*
+           * Threading. Top-level comments stay newest-first, but replies
+           * under each one run oldest-first — a conversation read backwards
+           * makes no sense.
+           */
+          roots.map((root) => (
+            <div key={root.id} className="vg-thread">
+              {renderRow(root, false)}
+              {(repliesBy[root.id] || []).map((child) => renderRow(child, true))}
+            </div>
+          ))
+        )}
+      </div>
+    </>
+  );
+
+  function renderRow(r, isReply) {
             const isAuthor = user && r.author_id === user.id;
             return (
-              <div key={r.id} style={{ padding: '10px 12px', borderTop: '1px solid var(--border-dark)' }}>
+              <div
+                key={r.id}
+                className={isReply ? 'vg-review-row vg-review-reply' : 'vg-review-row'}
+                style={{ padding: '10px 12px', borderTop: '1px solid var(--border-dark)' }}
+              >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                   {r.author_avatar
                     ? <img src={r.author_avatar} alt="" style={{ width: '22px', height: '22px', objectFit: 'cover', border: '1px solid var(--border-dark)' }} />
@@ -267,6 +327,22 @@ export default function ReviewSection({ creationId }) {
                         🗑 delete
                       </button>
                     )}
+                    {/* Replies always attach to the thread root, so replying
+                        to a reply continues the same conversation rather than
+                        starting a deeper one. */}
+                    {canPost && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const target = r.parent_id || r.id;
+                          setReplyTo(replyTo === target ? null : target);
+                          setReplyBody(r.parent_id ? `@${r.author_username} ` : '');
+                        }}
+                        style={ghostBtn}
+                      >
+                        ↩ reply
+                      </button>
+                    )}
                     {!isAuthor && <ReportButton targetType="review" targetId={r.id} compact />}
                   </span>
                 </div>
@@ -293,7 +369,7 @@ export default function ReviewSection({ creationId }) {
                     </div>
                   </div>
                 ) : (
-                  <div style={{
+                  <div className="vg-review-body" style={{
                     fontFamily: 'var(--font-retro)', fontSize: '18px',
                     color: 'var(--text-primary)', marginTop: '4px',
                     whiteSpace: 'pre-wrap', lineHeight: 1.35,
@@ -301,13 +377,47 @@ export default function ReviewSection({ creationId }) {
                     {r.body}
                   </div>
                 )}
+
+                {/* Reply composer, opened under whichever row was clicked. */}
+                {replyTo === (r.parent_id || r.id) && canPost && (
+                  <div className="vg-reply-box">
+                    <textarea
+                      value={replyBody}
+                      onChange={(e) => setReplyBody(e.target.value)}
+                      placeholder={`Reply to ${r.author_username}...`}
+                      maxLength={1000}
+                      disabled={busy}
+                      autoFocus
+                    />
+                    <div className="vg-reply-actions">
+                      <button
+                        type="button"
+                        onClick={() => postReply(r.parent_id || r.id)}
+                        disabled={busy || !replyBody.trim()}
+                        style={{
+                          background: 'var(--orange)', color: '#000',
+                          border: '2px solid var(--orange-dim)',
+                          fontFamily: 'var(--font-pixel)', fontSize: '8px',
+                          padding: '6px 12px',
+                          cursor: busy ? 'wait' : 'pointer',
+                          opacity: replyBody.trim() ? 1 : 0.5,
+                        }}
+                      >
+                        {busy ? 'SENDING...' : 'REPLY'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setReplyTo(null); setReplyBody(''); }}
+                        style={ghostBtn}
+                      >
+                        cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             );
-          })
-        )}
-      </div>
-    </>
-  );
+  }
 }
 
 const ghostBtn = {
