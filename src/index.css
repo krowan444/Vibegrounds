@@ -2837,13 +2837,24 @@ body { background: var(--bg-darkest); overflow-y: auto; }
   /* A floor, not just min-height:0. A flex child with no intrinsic content
      size collapses to nothing, and a collapsed box means the image inside
      it can never become visible — belt and braces alongside eager loading. */
-  flex: 1; min-height: 220px;
+  flex: 1 1 auto; min-height: 220px;
   display: flex; align-items: center; justify-content: center;
   background: #06060c;
+  /* The image is bounded by this box, so anything taller is clipped rather
+     than pushing out of the panel. */
+  overflow: hidden;
 }
-.vg-lb-stage .vg-nsfw-wrap { display: flex; max-height: 100%; }
+.vg-lb-stage .vg-nsfw-wrap {
+  display: flex; align-items: center; justify-content: center;
+  max-width: 100%; max-height: 100%; min-height: 0;
+}
+/* Bound the image by its container, not by a vh sum. The old
+   calc(92vh - 96px) was a guess at the chrome height and did not match the
+   space the flex layout actually left, so tall memes were clipped top and
+   bottom — the punchline is usually at the bottom. */
 .vg-lb-img {
-  max-width: 100%; max-height: calc(92vh - 96px);
+  max-width: 100%; max-height: 100%;
+  width: auto; height: auto;
   object-fit: contain; display: block;
 }
 
