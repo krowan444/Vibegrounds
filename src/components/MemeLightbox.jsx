@@ -74,6 +74,7 @@ export default function MemeLightbox({ memes, index, onClose, onIndex }) {
             alt={meme.title}
             nsfw={meme.is_nsfw}
             className="vg-lb-img"
+            eager
           />
         </div>
 
