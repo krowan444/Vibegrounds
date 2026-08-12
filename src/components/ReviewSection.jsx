@@ -196,7 +196,7 @@ export default function ReviewSection({ creationId }) {
       </div>
 
       {/* Comments */}
-      <div className="retro-panel">
+      <div className="retro-panel vg-reviews-panel">
         <div className="section-header">
           <h2>💬 Reviews ({reviews.length})</h2>
         </div>
@@ -215,6 +215,7 @@ export default function ReviewSection({ creationId }) {
           ) : (
             <form onSubmit={post}>
               <textarea
+                id="vg-review-input"
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
                 placeholder="What did you think? Be honest, be useful, don't be a dick."
