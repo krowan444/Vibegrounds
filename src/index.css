@@ -2827,7 +2827,12 @@ body { background: var(--bg-darkest); overflow-y: auto; }
 
 .vg-lb-panel {
   display: flex; flex-direction: column;
-  max-width: min(1100px, 92vw); max-height: 92vh; width: 100%;
+  max-width: min(1100px, 92vw); width: 100%;
+  /* A *definite* height, not just a max. Percentage heights inside only
+     resolve against a parent with a definite height — with max-height alone
+     the browser treats the child's max-height:100% as `none`, which is
+     exactly why tall memes were spilling out of the box. */
+  height: 92vh;
   background: var(--bg-panel);
   border: 1px solid var(--border-panel); border-radius: 6px;
   overflow: hidden;
@@ -2837,24 +2842,21 @@ body { background: var(--bg-darkest); overflow-y: auto; }
   /* A floor, not just min-height:0. A flex child with no intrinsic content
      size collapses to nothing, and a collapsed box means the image inside
      it can never become visible — belt and braces alongside eager loading. */
-  flex: 1 1 auto; min-height: 220px;
-  display: flex; align-items: center; justify-content: center;
+  flex: 1 1 auto; min-height: 0;
   background: #06060c;
-  /* The image is bounded by this box, so anything taller is clipped rather
-     than pushing out of the panel. */
   overflow: hidden;
+  /* Containing block for the absolutely positioned image below. */
+  position: relative;
 }
-.vg-lb-stage .vg-nsfw-wrap {
-  display: flex; align-items: center; justify-content: center;
-  max-width: 100%; max-height: 100%; min-height: 0;
-}
-/* Bound the image by its container, not by a vh sum. The old
-   calc(92vh - 96px) was a guess at the chrome height and did not match the
-   space the flex layout actually left, so tall memes were clipped top and
-   bottom — the punchline is usually at the bottom. */
+.vg-lb-stage .vg-nsfw-wrap { position: absolute; inset: 0; }
+
+/* Fill the stage and letterbox. `object-fit: contain` guarantees the whole
+   meme is visible and never distorted, whatever its aspect ratio — which
+   matters because the punchline is usually along the bottom edge. Absolute
+   positioning sidesteps the percentage-height resolution problem entirely. */
 .vg-lb-img {
-  max-width: 100%; max-height: 100%;
-  width: auto; height: auto;
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
   object-fit: contain; display: block;
 }
 
