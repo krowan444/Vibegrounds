@@ -2834,7 +2834,10 @@ body { background: var(--bg-darkest); overflow-y: auto; }
 }
 
 .vg-lb-stage {
-  flex: 1; min-height: 0;
+  /* A floor, not just min-height:0. A flex child with no intrinsic content
+     size collapses to nothing, and a collapsed box means the image inside
+     it can never become visible — belt and braces alongside eager loading. */
+  flex: 1; min-height: 220px;
   display: flex; align-items: center; justify-content: center;
   background: #06060c;
 }
