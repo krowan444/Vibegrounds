@@ -3177,3 +3177,59 @@ body { background: var(--bg-darkest); overflow-y: auto; }
   .vg-shot-compare { grid-template-columns: 1fr; }
   .vg-review-reply { margin-left: 12px; }
 }
+
+/* ==========================================================
+   REVIEW VISIBILITY
+   Reviews live at the bottom of a long page. Without a way in
+   from the top, people who wanted to leave one simply never
+   found the box.
+   ========================================================== */
+.vg-jump-reviews {
+  display: flex; flex-direction: column; gap: 3px;
+  width: 100%; margin-top: 12px; padding: 11px 13px;
+  background: var(--bg-panel);
+  border: 2px solid var(--orange-dim);
+  border-radius: 4px;
+  text-align: left; cursor: pointer;
+  font: inherit; color: inherit;
+  transition: border-color .12s, background .12s;
+}
+.vg-jump-reviews:hover {
+  border-color: var(--orange);
+  background: rgba(232, 163, 23, .08);
+}
+.vg-jump-reviews:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+
+.vg-jump-reviews-top {
+  font-family: var(--font-retro); font-size: 17px;
+  color: var(--text-bright); font-weight: bold;
+}
+.vg-jump-reviews-cta {
+  font-family: var(--font-retro); font-size: 14px;
+  color: var(--orange);
+}
+
+/* Give the reviews panel itself a bit of presence once you land on it,
+   so it reads as a destination rather than more page. */
+.vg-reviews-panel { border-color: var(--orange-dim); }
+.vg-reviews-panel .section-header { border-bottom-color: var(--orange); }
+
+/* Newest and Top Rated stacked on one screen, rather than hidden behind
+   tabs. A meme with no votes yet is the one that most needs eyes on it. */
+.vg-meme-section { margin-bottom: 26px; }
+.vg-meme-section-head {
+  display: flex; align-items: baseline; gap: 10px;
+  margin-bottom: 10px; flex-wrap: wrap;
+  border-bottom: 1px solid var(--border-dark); padding-bottom: 6px;
+}
+.vg-meme-section-head h2 {
+  font-family: var(--font-retro); font-size: 20px;
+  color: var(--orange); margin: 0;
+}
+.vg-meme-section-sub {
+  font-family: var(--font-retro); font-size: 14px; color: var(--text-dim);
+}
+.vg-meme-note {
+  font-family: var(--font-retro); font-size: 15px;
+  color: var(--text-dim); text-align: center; margin: 4px 0 20px;
+}
