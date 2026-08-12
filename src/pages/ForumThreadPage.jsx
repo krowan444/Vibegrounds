@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import SiteHeader from '../components/SiteHeader';
+import { renderPostBody } from '../lib/postText';
 
 export default function ForumThreadPage() {
   const { id } = useParams();
@@ -450,7 +451,7 @@ function ForumPost({ username, avatarUrl, body, createdAt, isOP, canEdit, onEdit
           fontFamily: 'var(--font-retro)', fontSize: '17px', color: 'var(--text-primary)',
           lineHeight: '1.4', whiteSpace: 'pre-wrap', wordBreak: 'break-word'
         }}>
-          {body}
+          {renderPostBody(body)}
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
           <span style={{ fontFamily: 'var(--font-retro)', fontSize: '13px', color: 'var(--text-dim)' }}>
