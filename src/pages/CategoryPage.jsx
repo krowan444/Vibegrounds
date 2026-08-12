@@ -5,7 +5,45 @@ import SiteHeader from '../components/SiteHeader';
 import CreationCard from '../components/CreationCard';
 import Notice from '../components/Notice';
 import SubmitCta from '../components/SubmitCta';
+import CreditNote from '../components/CreditNote';
 import { compactNumber } from '../lib/format';
+
+/*
+ * Categories where most of the best work is made by people outside this
+ * site, so pointing at other people's stuff is genuinely worth encouraging.
+ * The value is the noun used in the prompt — "great films", "great tracks".
+ */
+const CREDIT_CATEGORIES = {
+  'ai-movies': 'films',
+  audio: 'music or sound',
+  art: 'art',
+};
+
+/**
+ * A real shout-out, as an example of the behaviour we are asking for:
+ * named, linked, and clearly not ours.
+ */
+function DorBrothersShoutOut() {
+  return (
+    <div className="vg-shoutout">
+      <div className="vg-shoutout-label">⭐ Shout-out</div>
+      <div className="vg-shoutout-body">
+        <strong>The Dor Brothers</strong> — Yonatan Dor&#39;s Berlin studio, and
+        about the best AI film-making going. Hundreds of projects, well over
+        100 million views, and they were doing cinematic AI before most people
+        knew it was possible. Not ours, nothing to do with us, just worth your
+        time.{' '}
+        <a href="https://thedorbrothers.com/" target="_blank" rel="noreferrer noopener">
+          thedorbrothers.com
+        </a>{' '}
+        ·{' '}
+        <a href="https://www.youtube.com/@thedorbrothers" target="_blank" rel="noreferrer noopener">
+          YouTube
+        </a>
+      </div>
+    </div>
+  );
+}
 
 export default function CategoryPage() {
   const { category } = useParams();
@@ -93,6 +131,19 @@ export default function CategoryPage() {
         </div>
 
         <Notice tone="error">{error}</Notice>
+
+        {/*
+          Only on the categories where the good stuff is overwhelmingly made
+          by people who are not members here. Putting this on Games or
+          Software would just be noise — those are things members build
+          themselves.
+        */}
+        {CREDIT_CATEGORIES[category] && (
+          <CreditNote
+            what={CREDIT_CATEGORIES[category]}
+            shoutOut={category === 'ai-movies' ? <DorBrothersShoutOut /> : null}
+          />
+        )}
 
         {count === 0 ? (
           <div className="vg-empty">
