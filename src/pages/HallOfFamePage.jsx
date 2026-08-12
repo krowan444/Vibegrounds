@@ -4,6 +4,7 @@ import { supabase, retryOnAbort } from '../lib/supabase';
 import SiteHeader from '../components/SiteHeader';
 import Notice from '../components/Notice';
 import SubmitCta from '../components/SubmitCta';
+import CreditNote from '../components/CreditNote';
 import { thumbFor, onThumbError, LOGO_FALLBACK } from '../lib/thumbnail';
 import { hostOf } from '../lib/format';
 
@@ -61,6 +62,10 @@ export default function HallOfFamePage() {
             <Link to="/portal">Go and rate those instead →</Link>
           </p>
         </div>
+
+        {/* The whole Hall is other people's work, credited — so this is the
+            natural place to invite more of the same. */}
+        <CreditNote what="AI-built projects" />
 
         <Notice tone="error">{error}</Notice>
 
