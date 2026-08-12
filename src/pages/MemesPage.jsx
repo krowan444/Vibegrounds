@@ -5,8 +5,8 @@ import { useAuth } from '../contexts/AuthContext';
 import SiteHeader from '../components/SiteHeader';
 import Notice from '../components/Notice';
 import NsfwImage from '../components/NsfwImage';
-import VoteWidget from '../components/VoteWidget';
-import { scoreLabel, scoreLabelColor, isUnrated, timeAgo } from '../lib/format';
+import MemeLightbox from '../components/MemeLightbox';
+import { scoreLabel, scoreLabelColor, isUnrated } from '../lib/format';
 
 const SORTS = [
   { id: 'top',    label: 'Top Rated', view: 'chart_memes',  order: 'rank',       asc: true,  blurb: 'The best of the board, by score.' },
@@ -16,15 +16,21 @@ const SORTS = [
 /**
  * The meme board.
  *
- * Deliberately a wall of images rather than the card-and-metadata layout
- * the Portal uses. Memes are judged in about a second, so the image gets
- * the space and everything else gets out of the way.
+ * The image is the product here, so the tiles are large and everything else
+ * is deliberately quiet: a title, who made it, and the score. Nothing else.
+ * Voting used to sit on every tile, which meant five competing controls per
+ * screen and a wall that read as busy rather than browsable — it lives in
+ * the viewer now, where you are actually looking at the thing you'd rate.
+ *
+ * Clicking a tile opens it full size in place rather than navigating, so you
+ * can move through the whole board with the arrow keys.
  */
 export default function MemesPage() {
   const { user } = useAuth();
   const [sort, setSort] = useState('top');
   const [rows, setRows] = useState(null);
   const [error, setError] = useState('');
+  const [open, setOpen] = useState(null); // index into rows, or null
 
   const load = useCallback(async (which) => {
     const cfg = SORTS.find((s) => s.id === which) || SORTS[0];
@@ -100,36 +106,46 @@ export default function MemesPage() {
 
         {rows !== null && rows.length > 0 && (
           <div className="vg-meme-grid">
-            {rows.map((m) => (
-              <div key={m.id} className="vg-meme-card">
-                <Link to={`/creation/${m.id}`} className="vg-meme-shot">
+            {rows.map((m, i) => (
+              <button
+                key={m.id}
+                type="button"
+                className="vg-meme-card"
+                onClick={() => setOpen(i)}
+                aria-label={`Open ${m.title}`}
+              >
+                <span className="vg-meme-shot">
                   <NsfwImage
                     src={m.thumbnail_url || m.project_url}
                     alt={m.title}
                     nsfw={m.is_nsfw}
                     className="vg-meme-img"
                   />
-                </Link>
+                </span>
 
-                <div className="vg-meme-body">
-                  <Link to={`/creation/${m.id}`} className="vg-meme-name">{m.title}</Link>
-                  <div className="vg-meme-meta">
-                    by <Link to={`/profile/${m.creator_username}`}>{m.creator_username}</Link>
-                    {' · '}{timeAgo(m.created_at)}
-                  </div>
-
-                  <div className="vg-meme-foot">
+                <span className="vg-meme-body">
+                  <span className="vg-meme-name">{m.title}</span>
+                  <span className="vg-meme-line">
+                    <span className="vg-meme-by">{m.creator_username}</span>
                     <span className="vg-meme-score" style={{ color: scoreLabelColor(m) }}>
-                      {isUnrated(m) ? 'UNRATED' : `★ ${scoreLabel(m)}`}
+                      {isUnrated(m) ? '–' : `★ ${scoreLabel(m)}`}
                     </span>
-                    <VoteWidget creation={m} />
-                  </div>
-                </div>
-              </div>
+                  </span>
+                </span>
+              </button>
             ))}
           </div>
         )}
       </div>
+
+      {open !== null && rows && rows.length > 0 && (
+        <MemeLightbox
+          memes={rows}
+          index={open}
+          onIndex={setOpen}
+          onClose={() => setOpen(null)}
+        />
+      )}
     </>
   );
 }
