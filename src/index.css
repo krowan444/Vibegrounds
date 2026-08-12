@@ -3233,3 +3233,47 @@ body { background: var(--bg-darkest); overflow-y: auto; }
   font-family: var(--font-retro); font-size: 15px;
   color: var(--text-dim); text-align: center; margin: 4px 0 20px;
 }
+/* ==========================================================
+   CREDITED SHARING
+   Sharing other people's work is encouraged; taking credit
+   for it is not. The copy carries that, the styling makes it
+   read as an invitation rather than a warning notice.
+   ========================================================== */
+.vg-credit-note {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  border-left: 4px solid var(--orange);
+  border-radius: 4px;
+  padding: 13px 15px;
+  margin-bottom: 16px;
+}
+.vg-credit-head {
+  font-family: var(--font-retro); font-size: 17px;
+  color: var(--orange); font-weight: bold; margin-bottom: 5px;
+}
+.vg-credit-body {
+  font-family: var(--font-retro); font-size: 15px;
+  color: var(--text-primary); line-height: 1.45; margin: 0 0 6px;
+}
+.vg-credit-body strong { color: var(--text-bright); }
+.vg-credit-rule {
+  font-family: var(--font-retro); font-size: 14px;
+  color: var(--text-dim); line-height: 1.4; margin: 0;
+}
+
+.vg-shoutout {
+  margin-top: 12px; padding: 11px 13px;
+  background: var(--bg-panel-alt);
+  border: 1px solid var(--border-dark); border-radius: 4px;
+}
+.vg-shoutout-label {
+  font-family: var(--font-pixel); font-size: 8px;
+  color: var(--yellow); letter-spacing: 1px; margin-bottom: 6px;
+}
+.vg-shoutout-body {
+  font-family: var(--font-retro); font-size: 15px;
+  color: var(--text-primary); line-height: 1.45;
+}
+.vg-shoutout-body strong { color: var(--text-bright); }
+.vg-shoutout-body a { color: var(--blue-link); text-decoration: none; }
+.vg-shoutout-body a:hover { color: var(--orange); text-decoration: underline; }
