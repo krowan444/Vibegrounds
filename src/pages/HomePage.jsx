@@ -43,9 +43,10 @@ export default function HomePage() {
         // chart_memes_safe excludes anything flagged 18+ in SQL, so nothing
         // rude can reach the front page even if this component slips up.
         retryOnAbort(() => supabase.from('chart_memes_safe').select('*').order('rank').limit(12)),
+        retryOnAbort(() => supabase.from('chart_monthly').select('*').order('rank').limit(50)),
       ])).map(settle);
 
-      const [featured, latest, daily, weekly, alltime, cats, creators, cCount, uCount, memes] = R;
+      const [featured, latest, daily, weekly, alltime, cats, creators, cCount, uCount, memes, monthly] = R;
       if (!alive) return;
 
       const firstError = R.find((r) => r.error)?.error;
@@ -62,11 +63,16 @@ export default function HomePage() {
         total: cCount.count || 0,
         members: uCount.count || 0,
         memes: memes.data || [],
+        monthly: monthly.data || [],
       });
     })().catch((e) => {
       if (!alive) return;
       setError(e?.message || 'Something went wrong loading the Portal.');
+      // Every array the render touches must be present here, or the failure
+      // path throws on .length and takes the page down harder than the
+      // original error did.
       setD({ featured: [], latest: [], daily: [], weekly: [], alltime: [],
+             monthly: [], memes: [],
              categories: [], creators: [], total: 0, members: 0 });
     });
     return () => { alive = false; };
@@ -251,7 +257,7 @@ export default function HomePage() {
               </div>
               {d.alltime.length === 0 ? (
                 <div className="vg-rail-empty">
-                  Needs 5 votes to chart.<br />Go and rate something.
+                  Needs one vote to chart.<br />Go and rate something.
                 </div>
               ) : (
                 d.alltime.map((c) => (
@@ -279,6 +285,46 @@ export default function HomePage() {
                 ))
               )}
             </div>
+
+            {/* Top 50 this month, under the all-time board. A monthly window
+                gives newer work a realistic shot — on the all-time chart an
+                early submission with a head start is very hard to displace. */}
+            <div className="vg-rail-box vg-rail-scroll" style={{ marginTop: '14px' }}>
+              <div className="vg-rail-head" style={{ position: 'sticky', top: 0, zIndex: 2 }}>
+                <span>📅 TOP 50 THIS MONTH</span>
+                <Link to="/charts?chart=monthly">full</Link>
+              </div>
+              {d.monthly.length === 0 ? (
+                <div className="vg-rail-empty">
+                  Nothing rated this month yet.<br />Go and rate something.
+                </div>
+              ) : (
+                d.monthly.map((c) => (
+                  <Link key={c.id} to={`/creation/${c.id}`} className="vg-rail-row">
+                    <span className={`vg-rail-rank ${c.rank <= 3 ? 'medal' : ''}`}>
+                      {c.rank === 1 ? '🥇' : c.rank === 2 ? '🥈' : c.rank === 3 ? '🥉' : c.rank}
+                    </span>
+                    <span className="vg-rail-thumb">
+                      <img
+                        src={thumbFor(c, 120)}
+                        alt=""
+                        loading="lazy"
+                        onError={onThumbError}
+                        className={thumbFor(c, 120) === LOGO_FALLBACK ? 'vg-thumb-placeholder' : undefined}
+                      />
+                    </span>
+                    <span className="vg-rail-body">
+                      <span className="vg-rail-title">{c.title}</span>
+                      <span className="vg-rail-by">by {c.creator_username}</span>
+                    </span>
+                    <span className="vg-rail-score" style={{ color: scoreLabelColor(c) }}>
+                      {scoreLabel(c)}
+                    </span>
+                  </Link>
+                ))
+              )}
+            </div>
+
             <AdSlot index={0} />
           </div>
         </div>
