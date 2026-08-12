@@ -18,12 +18,20 @@ import { useState } from 'react';
  * Reveal state is per-image and deliberately not remembered. Erring
  * towards covered is the cheap mistake.
  */
-export default function NsfwImage({ src, alt, nsfw, className = '', onError, sizes }) {
+/*
+ * `eager` exists because lazy loading deadlocks inside a flex container that
+ * starts at zero height: the image is not in the viewport, so it never loads;
+ * it never loads, so it never gains intrinsic size; so the container stays at
+ * zero forever and you see a blank box. Anywhere the image *is* the content —
+ * the lightbox — must opt out.
+ */
+export default function NsfwImage({ src, alt, nsfw, className = '', onError, sizes, eager = false }) {
   const [shown, setShown] = useState(false);
+  const loading = eager ? 'eager' : 'lazy';
 
   if (!nsfw) {
     return (
-      <img src={src} alt={alt} className={className} onError={onError} sizes={sizes} loading="lazy" />
+      <img src={src} alt={alt} className={className} onError={onError} sizes={sizes} loading={loading} />
     );
   }
 
@@ -34,7 +42,7 @@ export default function NsfwImage({ src, alt, nsfw, className = '', onError, siz
         alt={shown ? alt : ''}
         className={`${className} ${shown ? '' : 'vg-nsfw-blurred'}`.trim()}
         onError={onError}
-        loading="lazy"
+        loading={loading}
         aria-hidden={!shown || undefined}
       />
 
