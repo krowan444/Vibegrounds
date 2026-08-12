@@ -279,7 +279,8 @@ export default function CreationPage() {
               )}
             </div>
 
-            <div style={{ marginTop: '14px' }}>
+            {/* Anchor target for the "write a review" jump below. */}
+            <div id="reviews" style={{ marginTop: '14px', scrollMarginTop: '14px' }}>
               <ReviewSection creationId={c.id} />
             </div>
           </div>
@@ -290,6 +291,32 @@ export default function CreationPage() {
               creation={c}
               onVoted={(d) => setC((prev) => ({ ...prev, score: d.score, vote_count: d.vote_count }))}
             />
+
+            {/*
+              Reviews sat at the very bottom of the page, under the
+              description, tags and owner controls — far enough down that
+              people wanting to leave one could not find it. A score is a
+              number; a review is the thing that actually helps a creator,
+              so it gets a real invitation rather than being left to be
+              scrolled past.
+            */}
+            <button
+              type="button"
+              className="vg-jump-reviews"
+              onClick={() => {
+                document.getElementById('reviews')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                // Focus after the smooth scroll has had a moment, otherwise
+                // the browser snaps straight there and the animation is lost.
+                setTimeout(() => document.getElementById('vg-review-input')?.focus(), 550);
+              }}
+            >
+              <span className="vg-jump-reviews-top">
+                💬 {c.review_count || 0} {c.review_count === 1 ? 'review' : 'reviews'}
+              </span>
+              <span className="vg-jump-reviews-cta">
+                {c.review_count ? 'Read them or add yours ↓' : 'Be the first to review it ↓'}
+              </span>
+            </button>
 
             <ShareBar creation={c} />
 
