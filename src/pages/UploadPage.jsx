@@ -5,6 +5,7 @@ import { supabase, retryOnAbort, withTimeout } from '../lib/supabase';
 import SiteHeader from '../components/SiteHeader';
 import Notice from '../components/Notice';
 import ShareBar from '../components/ShareBar';
+import TagPicker from '../components/TagPicker';
 
 /** Normalise a URL: add https:// when the user leaves it off. */
 export function normalizeUrl(raw) {
@@ -362,8 +363,14 @@ export default function UploadPage() {
                 value={form.tags} onChange={set('tags')} disabled={loading}
               />
               <div style={{ fontFamily: 'var(--font-retro)', fontSize: '14px', color: 'var(--text-dim)' }}>
-                Comma separated, up to 8.
+                Comma separated, up to 8. Type your own, or tap the ones below.
               </div>
+              <TagPicker
+                value={form.tags}
+                onChange={(tags) => setForm((f) => ({ ...f, tags }))}
+                category={form.category}
+                disabled={loading}
+              />
             </div>
 
             <label style={{
