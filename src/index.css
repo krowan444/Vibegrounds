@@ -3277,3 +3277,80 @@ body { background: var(--bg-darkest); overflow-y: auto; }
 .vg-shoutout-body strong { color: var(--text-bright); }
 .vg-shoutout-body a { color: var(--blue-link); text-decoration: none; }
 .vg-shoutout-body a:hover { color: var(--orange); text-decoration: underline; }
+
+
+/* ── TAG PICKER ──────────────────────────────────────────────
+   One-click tag suggestions under the tags input on the upload
+   and edit forms. Chips are buttons, so they toggle both ways. */
+.vg-tagpicker {
+  margin-top: 8px;
+  padding: 9px 10px;
+  background: var(--bg-panel-alt);
+  border: 1px solid var(--border-dark);
+  border-radius: 4px;
+}
+
+.vg-tagpicker-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-family: var(--font-pixel);
+  font-size: 7px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 7px;
+}
+
+.vg-tagpicker-count { color: var(--text-dim); }
+.vg-tagpicker-count.is-full { color: var(--orange); }
+
+.vg-tagpicker-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.vg-tag-chip {
+  font-family: var(--font-retro);
+  font-size: 16px;
+  line-height: 1;
+  padding: 5px 9px;
+  background: var(--bg-input);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-dark);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+
+.vg-tag-chip:hover:not(:disabled) {
+  border-color: var(--orange);
+  color: var(--orange-bright);
+}
+
+.vg-tag-chip.is-on {
+  background: var(--orange-dim);
+  border-color: var(--orange-bright);
+  color: #000;
+  font-weight: bold;
+}
+
+.vg-tag-chip.is-on:hover:not(:disabled) {
+  background: var(--red);
+  border-color: var(--red);
+  color: #fff;
+}
+
+.vg-tag-chip:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.vg-tagpicker-note {
+  font-family: var(--font-retro);
+  font-size: 14px;
+  color: var(--orange);
+  margin-top: 7px;
+}
