@@ -76,20 +76,47 @@ export function withTimeout(promise, ms, label = 'request') {
  * dead request still gives up rather than hanging forever, which was the
  * original bug.
  */
+/*
+ * Errors that mean "try that again", not "that was wrong".
+ *
+ * The JWT ones need explaining. PostgREST refuses a token whose issued-at time
+ * is ahead of its own clock, and it caches its system timestamp for up to a
+ * second — so a token that is only milliseconds old can be read as coming from
+ * the future and bounced. Page load is exactly when supabase-js renews an
+ * expiring token, which is why this only ever showed up on first load and why
+ * hitting refresh always "fixed" it: by then the token was old enough to pass.
+ *
+ * That is the same manual refresh the retry below now does automatically.
+ */
+const TRANSIENT = /abort|lock broken|issued at future|jwtissuedatfuture|not yet valid|jwt.*(future|not yet)/i;
+
+/*
+ * A quarter of a second is the right backoff for a broken lock, but useless
+ * against a clock that is a second out — the retry lands inside the same bad
+ * window and fails identically. Clock problems get a longer wait so the second
+ * attempt is made on the far side of it.
+ */
+const CLOCK_SKEW = /future|not yet valid/i;
+
 export async function retryOnAbort(run, attempts = 2, timeoutMs = 22000) {
   let last;
   for (let i = 0; i < attempts; i++) {
+    let msg = '';
     try {
       const res = await withTimeout(run(), timeoutMs);
-      const msg = res?.error?.message || '';
-      if (!/abort|lock broken/i.test(msg)) return res;
+      msg = res?.error?.message || '';
+      if (!TRANSIENT.test(msg)) return res;
       last = res;
     } catch (e) {
-      const transient = e?.timedOut || /abort|lock broken/i.test(e?.message || '');
-      if (!transient) throw e;
+      msg = e?.message || '';
+      if (!e?.timedOut && !TRANSIENT.test(msg)) throw e;
       last = { data: null, error: e };
     }
-    await new Promise((r) => setTimeout(r, 250 * (i + 1)));
+    // No point waiting after the last attempt — there is nothing left to wait
+    // for, and at 1.5s that delay is long enough to be felt on the page.
+    if (i === attempts - 1) break;
+    const backoff = CLOCK_SKEW.test(msg) ? 1500 : 250 * (i + 1);
+    await new Promise((r) => setTimeout(r, backoff));
   }
   return last;
 }
