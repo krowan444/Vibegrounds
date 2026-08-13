@@ -4,6 +4,7 @@ import { supabase, retryOnAbort, withTimeout } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import SiteHeader from '../components/SiteHeader';
 import Notice from '../components/Notice';
+import TagPicker from '../components/TagPicker';
 import { normalizeUrl, isValidUrl } from './UploadPage';
 
 /**
@@ -339,6 +340,12 @@ export default function EditCreationPage() {
               <label>6. Tags <span style={{ color: 'var(--text-dim)' }}>(comma separated, up to 8)</span></label>
               <input
                 type="text" value={form.tags} onChange={set('tags')} disabled={loading}
+              />
+              <TagPicker
+                value={form.tags}
+                onChange={(tags) => setForm((f) => ({ ...f, tags }))}
+                category={form.category}
+                disabled={loading}
               />
             </div>
 
