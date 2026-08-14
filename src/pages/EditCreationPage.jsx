@@ -67,6 +67,8 @@ export default function EditCreationPage() {
         thumbnail_url: row.thumbnail_url || '',
         tags: (row.tags || []).join(', '),
         is_nsfw: !!row.is_nsfw,
+        // Older rows pre-date the column, so treat a missing value as open.
+        accepts_ideas: row.accepts_ideas !== false,
       });
     })().catch((e) => alive && setError(e?.message || 'Could not load that submission.'));
     return () => { alive = false; };
@@ -200,6 +202,14 @@ export default function EditCreationPage() {
           // approval that landed in between.
           tags,
           is_nsfw: form.is_nsfw,
+          // Only sent if the column actually exists on the row we loaded.
+          // Writing a column that has not been migrated yet fails the whole
+          // update, which would break editing entirely for anyone who
+          // deployed this before running 19_ideas.sql. Deploy order should
+          // not be able to break saving a typo.
+          ...(original && 'accepts_ideas' in original
+            ? { accepts_ideas: form.accepts_ideas }
+            : {}),
         })
         .eq('id', id)
         .eq('creator_id', user.id));
@@ -358,6 +368,30 @@ export default function EditCreationPage() {
                 Mark as 18+
               </label>
             </div>
+
+            {/* Opt-out, not opt-in — but stated plainly, because being open to
+                suggestions should be a choice you know you are making rather
+                than something that happened to you.
+
+                Hidden until the column exists, so this does not appear as a
+                toggle that silently does nothing before the migration runs. */}
+            {original && 'accepts_ideas' in original && (
+            <div className="retro-form-group">
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                <input
+                  type="checkbox" checked={form.accepts_ideas} onChange={set('accepts_ideas')}
+                  disabled={loading} style={{ width: 'auto' }}
+                />
+                💡 Open to ideas
+              </label>
+              <div className="vg-edit-hint">
+                Lets people suggest improvements — and prompts you can paste
+                straight into your AI — underneath your submission. You decide
+                what gets marked Planned or Built. Untick to switch it off; any
+                ideas already posted stay visible but nobody can add more.
+              </div>
+            </div>
+            )}
 
             <div className="vg-edit-actions">
               <button type="submit" className="retro-cta" disabled={loading}>
