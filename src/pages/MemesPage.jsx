@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase, retryOnAbort } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -11,46 +11,100 @@ import { scoreLabel, scoreLabelColor, isUnrated } from '../lib/format';
 /**
  * The meme board.
  *
- * Newest and top rated sit on one screen rather than behind tabs. A tab is a
- * thing nobody clicks: with the board split in two, a meme posted five
- * minutes ago was invisible unless you happened to switch to Newest, which
- * is precisely backwards — new uploads are the ones that need eyes on them
- * to get their first vote and climb.
+ * The old layout was two lists of 24 — "Fresh" and "Top Rated" — drawn from a
+ * board of eighteen memes. Every meme appeared in both, so the page read as
+ * the same wall of images twice and neither heading meant anything. Worse,
+ * there was no way to see the whole board: 24 was the ceiling.
  *
- * The image is the product, so the tiles are large and the text under each
- * is a label, not a card: title, who made it, score. Clicking opens it full
- * size in place so you can flick through with the arrow keys.
+ * So: two short highlight rows and one full catalogue underneath.
+ *
+ *   🔥 Hot      the best-scoring memes, a handful of them
+ *   🆕 New      the most recent, with anything already in Hot removed
+ *   📚 All      the entire board, sortable, filterable, paged
+ *
+ * Hot and New are deliberately small. They are a shop window, not a list —
+ * the catalogue is where you go to actually browse, and it is the only
+ * section that grows. Deduplicating New against Hot is what stops the two
+ * rows being the same pictures, which was the original complaint.
  */
+
+const HOT_N = 6;
+const NEW_N = 6;
+const PAGE = 24;
+
+const SORTS = {
+  newest: { label: 'Newest',     col: 'created_at' },
+  top:    { label: 'Top rated',  col: 'score' },
+  voted:  { label: 'Most voted', col: 'vote_count' },
+};
+
 export default function MemesPage() {
   const { user } = useAuth();
-  const [newest, setNewest] = useState(null);
-  const [top, setTop] = useState(null);
+
+  const [hot, setHot] = useState(null);
+  const [fresh, setFresh] = useState(null);
+
+  // The catalogue is paged and independently sorted/filtered.
+  const [all, setAll] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [sort, setSort] = useState('newest');
+  const [tag, setTag] = useState('');
+  const [tags, setTags] = useState([]);
+  const [more, setMore] = useState(false);
+
   const [error, setError] = useState('');
+  const [view, setView] = useState(null); // { list, index }
 
-  // Which list the viewer is walking through, and where in it.
-  const [view, setView] = useState(null); // { list: 'newest' | 'top', index }
-
-  const load = useCallback(async () => {
+  /* Highlight rows + the tag vocabulary. Loaded once. */
+  const loadTop = useCallback(async () => {
     const settle = (r) => (r.status === 'fulfilled' ? r.value : { data: [], error: r.reason });
-    const [n, t] = (await Promise.allSettled([
-      retryOnAbort(() => supabase.from('memes_public').select('*')
-        .order('created_at', { ascending: false }).limit(24)),
+    const [h, n, t] = (await Promise.allSettled([
       retryOnAbort(() => supabase.from('chart_memes').select('*')
-        .order('rank', { ascending: true }).limit(24)),
+        .order('rank', { ascending: true }).limit(HOT_N)),
+      // Over-fetch so that removing the Hot ones still leaves a full row.
+      retryOnAbort(() => supabase.from('memes_public').select('*')
+        .order('created_at', { ascending: false }).limit(HOT_N + NEW_N)),
+      retryOnAbort(() => supabase.from('memes_public').select('tags')),
     ])).map(settle);
 
-    const firstError = [n, t].find((r) => r.error)?.error;
+    const firstError = [h, n, t].find((r) => r.error)?.error;
     if (firstError) setError(`Could not load everything: ${firstError.message || firstError}`);
 
-    setNewest(n.data || []);
-    setTop(t.data || []);
+    const hotList = h.data || [];
+    const hotIds = new Set(hotList.map((m) => m.id));
+    setHot(hotList);
+    setFresh((n.data || []).filter((m) => !hotIds.has(m.id)).slice(0, NEW_N));
+
+    // Every tag anyone has used, most common first, so the filter row is
+    // ordered by usefulness rather than alphabetically.
+    const counts = new Map();
+    (t.data || []).forEach((row) => (row.tags || []).forEach((x) => counts.set(x, (counts.get(x) || 0) + 1)));
+    setTags([...counts.entries()].sort((a, b) => b[1] - a[1]).map(([name, n2]) => ({ name, n: n2 })));
   }, []);
 
-  useEffect(() => {
-    load().catch(() => { setNewest([]); setTop([]); });
-  }, [load]);
+  /* The catalogue. Re-runs whenever the sort or tag filter changes. */
+  const loadPage = useCallback(async (from) => {
+    let q = supabase.from('memes_public').select('*', { count: 'exact' });
+    if (tag) q = q.contains('tags', [tag]);
+    const { data, count, error: err } = await retryOnAbort(() => q
+      .order(SORTS[sort].col, { ascending: false })
+      .range(from, from + PAGE - 1));
 
-  const openList = view?.list === 'top' ? (top || []) : (newest || []);
+    if (err) { setError(`Could not load the catalogue: ${err.message || err}`); return; }
+    const rows = data || [];
+    setTotal(count || 0);
+    setAll((prev) => (from === 0 ? rows : [...prev, ...rows]));
+    setMore(from + rows.length < (count || 0));
+  }, [sort, tag]);
+
+  useEffect(() => { loadTop().catch(() => { setHot([]); setFresh([]); }); }, [loadTop]);
+  useEffect(() => { loadPage(0).catch(() => setAll([])); }, [loadPage]);
+
+  const openList = useMemo(() => {
+    if (view?.list === 'hot') return hot || [];
+    if (view?.list === 'fresh') return fresh || [];
+    return all;
+  }, [view, hot, fresh, all]);
 
   const Tile = ({ m, onOpen }) => (
     <button type="button" className="vg-meme-card" onClick={onOpen} aria-label={`Open ${m.title}`}>
@@ -70,12 +124,33 @@ export default function MemesPage() {
             {isUnrated(m) ? '–' : `★ ${scoreLabel(m)}`}
           </span>
         </span>
+        {/* Tags double as a browse affordance: seeing them on a meme is what
+            tells you the filter row above is worth using. */}
+        {m.tags?.length > 0 && (
+          <span className="vg-meme-tags">
+            {m.tags.slice(0, 3).map((x) => <span key={x} className="vg-meme-tag">{x}</span>)}
+          </span>
+        )}
       </span>
     </button>
   );
 
-  const loading = newest === null || top === null;
-  const nothing = !loading && newest.length === 0 && top.length === 0;
+  const Row = ({ id, icon, title, sub, list, keyName }) => (
+    <section className="vg-meme-section" id={id}>
+      <div className="vg-meme-section-head">
+        <h2>{icon} {title}</h2>
+        <span className="vg-meme-section-sub">{sub}</span>
+      </div>
+      <div className="vg-meme-grid vg-meme-grid-row">
+        {list.map((m, i) => (
+          <Tile key={m.id} m={m} onOpen={() => setView({ list: keyName, index: i })} />
+        ))}
+      </div>
+    </section>
+  );
+
+  const loading = hot === null || fresh === null;
+  const nothing = !loading && hot.length === 0 && fresh.length === 0 && all.length === 0;
 
   return (
     <>
@@ -112,39 +187,89 @@ export default function MemesPage() {
           </div>
         )}
 
-        {/* Newest first — a meme with no votes yet is the one that most
-            needs to be seen. */}
-        {!loading && newest.length > 0 && (
-          <section className="vg-meme-section">
+        {!loading && hot.length > 0 && (
+          <Row id="hot" icon="🔥" title="Hot" sub="Best scoring on the board" list={hot} keyName="hot" />
+        )}
+
+        {!loading && fresh.length > 0 && (
+          <Row id="new" icon="🆕" title="New" sub="Straight off the press" list={fresh} keyName="fresh" />
+        )}
+
+        {/* The catalogue. Everything, always — the two rows above are only a
+            sample of it, so this is the section that has to scale. */}
+        {!loading && total > 0 && (
+          <section className="vg-meme-section" id="all">
             <div className="vg-meme-section-head">
-              <h2>🆕 Fresh</h2>
-              <span className="vg-meme-section-sub">Straight off the press</span>
+              <h2>📚 All Memes</h2>
+              <span className="vg-meme-section-sub">
+                {tag ? `${total} tagged “${tag}”` : `The whole board — ${total} in total`}
+              </span>
             </div>
-            <div className="vg-meme-grid">
-              {newest.map((m, i) => (
-                <Tile key={m.id} m={m} onOpen={() => setView({ list: 'newest', index: i })} />
-              ))}
+
+            <div className="vg-meme-controls">
+              <div className="vg-meme-sorts">
+                {Object.entries(SORTS).map(([k, s]) => (
+                  <button
+                    key={k}
+                    type="button"
+                    className={sort === k ? 'vg-meme-sort is-on' : 'vg-meme-sort'}
+                    onClick={() => setSort(k)}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Only worth showing once somebody has actually tagged something,
+                  otherwise it is an empty control that makes the page look broken. */}
+              {tags.length > 0 && (
+                <div className="vg-meme-tagbar">
+                  <button
+                    type="button"
+                    className={tag === '' ? 'vg-meme-tagpill is-on' : 'vg-meme-tagpill'}
+                    onClick={() => setTag('')}
+                  >
+                    All
+                  </button>
+                  {tags.slice(0, 12).map(({ name, n }) => (
+                    <button
+                      key={name}
+                      type="button"
+                      className={tag === name ? 'vg-meme-tagpill is-on' : 'vg-meme-tagpill'}
+                      onClick={() => setTag(name === tag ? '' : name)}
+                    >
+                      {name} <span className="vg-meme-tagpill-n">{n}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
+
+            {all.length === 0 ? (
+              <p className="vg-meme-note">Nothing tagged “{tag}” yet.</p>
+            ) : (
+              <div className="vg-meme-grid">
+                {all.map((m, i) => (
+                  <Tile key={m.id} m={m} onOpen={() => setView({ list: 'all', index: i })} />
+                ))}
+              </div>
+            )}
+
+            {more && (
+              <button
+                type="button"
+                className="retro-cta vg-meme-more"
+                onClick={() => loadPage(all.length)}
+              >
+                LOAD MORE ({total - all.length} to go)
+              </button>
+            )}
           </section>
         )}
 
-        {!loading && top.length > 0 && (
-          <section className="vg-meme-section">
-            <div className="vg-meme-section-head">
-              <h2>🏆 Top Rated</h2>
-              <span className="vg-meme-section-sub">The best of the board, by score</span>
-            </div>
-            <div className="vg-meme-grid">
-              {top.map((m, i) => (
-                <Tile key={m.id} m={m} onOpen={() => setView({ list: 'top', index: i })} />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {!loading && newest.length > 0 && top.length === 0 && (
+        {!loading && hot.length === 0 && all.length > 0 && (
           <p className="vg-meme-note">
-            Nothing has been rated yet — go and score a few and the Top Rated board fills up.
+            Nothing has been rated yet — go and score a few and the Hot row fills up.
           </p>
         )}
       </div>
