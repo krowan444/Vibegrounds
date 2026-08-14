@@ -14,7 +14,7 @@ export default function SubmitCta({ text }) {
       <span className="vg-submit-cta-text">
         {text || (user
           ? 'Made something? Get it on the charts — 10 coins a post.'
-          : 'Made something? Join and get 50 free coins — five posts on the house.')}
+          : 'Made something? Join and get 50 free Vibe Coins — five posts on the house.')}
       </span>
       <Link to={user ? '/upload' : '/auth?mode=signup'} className="vg-submit-cta-btn">
         {user ? '🚀 SUBMIT A CREATION' : 'JOIN & SUBMIT'}
