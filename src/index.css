@@ -1833,10 +1833,28 @@ a:hover {
 }
 .vg-ad-body { display: block; line-height: 0; }
 .vg-ad-body img { width: 100%; height: auto; display: block; }
+/* Caption is a link now rather than a plain div, so it needs the anchor
+   defaults stripped back off — otherwise it renders as browser-blue and
+   underlined, which looks broken against the rest of the panel. */
 .vg-ad-caption {
+  display: block;
   font-family: var(--font-retro); font-size: 14px; color: var(--text-dim);
   padding: 5px 6px; border-top: 1px solid var(--border-dark);
+  text-decoration: none;
 }
+.vg-ad-caption:hover { color: var(--text-secondary); text-decoration: none; }
+
+/* Matches .vg-joke-foot, so both ad types carry the same "advertise here"
+   strip and read as one consistent piece of furniture. */
+.vg-ad-foot {
+  display: block; text-align: center;
+  font-family: var(--font-retro); font-size: 14px;
+  color: var(--text-dim); text-decoration: none;
+  padding: 6px 8px; border-top: 1px solid var(--border-dark);
+  background: var(--bg-panel);
+}
+.vg-ad-foot strong { color: var(--orange); }
+.vg-ad-foot:hover { color: var(--text-secondary); text-decoration: none; }
 
 /* ── "your rank" callout ── */
 .vg-yours {
