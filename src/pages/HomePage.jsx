@@ -166,7 +166,7 @@ export default function HomePage() {
               <div className="vg-strip" style={{ borderColor: 'var(--orange)', margin: 0 }}>
                 <div style={{ fontFamily: 'var(--font-retro)', fontSize: '19px' }}>
                   <strong style={{ color: 'var(--orange)' }}>Made something weird?</strong>{' '}
-                  <span style={{ color: 'var(--text-secondary)' }}>50 free coins when you join.</span>
+                  <span style={{ color: 'var(--text-secondary)' }}>50 free Vibe Coins when you join.</span>
                 </div>
                 <Link to="/auth?mode=signup" className="vg-daily-btn" style={{ textDecoration: 'none' }}>
                   JOIN VIBEGROUNDS
