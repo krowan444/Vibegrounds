@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import SiteHeader from '../components/SiteHeader';
 import Notice from '../components/Notice';
 import ShareBar from '../components/ShareBar';
+import TagPicker from '../components/TagPicker';
 
 const MAX_BYTES = 5 * 1024 * 1024;
 const TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
@@ -266,6 +267,15 @@ export default function PostMemePage() {
               <input
                 type="text" value={tags} onChange={(e) => setTags(e.target.value)}
                 disabled={!!busy} placeholder="relatable, cursed, debugging"
+              />
+              {/* The board filters by tag now, so an untagged meme is harder to
+                  find than a tagged one. Suggestions are the difference between
+                  people tagging and people leaving the box empty. */}
+              <TagPicker
+                value={tags}
+                onChange={setTags}
+                category="memes"
+                disabled={!!busy}
               />
             </div>
 
