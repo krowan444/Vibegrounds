@@ -126,7 +126,19 @@ export default function HeroAd({ creation, creations }) {
             <p className="vg-featured-desc">{current.description}</p>
           )}
 
+          {/* Arrows wrap around deliberately: at the end of a list of staff
+              picks the useful thing is to keep going, not to hit a dead stop. */}
           {picks.length > 1 && (
+            <div className="vg-featured-nav">
+              <button
+                type="button"
+                className="vg-featured-arrow"
+                onClick={() => goTo((index - 1 + picks.length) % picks.length)}
+                aria-label="Previous staff pick"
+              >
+                ◀
+              </button>
+
             <div className="vg-featured-dots" role="tablist" aria-label="Featured picks">
               {picks.map((p, i) => (
                 <button
@@ -139,6 +151,16 @@ export default function HeroAd({ creation, creations }) {
                   role="tab"
                 />
               ))}
+            </div>
+
+              <button
+                type="button"
+                className="vg-featured-arrow"
+                onClick={() => goTo((index + 1) % picks.length)}
+                aria-label="Next staff pick"
+              >
+                ▶
+              </button>
             </div>
           )}
 
