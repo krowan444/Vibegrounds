@@ -3301,6 +3301,62 @@ body { background: var(--bg-darkest); overflow-y: auto; }
   font-family: var(--font-retro); font-size: 15px;
   color: var(--text-dim); text-align: center; margin: 4px 0 20px;
 }
+
+/* ── MEME BOARD: highlight rows, catalogue controls, tags ──────────────
+   Hot and New are a shop window, so their tiles are smaller than the
+   catalogue's — that size difference is most of what tells you at a glance
+   that they are a sample and the grid below is the real list. */
+.vg-meme-grid-row {
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 12px;
+}
+.vg-meme-grid-row .vg-meme-shot img,
+.vg-meme-grid-row .vg-meme-shot,
+.vg-meme-grid-row .vg-meme-img { height: 190px; }
+
+.vg-meme-controls {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; flex-wrap: wrap; margin-bottom: 12px;
+}
+
+.vg-meme-sorts { display: flex; gap: 6px; flex-wrap: wrap; }
+.vg-meme-sort {
+  font-family: var(--font-retro); font-size: 16px; line-height: 1;
+  padding: 6px 11px; cursor: pointer;
+  background: var(--bg-input); color: var(--text-secondary);
+  border: 1px solid var(--border-dark); border-radius: 3px;
+}
+.vg-meme-sort:hover { border-color: var(--orange); color: var(--orange-bright); }
+.vg-meme-sort.is-on {
+  background: var(--orange-dim); border-color: var(--orange-bright);
+  color: #000; font-weight: bold;
+}
+
+.vg-meme-tagbar { display: flex; gap: 6px; flex-wrap: wrap; }
+.vg-meme-tagpill {
+  font-family: var(--font-retro); font-size: 15px; line-height: 1;
+  padding: 5px 9px; cursor: pointer;
+  background: var(--bg-panel-alt); color: var(--text-secondary);
+  border: 1px solid var(--border-dark); border-radius: 999px;
+}
+.vg-meme-tagpill:hover { border-color: var(--orange); color: var(--orange-bright); }
+.vg-meme-tagpill.is-on {
+  background: var(--orange-dim); border-color: var(--orange-bright);
+  color: #000; font-weight: bold;
+}
+.vg-meme-tagpill-n { opacity: .65; font-size: 13px; }
+
+/* Tags on a tile. Non-interactive here — the filter row above is the
+   control; these are a label, so they must not look like buttons. */
+.vg-meme-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 5px; }
+.vg-meme-tag {
+  font-family: var(--font-retro); font-size: 13px; line-height: 1;
+  padding: 3px 6px; color: var(--text-dim);
+  background: var(--bg-input); border: 1px solid var(--border-dark);
+  border-radius: 3px;
+}
+
+.vg-meme-more { display: block; width: 100%; margin-top: 14px; }
 /* ==========================================================
    CREDITED SHARING
    Sharing other people's work is encouraged; taking credit
