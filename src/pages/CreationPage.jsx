@@ -142,10 +142,15 @@ export default function CreationPage() {
               </div>
 
               {/* Preview */}
+              {/* maxHeight caps this on a wide screen. Without it a 16:9 box
+                  in a 590px column is over 330px tall, which pushed "Launch it"
+                  below the fold — the one thing every visitor came to click.
+                  aspect-ratio yields to max-height, so narrow screens keep the
+                  full 16:9 and only wide ones get trimmed. */}
               <div style={{
                 position: 'relative', background: 'var(--bg-dark)',
                 borderBottom: '2px solid var(--border-panel)',
-                aspectRatio: '16 / 9', display: 'flex',
+                aspectRatio: '16 / 9', maxHeight: '260px', display: 'flex',
                 alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
               }}>
                 <img
@@ -158,7 +163,7 @@ export default function CreationPage() {
               </div>
 
               {/* Launch */}
-              <div style={{ padding: '12px', textAlign: 'center' }}>
+              <div style={{ padding: '16px 12px 18px', textAlign: 'center' }}>
                 <a
                   href={c.project_url}
                   target="_blank"
