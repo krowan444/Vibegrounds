@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase, retryOnAbort, withTimeout } from '../lib/supabase';
@@ -45,6 +45,11 @@ const BLANK = {
   project_url: '', thumbnail_url: '', tags: '', is_nsfw: false,
 };
 
+// Mirrors the thumbnails bucket. The bucket is what actually enforces this;
+// checking here just means a useful message instead of an opaque 400.
+const COVER_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
+const COVER_MAX = 3 * 1024 * 1024;
+
 
 export default function UploadPage() {
   const { user, profile, coins, emailVerified, canPost, refreshProfile } = useAuth();
@@ -55,6 +60,67 @@ export default function UploadPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [done, setDone] = useState(null);
+
+  // Optional cover image. Held locally until the creation exists, because
+  // submit_thumbnail needs an id to attach the approval request to — there is
+  // nothing to approve against until the submission has been created.
+  const coverRef = useRef(null);
+  const [coverFile, setCoverFile] = useState(null);
+  const [coverPreview, setCoverPreview] = useState('');
+  const [coverError, setCoverError] = useState('');
+  const [coverSent, setCoverSent] = useState(false);
+
+  useEffect(() => () => { if (coverPreview) URL.revokeObjectURL(coverPreview); }, [coverPreview]);
+
+  const takeCover = (f) => {
+    if (!f) return;
+    if (!COVER_TYPES.includes(f.type)) { setCoverError('PNG, JPG or WEBP only.'); return; }
+    if (f.size > COVER_MAX) {
+      setCoverError(`That is ${(f.size / 1024 / 1024).toFixed(1)} MB. The limit is 3 MB.`);
+      return;
+    }
+    setCoverError('');
+    setCoverFile(f);
+    if (coverPreview) URL.revokeObjectURL(coverPreview);
+    setCoverPreview(URL.createObjectURL(f));
+  };
+
+  /*
+   * Runs after the creation exists. Deliberately does not throw into the
+   * submit flow: the submission has already succeeded and been paid for by
+   * this point, so a failure here must not read as "your post failed". It
+   * reports itself in the confirmation instead, where it can be retried.
+   */
+  const sendCover = async (creationId) => {
+    if (!coverFile || !creationId) return;
+    try {
+      const ext = (coverFile.name.match(/\.[a-z0-9]+$/i) || ['.png'])[0].toLowerCase();
+      const path = `${user.id}/${creationId}-${Date.now()}${ext}`;
+
+      const { error: upErr } = await withTimeout(
+        supabase.storage.from('thumbnails').upload(path, coverFile, {
+          cacheControl: '31536000', contentType: coverFile.type, upsert: false,
+        }),
+        45000, 'coverUpload',
+      );
+      if (upErr) throw new Error(upErr.message);
+
+      const { data: pub } = supabase.storage.from('thumbnails').getPublicUrl(path);
+      if (!pub?.publicUrl) throw new Error('Could not work out the image address.');
+
+      const { error: rpcErr } = await withTimeout(
+        retryOnAbort(() => supabase.rpc('submit_thumbnail', {
+          p_creation: creationId, p_url: pub.publicUrl,
+        })),
+        25000,
+      );
+      if (rpcErr) throw new Error(rpcErr.message);
+      setCoverSent(true);
+    } catch (e) {
+      console.error('cover submit failed:', e);
+      setCoverError('Your submission posted fine, but the image did not upload. You can add it from the edit page.');
+    }
+  };
 
   useEffect(() => {
     (async () => {
@@ -111,6 +177,16 @@ export default function UploadPage() {
               VibeGrounds logo for a few minutes until it&#39;s generated. That&#39;s normal.
             </p>
 
+            {coverFile && (
+              <p className="vg-posted-note">
+                {coverSent
+                  ? '🖼️ Your cover image has been sent for approval. The screenshot stays up until a moderator approves it.'
+                  : coverError
+                    ? `⚠️ ${coverError}`
+                    : '🖼️ Uploading your cover image...'}
+              </p>
+            )}
+
             {/* The best moment anyone will ever have for sharing this is right
                 now, seconds after posting. Not buried on a page they might
                 revisit later. */}
@@ -134,7 +210,12 @@ export default function UploadPage() {
               <button
                 type="button"
                 className="vg-posted-btn vg-posted-btn-quiet"
-                onClick={() => { setDone(null); setForm(BLANK); }}
+                onClick={() => {
+                  setDone(null); setForm(BLANK);
+                  if (coverPreview) URL.revokeObjectURL(coverPreview);
+                  setCoverFile(null); setCoverPreview('');
+                  setCoverError(''); setCoverSent(false);
+                }}
               >
                 POST ANOTHER
               </button>
@@ -201,7 +282,7 @@ export default function UploadPage() {
     setLoading(true);
     try {
       const tags = form.tags
-        .split(',').map((t) => t.trim().toLowerCase()).filter(Boolean).slice(0, 8);
+        .split(',').map((t) => t.trim().toLowerCase()).filter(Boolean).slice(0, 12);
 
       // A user reported the button spinning forever. The submission itself is
       // fine — it's the network call that can stall on a broken auth lock. So:
@@ -229,6 +310,10 @@ export default function UploadPage() {
 
       const created = Array.isArray(data) ? data[0] : data;
       setDone(created || {});
+
+      // Not awaited: the confirmation screen should not wait on an optional
+      // extra. It reports itself when it lands.
+      if (coverFile && created?.id) sendCover(created.id);
 
       // Deliberately NOT awaited. Refreshing the wallet is a nicety; blocking
       // the confirmation screen on it was how the original hang happened.
@@ -340,20 +425,55 @@ export default function UploadPage() {
 
             <div className="retro-form-group">
               <label>
-                5. Custom thumbnail{' '}
-                <span style={{ color: 'var(--text-dim)' }}>(optional — leave blank and we&#39;ll screenshot it)</span>
+                5. Cover image{' '}
+                <span style={{ color: 'var(--text-dim)' }}>(optional)</span>
               </label>
-              <input
-                type="text" placeholder="only if you want your own artwork instead of a screenshot"
-                value={form.thumbnail_url} onChange={set('thumbnail_url')} disabled={loading}
-              />
-              <div style={{
-                fontFamily: 'var(--font-retro)', fontSize: '15px',
-                color: 'var(--text-dim)', marginTop: '4px',
-              }}>
-                We grab a live screenshot of your link automatically. It can take a
-                few minutes to appear the first time.
+
+              {/* Says what happens if you do nothing, first. Most people should
+                  do nothing here, and the old wording made it sound like a
+                  field you were supposed to fill in. */}
+              <div className="vg-shot-explain">
+                <strong>Leave this blank and we handle it.</strong> We take a live
+                screenshot of your link automatically — it can take a few minutes
+                to appear the first time.
               </div>
+
+              <div
+                className={`vg-dropzone ${coverPreview ? 'has-image' : ''}`}
+                onClick={() => coverRef.current?.click()}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => { e.preventDefault(); takeCover(e.dataTransfer.files?.[0]); }}
+              >
+                {coverPreview ? (
+                  <>
+                    <img src={coverPreview} alt="Your cover" className="vg-dropzone-preview" />
+                    <span className="vg-dropzone-swap">Click to choose a different image</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="vg-dropzone-icon">🖼️</span>
+                    <strong>Or upload your own image</strong>
+                    <span className="vg-dropzone-sub">PNG, JPG or WEBP · up to 3 MB</span>
+                  </>
+                )}
+              </div>
+
+              <input
+                ref={coverRef} type="file" accept={COVER_TYPES.join(',')} hidden
+                onChange={(e) => takeCover(e.target.files?.[0])}
+              />
+
+              {coverError && <Notice tone="error">{coverError}</Notice>}
+
+              {/* The honest bit. Better said here than discovered later when
+                  their artwork does not appear. */}
+              {coverFile && (
+                <div className="vg-shot-explain vg-shot-explain-warn">
+                  ⏳ <strong>This needs approving before it goes live.</strong> Your
+                  submission posts straight away with the automatic screenshot, and
+                  your image replaces it once a moderator has looked at it.
+                </div>
+              )}
             </div>
 
             <div className="retro-form-group">
@@ -363,13 +483,14 @@ export default function UploadPage() {
                 value={form.tags} onChange={set('tags')} disabled={loading}
               />
               <div style={{ fontFamily: 'var(--font-retro)', fontSize: '14px', color: 'var(--text-dim)' }}>
-                Comma separated, up to 8. Type your own, or tap the ones below.
+                Comma separated, up to 12. Type your own, or tap the ones below.
               </div>
               <TagPicker
                 value={form.tags}
                 onChange={(tags) => setForm((f) => ({ ...f, tags }))}
                 category={form.category}
                 disabled={loading}
+                sourceText={`${form.title} ${form.description}`}
               />
             </div>
 
