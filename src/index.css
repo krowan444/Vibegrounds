@@ -3487,3 +3487,147 @@ body { background: var(--bg-darkest); overflow-y: auto; }
   color: var(--orange);
   margin-top: 7px;
 }
+
+
+/* ============================================================
+   IDEAS — what a submission could become next.
+   Visually distinct from reviews on purpose: reviews are a verdict,
+   these are a to-do list, and they sit on the same page.
+   ============================================================ */
+.vg-ideas { margin-top: 14px; }
+.vg-ideas-count {
+  font-family: var(--font-retro); font-size: 15px; color: var(--text-dim);
+  margin-left: auto;
+}
+.vg-ideas-intro {
+  font-family: var(--font-retro); font-size: 17px; line-height: 1.45;
+  color: var(--text-secondary); margin-bottom: 10px;
+}
+.vg-ideas-closed,
+.vg-ideas-empty {
+  font-family: var(--font-retro); font-size: 17px; color: var(--text-dim);
+  background: var(--bg-panel-alt); border: 1px dashed var(--border-dark);
+  border-radius: 4px; padding: 12px 14px; margin: 10px 0;
+}
+.vg-ideas-closed a { color: var(--orange); }
+
+/* ── the form ── */
+.vg-idea-form { margin-bottom: 16px; }
+.vg-idea-input {
+  width: 100%; background: var(--bg-input);
+  border: 2px solid var(--border-dark); color: var(--text-primary);
+  font-family: var(--font-retro); font-size: 18px; padding: 8px 10px;
+  outline: none; resize: vertical;
+}
+.vg-idea-input:focus { border-color: var(--orange); }
+.vg-idea-prompt-input {
+  margin-top: 6px; font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 13px; line-height: 1.5;
+}
+.vg-idea-addprompt {
+  display: inline-block; margin-top: 6px; padding: 0;
+  background: none; border: none; cursor: pointer;
+  font-family: var(--font-retro); font-size: 15px;
+  color: var(--blue-link);
+}
+.vg-idea-addprompt:hover { color: var(--orange); text-decoration: underline; }
+.vg-idea-form-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; margin-top: 8px; flex-wrap: wrap;
+}
+.vg-idea-chars { font-family: var(--font-retro); font-size: 14px; color: var(--text-dim); }
+
+/* ── the list ── */
+.vg-idea-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.vg-idea {
+  display: flex; gap: 10px; align-items: flex-start;
+  background: var(--bg-panel-alt);
+  border: 1px solid var(--border-dark);
+  border-left: 3px solid var(--border-panel);
+  border-radius: 4px; padding: 10px 12px;
+}
+/* The left edge carries the status, so you can scan the column and see
+   what is being worked on without reading a word. */
+.vg-idea.is-planned { border-left-color: var(--yellow); }
+.vg-idea.is-built   { border-left-color: var(--green); }
+.vg-idea.is-declined { opacity: .62; }
+
+.vg-idea-vote {
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
+  min-width: 44px; padding: 5px 4px; cursor: pointer;
+  background: var(--bg-input); color: var(--text-secondary);
+  border: 1px solid var(--border-dark); border-radius: 4px;
+  font-family: var(--font-retro); line-height: 1;
+}
+.vg-idea-vote:hover:not(:disabled) { border-color: var(--orange); color: var(--orange-bright); }
+.vg-idea-vote:disabled { cursor: default; opacity: .55; }
+.vg-idea-vote.is-on {
+  background: var(--orange-dim); border-color: var(--orange-bright); color: #000;
+}
+.vg-idea-arrow { font-size: 11px; }
+.vg-idea-votes { font-size: 17px; font-weight: bold; }
+
+.vg-idea-main { flex: 1; min-width: 0; }
+.vg-idea-head {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  font-family: var(--font-retro); font-size: 15px; margin-bottom: 3px;
+}
+.vg-idea-author { color: var(--orange); text-decoration: none; font-weight: bold; }
+.vg-idea-author:hover { text-decoration: underline; }
+.vg-idea-age { color: var(--text-dim); }
+.vg-idea-status {
+  font-family: var(--font-pixel); font-size: 7px; letter-spacing: .5px;
+  padding: 3px 6px; border-radius: 3px; border: 1px solid var(--border-dark);
+  background: var(--bg-input); color: var(--text-secondary);
+}
+.vg-idea-status.is-planned { background: #3a2f0d; color: var(--yellow); border-color: var(--orange-dim); }
+.vg-idea-status.is-built   { background: #10330f; color: var(--green); border-color: #2f7d32; }
+
+.vg-idea-body {
+  font-family: var(--font-retro); font-size: 18px; line-height: 1.4;
+  color: var(--text-primary); overflow-wrap: anywhere;
+}
+
+/* The prompt is code, so it is set as code — monospace, boxed, copyable.
+   That framing is what tells someone it is meant to be run, not read. */
+.vg-idea-prompt {
+  margin-top: 7px; border: 1px solid var(--border-dark);
+  border-radius: 4px; background: var(--bg-input); overflow: hidden;
+}
+.vg-idea-prompt-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 4px 8px; background: var(--bg-panel-header);
+  font-family: var(--font-pixel); font-size: 7px;
+  letter-spacing: 1px; color: var(--text-dim);
+}
+.vg-idea-prompt-head button {
+  background: none; border: none; cursor: pointer;
+  font-family: var(--font-pixel); font-size: 7px; color: var(--orange);
+}
+.vg-idea-prompt-head button:hover { color: var(--orange-bright); }
+.vg-idea-prompt pre {
+  margin: 0; padding: 8px 10px; white-space: pre-wrap; overflow-wrap: anywhere;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 13px; line-height: 1.5; color: var(--text-primary);
+}
+
+.vg-idea-actions { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 8px; }
+.vg-idea-set {
+  font-family: var(--font-retro); font-size: 14px; line-height: 1;
+  padding: 5px 8px; cursor: pointer; border-radius: 3px;
+  background: var(--bg-input); color: var(--text-secondary);
+  border: 1px solid var(--border-dark);
+}
+.vg-idea-set:hover { border-color: var(--orange); color: var(--orange-bright); }
+.vg-idea-set.is-on { background: var(--orange-dim); border-color: var(--orange-bright); color: #000; font-weight: bold; }
+
+.vg-idea-del {
+  margin-top: 6px; padding: 0; background: none; border: none; cursor: pointer;
+  font-family: var(--font-retro); font-size: 14px; color: var(--text-dim);
+}
+.vg-idea-del:hover { color: var(--red); text-decoration: underline; }
+
+@media (max-width: 560px) {
+  .vg-idea { padding: 9px 10px; gap: 8px; }
+  .vg-idea-vote { min-width: 38px; }
+}
