@@ -104,16 +104,99 @@ export function suggestionsFor(category) {
   return [...new Set([...own, ...COMMON_TAGS])];
 }
 
+/*
+ * Words that mean a tag without being the tag. Without these the matcher is
+ * close to useless: people write "made with Claude Code", "built in GPT",
+ * "a 2D platformer" — none of which contain the literal tag string.
+ *
+ * Deliberately conservative. A wrong tag is worse than a missing one, because
+ * the missing one costs a click and the wrong one has to be spotted and
+ * removed — and mostly will not be.
+ */
+const ALIASES = {
+  claude:        ['claude code', 'anthropic', 'sonnet', 'opus'],
+  chatgpt:       ['chat gpt', 'gpt-4', 'gpt4', 'gpt-5', 'openai'],
+  copilot:       ['github copilot'],
+  v0:            ['v zero', 'vercel v0'],
+  'hand-coded':  ['by hand', 'from scratch', 'no ai', 'handwritten'],
+  'pixel-art':   ['pixelart', '8-bit', '8 bit', '16-bit', '16 bit', 'sprite'],
+  multiplayer:   ['co-op', 'coop', 'versus', 'pvp', 'two player', '2 player'],
+  singleplayer:  ['single player', 'solo play'],
+  roguelike:     ['rogue-like', 'roguelite', 'permadeath'],
+  platformer:    ['jumping', 'side-scroller', 'side scroller'],
+  puzzle:        ['puzzles', 'brain teaser'],
+  '3d':          ['three.js', 'threejs', 'webgl'],
+  horror:        ['scary', 'creepy', 'spooky'],
+  comedy:        ['funny', 'humour', 'humor', 'joke'],
+  productivity:  ['todo', 'to-do', 'task manager', 'workflow'],
+  'landing-page':['landing site', 'one pager'],
+  portfolio:     ['showcase site'],
+  ecommerce:     ['e-commerce', 'shop', 'store', 'checkout'],
+  'dark-mode':   ['dark theme'],
+  generative:    ['procedural', 'generated art'],
+  music:         ['soundtrack', 'song', 'audio track'],
+  'ai-voice':    ['text to speech', 'tts', 'voice over', 'voiceover'],
+  'work-in-progress': ['wip', 'unfinished', 'early days', 'prototype'],
+  'open-source': ['github repo', 'source available', 'mit licence', 'mit license'],
+  'mobile-friendly': ['responsive', 'works on mobile', 'mobile first'],
+  free:          ['no cost', 'free to play', 'completely free'],
+  'no-signup':   ['no account', 'no login', 'without signing up'],
+};
+
+/**
+ * Which of the known tags does this text appear to be about?
+ *
+ * Plain substring matching would tag anything mentioning "art" with
+ * "pixel-art" and anything with "free" inside "freedom". So: normalise
+ * punctuation to spaces, then require whole-word matches with padding — the
+ * cheapest thing that behaves correctly on real sentences.
+ *
+ * Kept as a standalone pure function on purpose. Swapping this for a real
+ * model call later means replacing one function and nothing else.
+ */
+export function suggestFromText(text, vocabulary) {
+  const hay = ` ${String(text || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()} `;
+  if (hay.length < 12) return [];
+
+  // Also tries the plain plural, because people write "wallpapers",
+  // "puzzles" and "platformers" far more often than the singular. Only the
+  // trailing -s: anything cleverer starts inventing stems and mis-firing.
+  const has = (phrase) => {
+    const base = phrase.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+    if (base.length < 2) return false;
+    return hay.includes(` ${base} `) || hay.includes(` ${base}s `);
+  };
+
+  return vocabulary.filter((tag) => {
+    if (has(tag)) return true;
+    return (ALIASES[tag] || []).some(has);
+  });
+}
+
 export default function TagPicker({
   value = '',
   onChange,
   category = 'other',
-  max = 8,
+  max = 12,
   disabled = false,
+  // What the person has already written. Optional: without it the button
+  // simply does not appear, so this stays a drop-in for callers that have
+  // no description to offer.
+  sourceText = '',
 }) {
   const selected = parseTags(value);
   const suggestions = suggestionsFor(category);
   const full = selected.length >= max;
+
+  // Everything the matcher is allowed to propose: this category's tags, the
+  // generic ones, and the tools. Never invents a tag outside the vocabulary.
+  const vocabulary = [...new Set([...suggestions, ...TOOL_TAGS])];
+  const found = suggestFromText(sourceText, vocabulary);
+  const fresh = found.filter((t) => !selected.includes(t));
+
+  const applySuggested = () => {
+    onChange([...selected, ...fresh].slice(0, max).join(', '));
+  };
 
   const toggle = (tag) => {
     const next = selected.includes(tag)
@@ -148,6 +231,20 @@ export default function TagPicker({
           {selected.length}/{max}
         </span>
       </div>
+
+      {/* Only worth offering when it would actually do something: there is
+          a description, and it contains tags they have not already picked. */}
+      {fresh.length > 0 && !full && (
+        <button
+          type="button"
+          className="vg-tagpicker-suggest"
+          onClick={applySuggested}
+          disabled={disabled}
+        >
+          ✨ Add {fresh.length} tag{fresh.length > 1 ? 's' : ''} from your description
+          <span className="vg-tagpicker-suggest-list">{fresh.slice(0, 6).join(' · ')}</span>
+        </button>
+      )}
 
       <div className="vg-tagpicker-chips">{suggestions.map(chip)}</div>
 
