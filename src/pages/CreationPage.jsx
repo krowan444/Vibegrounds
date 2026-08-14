@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import SiteHeader from '../components/SiteHeader';
 import VoteWidget from '../components/VoteWidget';
 import ReviewSection from '../components/ReviewSection';
+import IdeasSection from '../components/IdeasSection';
 import ReportButton from '../components/ReportButton';
 import ShareBar from '../components/ShareBar';
 import CreationCard from '../components/CreationCard';
@@ -283,6 +284,10 @@ export default function CreationPage() {
             <div id="reviews" style={{ marginTop: '14px', scrollMarginTop: '14px' }}>
               <ReviewSection creationId={c.id} />
             </div>
+
+            {/* Ideas sit under reviews, not above: you decide what you think
+                of a thing before you start suggesting what it should become. */}
+            <IdeasSection creation={c} />
           </div>
 
           {/* ── sidebar ── */}
