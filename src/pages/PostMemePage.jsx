@@ -107,7 +107,7 @@ export default function PostMemePage() {
           p_title: title.trim(),
           p_image_url: imageUrl,
           p_description: description.trim(),
-          p_tags: tags.split(',').map((t) => t.trim().toLowerCase()).filter(Boolean).slice(0, 8),
+          p_tags: tags.split(',').map((t) => t.trim().toLowerCase()).filter(Boolean).slice(0, 12),
           p_is_nsfw: isNsfw,
         })),
         25000,
@@ -263,7 +263,7 @@ export default function PostMemePage() {
             </div>
 
             <div className="retro-form-group">
-              <label>Tags <span style={{ color: 'var(--text-dim)' }}>(comma separated, up to 8)</span></label>
+              <label>Tags <span style={{ color: 'var(--text-dim)' }}>(comma separated, up to 12)</span></label>
               <input
                 type="text" value={tags} onChange={(e) => setTags(e.target.value)}
                 disabled={!!busy} placeholder="relatable, cursed, debugging"
@@ -276,6 +276,7 @@ export default function PostMemePage() {
                 onChange={setTags}
                 category="memes"
                 disabled={!!busy}
+                sourceText={`${title} ${description}`}
               />
             </div>
 
