@@ -30,7 +30,7 @@ const SUBMIT_ERRORS = {
   ACCOUNT_MUTED:        'Your account is muted. Contact a moderator if you think that is a mistake.',
   ACCOUNT_TOO_NEW:      'Brand new accounts wait 10 minutes before their first post. Grab a coffee.',
   DAILY_LIMIT_REACHED:  'You have hit today’s submission limit. Come back tomorrow.',
-  INSUFFICIENT_COINS:   'Not enough gold coins for this submission.',
+  INSUFFICIENT_COINS:   'Not enough Vibe Coins for this submission.',
   DUPLICATE_SUBMISSION: 'You have already posted that exact link.',
   INVALID_URL:          'That does not look like a working web address.',
 };
@@ -151,7 +151,7 @@ export default function UploadPage() {
         <p>You need an account to post to the Portal.</p>
         <p style={{ marginTop: '12px' }}>
           <Link to="/auth?mode=signup" className="retro-cta" style={{ display: 'inline-block' }}>
-            🚀 JOIN — GET 50 FREE COINS
+            🚀 JOIN — GET 50 FREE VIBE COINS
           </Link>
         </p>
       </>
@@ -162,7 +162,7 @@ export default function UploadPage() {
     return gate('📬 Confirm Your Email', (
       <>
         <p>One quick step before you can post.</p>
-        <p style={{ marginTop: '8px' }}>Confirming your email keeps the trolls out and unlocks your 50 free coins.</p>
+        <p style={{ marginTop: '8px' }}>Confirming your email keeps the trolls out and unlocks your 50 free Vibe Coins.</p>
         <p style={{ marginTop: '14px' }}>
           <Link to="/verify" className="retro-cta" style={{ display: 'inline-block' }}>✉️ RESEND THE LINK</Link>
         </p>
@@ -395,7 +395,7 @@ export default function UploadPage() {
               fontFamily: 'var(--font-retro)', fontSize: '15px',
               color: 'var(--text-dim)', textAlign: 'center', marginTop: '8px',
             }}>
-              Coins are spent on submission and are not refunded if you delete the post.
+              Vibe Coins are spent on submission and are not refunded if you delete the post.
             </div>
           </form>
         </div>
