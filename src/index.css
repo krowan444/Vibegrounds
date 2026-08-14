@@ -2037,6 +2037,29 @@ body { background: var(--bg-darkest); overflow-y: auto; }
   vertical-align: middle;
 }
 
+/* FORUM — the other destination in the row.
+   Same shape as the Portal button so it reads as a place rather than a
+   category, but blue and unanimated: two pulsing orange buttons side by side
+   would fight, and the Portal should stay the loudest thing in the header. */
+.site-nav a.vg-nav-forum {
+  background: linear-gradient(180deg, #4a6fd4, #2c4691);
+  color: #eef3ff !important;
+  font-weight: bold;
+  text-shadow: none;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.22), 0 0 10px rgba(74,111,212,.35);
+}
+.site-nav a.vg-nav-forum:hover {
+  background: linear-gradient(180deg, #6b8ce8, #3a58b0) !important;
+  color: #fff !important;
+  transform: translateY(-1px);
+}
+.site-nav a.vg-nav-forum::after {
+  content: '💬';
+  margin-left: 5px;
+  font-size: 8px;
+  vertical-align: middle;
+}
+
 /* SUBMIT — pinned to the right of the nav so there is always one
    obvious way to post, on every page, without shouting. */
 .site-nav a.vg-nav-submit {
@@ -3350,6 +3373,15 @@ body { background: var(--bg-darkest); overflow-y: auto; }
 
 .vg-tagpicker-count { color: var(--text-dim); }
 .vg-tagpicker-count.is-full { color: var(--orange); }
+
+/* Second heading, for the "Built with" row. Ruled off above so the two groups
+   read as separate questions rather than one long list of chips. */
+.vg-tagpicker-head-sub {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-dark);
+  color: var(--orange);
+}
 
 .vg-tagpicker-chips {
   display: flex;
