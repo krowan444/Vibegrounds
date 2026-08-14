@@ -32,7 +32,7 @@ const MARKETS = [
 const REASON_LABELS = {
   signup_bonus: '🎁 Welcome bonus',
   submission: '🚀 Submission',
-  purchase: '💳 Coin purchase',
+  purchase: '💳 Vibe Coin purchase',
   refund: '↩️ Refund',
   admin_grant: '🎩 Granted by staff',
   admin_deduct: '🎩 Removed by staff',
@@ -112,7 +112,7 @@ export default function CoinsPage() {
 
         {/* Wallet */}
         <div className="retro-panel">
-          <div className="section-header"><h2>🪙 Your Gold Coins</h2></div>
+          <div className="section-header"><h2>🪙 Your Vibe Coins</h2></div>
           <div className="retro-panel-body" style={{ textAlign: 'center', padding: '24px' }}>
             <div style={{ fontFamily: 'var(--font-pixel)', fontSize: '32px', color: 'var(--yellow)' }}>
               {user ? coins : '—'}
@@ -120,19 +120,19 @@ export default function CoinsPage() {
             <div style={{ fontFamily: 'var(--font-retro)', fontSize: '19px', color: 'var(--text-secondary)', marginTop: '8px' }}>
               {user
                 ? `That's ${Math.floor(coins / 10)} submission${Math.floor(coins / 10) === 1 ? '' : 's'} in the tank.`
-                : <><Link to="/auth?mode=signup" style={{ color: 'var(--orange)' }}>Join up</Link> and get 50 coins free.</>}
+                : <><Link to="/auth?mode=signup" style={{ color: 'var(--orange)' }}>Join up</Link> and get 50 Vibe Coins free.</>}
             </div>
           </div>
         </div>
 
         {/* Why coins exist */}
         <div className="retro-panel" style={{ marginTop: '16px' }}>
-          <div className="section-header"><h2>❓ Why Coins?</h2></div>
+          <div className="section-header"><h2>❓ Why Vibe Coins?</h2></div>
           <div className="retro-panel-body" style={{ fontFamily: 'var(--font-retro)', fontSize: '17px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
             <p>Posting costs 10 coins. That is not about the money — it is about friction.</p>
             <p style={{ marginTop: '6px' }}>
               A troll with a spam script will not pay to flood the Portal. A creator with something
-              to show barely notices. Everyone gets 50 coins free on signup, which is five posts
+              to show barely notices. Everyone gets 50 Vibe Coins free on signup, which is five posts
               before you spend a penny.
             </p>
           </div>
@@ -213,7 +213,7 @@ export default function CoinsPage() {
 
             <div style={{ fontFamily: 'var(--font-retro)', fontSize: '15px', color: 'var(--text-dim)', marginTop: '12px' }}>
               Payments are handled by Stripe — VibeGrounds never sees your card details.
-              Coins are non-refundable once spent and have no cash value.
+              Vibe Coins are non-refundable once spent and have no cash value.
             </div>
           </div>
         </div>
@@ -221,7 +221,7 @@ export default function CoinsPage() {
         {/* Ledger */}
         {user && (
           <div className="retro-panel" style={{ marginTop: '16px' }}>
-            <div className="section-header"><h2>📜 Coin History</h2></div>
+            <div className="section-header"><h2>📜 Vibe Coin History</h2></div>
             <div className="retro-panel-body" style={{ padding: 0 }}>
               {history.length === 0 ? (
                 <div style={{ padding: '20px', fontFamily: 'var(--font-retro)', fontSize: '17px', color: 'var(--text-dim)', textAlign: 'center' }}>
