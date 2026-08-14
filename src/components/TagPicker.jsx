@@ -60,6 +60,33 @@ const CATEGORY_TAGS = {
   ],
 };
 
+/*
+ * What it was built with, offered separately from what it is.
+ *
+ * This came from a visitor: the draw of a site like this is seeing *how*
+ * something was made, not just that it exists. "Built with Cursor" is a
+ * different kind of fact from "multiplayer", and mixing the two into one
+ * undifferentiated pile makes both harder to scan — so they get their own
+ * labelled row.
+ *
+ * They are ordinary tags underneath, sharing the same eight-tag budget and
+ * the same comma-separated field. No new column, nothing to migrate.
+ */
+const TOOL_TAGS = [
+  'claude',
+  'cursor',
+  'chatgpt',
+  'copilot',
+  'lovable',
+  'bolt',
+  'v0',
+  'replit',
+  'windsurf',
+  'gemini',
+  'figma-make',
+  'hand-coded',
+];
+
 /** Split the raw input string into clean tags, the same way submit does. */
 export function parseTags(raw) {
   return (raw || '')
@@ -96,6 +123,23 @@ export default function TagPicker({
     onChange(next.join(', '));
   };
 
+  const chip = (tag) => {
+    const on = selected.includes(tag);
+    return (
+      <button
+        key={tag}
+        type="button"
+        className={on ? 'vg-tag-chip is-on' : 'vg-tag-chip'}
+        // Only block the ones you can't add — you can always remove.
+        disabled={disabled || (full && !on)}
+        aria-pressed={on}
+        onClick={() => toggle(tag)}
+      >
+        {on ? '✓ ' : '+ '}{tag}
+      </button>
+    );
+  };
+
   return (
     <div className="vg-tagpicker">
       <div className="vg-tagpicker-head">
@@ -105,24 +149,12 @@ export default function TagPicker({
         </span>
       </div>
 
-      <div className="vg-tagpicker-chips">
-        {suggestions.map((tag) => {
-          const on = selected.includes(tag);
-          return (
-            <button
-              key={tag}
-              type="button"
-              className={on ? 'vg-tag-chip is-on' : 'vg-tag-chip'}
-              // Only block the ones you can't add — you can always remove.
-              disabled={disabled || (full && !on)}
-              aria-pressed={on}
-              onClick={() => toggle(tag)}
-            >
-              {on ? '✓ ' : '+ '}{tag}
-            </button>
-          );
-        })}
+      <div className="vg-tagpicker-chips">{suggestions.map(chip)}</div>
+
+      <div className="vg-tagpicker-head vg-tagpicker-head-sub">
+        <span>🛠 Built with</span>
       </div>
+      <div className="vg-tagpicker-chips">{TOOL_TAGS.map(chip)}</div>
 
       {full && (
         <div className="vg-tagpicker-note">
