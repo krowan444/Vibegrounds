@@ -155,7 +155,7 @@ export default function EditCreationPage() {
         25000,
       );
       if (rpcErr) {
-        if (/ALREADY_PENDING/.test(rpcErr.message)) throw new Error('You already have a screenshot waiting for review.');
+        if (/ALREADY_PENDING/.test(rpcErr.message)) throw new Error('You already have an image waiting for review.');
         if (/NOT_YOURS/.test(rpcErr.message)) throw new Error('That is not your submission.');
         throw new Error(rpcErr.message);
       }
@@ -187,7 +187,7 @@ export default function EditCreationPage() {
     setLoading(true);
     try {
       const tags = form.tags
-        .split(',').map((t) => t.trim().toLowerCase()).filter(Boolean).slice(0, 8);
+        .split(',').map((t) => t.trim().toLowerCase()).filter(Boolean).slice(0, 12);
 
       const { error: err } = await retryOnAbort(() => supabase
         .from('creations')
@@ -277,8 +277,8 @@ export default function EditCreationPage() {
 
             <div className="retro-form-group">
               <label>
-                5. Custom screenshot{' '}
-                <span style={{ color: 'var(--text-dim)' }}>(optional — blank uses an auto screenshot)</span>
+                5. Cover image{' '}
+                <span style={{ color: 'var(--text-dim)' }}>(optional — blank uses an automatic screenshot)</span>
               </label>
 
               {/* Uploads are reviewed before they go live. The auto-generated
@@ -286,21 +286,21 @@ export default function EditCreationPage() {
                   blank while it waits. */}
               {original.pending_thumbnail_status === 'pending' || shotDone ? (
                 <div className="vg-shot-state vg-shot-pending">
-                  ⏳ <strong>Waiting for approval.</strong> Your screenshot will
+                  ⏳ <strong>Waiting for approval.</strong> Your image will
                   appear once it has been checked. The automatic one shows until then.
                 </div>
               ) : (
                 <>
                   {original.pending_thumbnail_status === 'rejected' && (
                     <div className="vg-shot-state vg-shot-rejected">
-                      ✖ Your last screenshot was not approved
+                      ✖ Your last image was not approved
                       {original.pending_thumbnail_note ? `: ${original.pending_thumbnail_note}` : '.'}
                       {' '}You can try another.
                     </div>
                   )}
                   {original.pending_thumbnail_status === 'approved' && (
                     <div className="vg-shot-state vg-shot-approved">
-                      ✔ Your custom screenshot is live.
+                      ✔ Your custom image is live.
                     </div>
                   )}
 
@@ -314,13 +314,13 @@ export default function EditCreationPage() {
                   >
                     {shotPreview ? (
                       <>
-                        <img src={shotPreview} alt="Your screenshot" className="vg-dropzone-preview" />
+                        <img src={shotPreview} alt="Your cover" className="vg-dropzone-preview" />
                         <span className="vg-dropzone-swap">Click to choose a different image</span>
                       </>
                     ) : (
                       <>
                         <span className="vg-dropzone-icon">🖼️</span>
-                        <strong>Upload your own screenshot</strong>
+                        <strong>Upload your own image</strong>
                         <span className="vg-dropzone-sub">PNG, JPG or WEBP · up to 3 MB · checked before it goes live</span>
                       </>
                     )}
@@ -347,7 +347,7 @@ export default function EditCreationPage() {
             </div>
 
             <div className="retro-form-group">
-              <label>6. Tags <span style={{ color: 'var(--text-dim)' }}>(comma separated, up to 8)</span></label>
+              <label>6. Tags <span style={{ color: 'var(--text-dim)' }}>(comma separated, up to 12)</span></label>
               <input
                 type="text" value={form.tags} onChange={set('tags')} disabled={loading}
               />
@@ -356,6 +356,7 @@ export default function EditCreationPage() {
                 onChange={(tags) => setForm((f) => ({ ...f, tags }))}
                 category={form.category}
                 disabled={loading}
+                sourceText={`${form.title} ${form.description}`}
               />
             </div>
 
