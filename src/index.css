@@ -3631,3 +3631,171 @@ body { background: var(--bg-darkest); overflow-y: auto; }
   .vg-idea { padding: 9px 10px; gap: 8px; }
   .vg-idea-vote { min-width: 38px; }
 }
+
+
+/* ============================================================
+   PROGRESS DRAWER — daily bonus, quest, level and balance,
+   tucked off the right edge instead of stacked on the home page.
+   ============================================================ */
+.vg-drawer-tab {
+  position: fixed; right: 0; top: 40%;
+  z-index: 60; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 7px;
+  padding: 14px 7px;
+  background: linear-gradient(180deg, var(--bg-panel-header), var(--bg-panel));
+  border: 2px solid var(--orange-dim); border-right: none;
+  border-radius: 6px 0 0 6px;
+  color: var(--orange);
+  font-family: var(--font-pixel); font-size: 8px; letter-spacing: 1px;
+  transition: right .28s cubic-bezier(.22,.61,.36,1), background .15s, color .15s;
+}
+.vg-drawer-tab:hover { background: var(--bg-panel-header); color: var(--orange-bright); }
+.vg-drawer-tab.is-open { right: min(360px, 88vw); }
+.vg-drawer-tab-label { writing-mode: vertical-rl; text-orientation: mixed; }
+
+/* The light. Pearlescent green: three greens on a moving gradient rather
+   than one flat fill, which is what stops it reading as a plain dot. The
+   sheen sweeps across on a separate layer so the colour underneath keeps
+   shifting independently — that mismatch is what makes it look like pearl. */
+.vg-drawer-pip {
+  position: relative; width: 13px; height: 13px; border-radius: 50%;
+  background: linear-gradient(135deg, #7CFFB2 0%, #22D67F 40%, #A8FFD4 65%, #17B86A 100%);
+  background-size: 220% 220%;
+  box-shadow: 0 0 7px rgba(52, 230, 140, .85), 0 0 16px rgba(52, 230, 140, .45),
+              inset 0 1px 2px rgba(255, 255, 255, .65);
+  animation: vgPipSheen 3.6s ease-in-out infinite;
+  overflow: hidden;
+}
+.vg-drawer-pip::after {
+  content: '';
+  position: absolute; inset: -40%;
+  background: linear-gradient(115deg, transparent 40%, rgba(255,255,255,.9) 50%, transparent 60%);
+  animation: vgPipGlint 3.6s ease-in-out infinite;
+}
+@keyframes vgPipSheen {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+@keyframes vgPipGlint {
+  0%   { transform: translateX(-120%); }
+  55%  { transform: translateX(120%); }
+  100% { transform: translateX(120%); }
+}
+
+.vg-drawer-scrim {
+  position: fixed; inset: 0; z-index: 55;
+  background: rgba(5, 5, 12, .55);
+  border: none; padding: 0; cursor: pointer;
+  animation: vgScrimIn .2s ease-out;
+}
+@keyframes vgScrimIn { from { opacity: 0; } to { opacity: 1; } }
+
+.vg-drawer {
+  position: fixed; top: 0; right: 0; z-index: 58;
+  width: min(360px, 88vw); height: 100vh;
+  display: flex; flex-direction: column;
+  background: var(--bg-panel);
+  border-left: 2px solid var(--orange);
+  transform: translateX(100%);
+  transition: transform .28s cubic-bezier(.22,.61,.36,1);
+  overflow: hidden;
+}
+.vg-drawer.is-open { transform: translateX(0); }
+
+.vg-drawer-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 14px; background: var(--bg-panel-header);
+  border-bottom: 2px solid var(--orange-dim); flex-shrink: 0;
+}
+.vg-drawer-head h2 {
+  font-family: var(--font-pixel); font-size: 10px;
+  color: var(--orange); margin: 0; letter-spacing: 1px;
+}
+.vg-drawer-close {
+  background: none; border: none; cursor: pointer;
+  color: var(--text-dim); font-size: 16px; line-height: 1; padding: 4px;
+}
+.vg-drawer-close:hover { color: var(--orange); }
+
+.vg-drawer-body { padding: 14px; overflow-y: auto; flex: 1; }
+
+.vg-drawer-coins {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 12px 14px; margin-bottom: 12px; text-decoration: none;
+  background: var(--bg-panel-alt);
+  border: 2px solid var(--orange-dim); border-radius: 4px;
+}
+.vg-drawer-coins:hover { border-color: var(--orange); }
+.vg-drawer-coins-n {
+  font-family: var(--font-retro); font-size: 30px; line-height: 1;
+  color: var(--yellow); font-weight: bold;
+}
+.vg-drawer-coins-label {
+  font-family: var(--font-retro); font-size: 14px; color: var(--text-dim);
+}
+
+.vg-drawer-sep {
+  font-family: var(--font-pixel); font-size: 7px; letter-spacing: 1px;
+  color: var(--text-dim); margin: 16px 0 8px;
+  padding-top: 10px; border-top: 1px solid var(--border-dark);
+}
+
+/* The two widgets were built as full-width page strips. Inside a 360px
+   column they need to stack instead of sitting side by side. */
+.vg-drawer-body .vg-daily,
+.vg-drawer-body .vg-quest {
+  flex-direction: column; align-items: stretch; gap: 8px; margin: 0 0 10px;
+}
+.vg-drawer-body .vg-daily-btn,
+.vg-drawer-body .vg-quest-btn { width: 100%; text-align: center; }
+
+.vg-drawer-foot {
+  margin-top: 14px; padding-top: 12px;
+  border-top: 1px solid var(--border-dark);
+  font-family: var(--font-retro); font-size: 16px;
+}
+.vg-drawer-foot a { color: var(--blue-link); text-decoration: none; }
+.vg-drawer-foot a:hover { color: var(--orange); text-decoration: underline; }
+
+@media (max-width: 560px) {
+  .vg-drawer-tab { top: auto; bottom: 84px; padding: 10px 6px; }
+  .vg-drawer-tab-label { font-size: 7px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vg-drawer, .vg-drawer-tab { transition: none; }
+  .vg-drawer-pip, .vg-drawer-pip::after { animation: none; }
+}
+
+/* Staff pick arrows. The dots stay — they show how many there are and where
+   you are; the arrows are for moving quickly without aiming at a 6px target. */
+.vg-featured-nav { display: flex; align-items: center; gap: 10px; margin-top: 7px; }
+.vg-featured-nav .vg-featured-dots { margin-top: 0; }
+.vg-featured-arrow {
+  display: flex; align-items: center; justify-content: center;
+  width: 26px; height: 22px; flex-shrink: 0; cursor: pointer;
+  background: var(--bg-input); color: var(--text-secondary);
+  border: 1px solid var(--border-dark); border-radius: 3px;
+  font-size: 10px; line-height: 1;
+  transition: background .12s, color .12s, border-color .12s;
+}
+.vg-featured-arrow:hover {
+  background: var(--orange-dim); border-color: var(--orange-bright); color: #000;
+}
+
+/* "Add tags from your description". Green rather than orange: this is a
+   helpful offer, not the primary action, and orange is already spoken for
+   by every other button on the form. */
+.vg-tagpicker-suggest {
+  display: block; width: 100%; text-align: left; cursor: pointer;
+  margin-bottom: 9px; padding: 8px 10px;
+  background: rgba(52, 230, 140, .10);
+  border: 1px solid #2f7d32; border-radius: 4px;
+  font-family: var(--font-retro); font-size: 16px; color: #8de8b4;
+}
+.vg-tagpicker-suggest:hover { background: rgba(52, 230, 140, .18); border-color: var(--green); }
+.vg-tagpicker-suggest:disabled { opacity: .5; cursor: not-allowed; }
+.vg-tagpicker-suggest-list {
+  display: block; margin-top: 2px;
+  font-size: 14px; color: var(--text-dim); overflow-wrap: anywhere;
+}
