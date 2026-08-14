@@ -47,7 +47,7 @@ export default function RulesPage() {
           <p><strong style={{ color: 'var(--red)' }}>Hate speech, slurs and bigotry.</strong> Racism, homophobia, transphobia, misogyny and the rest. Permanent ban, first offence, no appeal worth writing. This is the one we care about most.</p>
           <p style={{ marginTop: '8px' }}><strong style={{ color: 'var(--red)' }}>Harassment.</strong> Going after a specific person, doxxing, pile-ons, threats.</p>
           <p style={{ marginTop: '8px' }}><strong style={{ color: 'var(--red)' }}>Malware, scams and phishing.</strong> Every link gets checked when reported.</p>
-          <p style={{ marginTop: '8px' }}><strong style={{ color: 'var(--red)' }}>Spam.</strong> Coins exist partly to make this uneconomical. Do not test it.</p>
+          <p style={{ marginTop: '8px' }}><strong style={{ color: 'var(--red)' }}>Spam.</strong> Vibe Coins exist partly to make this uneconomical. Do not test it.</p>
           <p style={{ marginTop: '8px' }}><strong style={{ color: 'var(--red)' }}>Stolen work.</strong> Do not post someone else&#39;s project as your own.</p>
           <p style={{ marginTop: '8px' }}><strong style={{ color: 'var(--red)' }}>Sexual content involving minors, or anything illegal.</strong> Reported to the relevant authorities, not just removed.</p>
         </Section>
@@ -63,10 +63,10 @@ export default function RulesPage() {
           <p>Vote manipulation — alt accounts, vote rings, begging in DMs — voids your scores and can cost you your account.</p>
         </Section>
 
-        <Section title="🪙 Coins">
-          <p>Everyone gets 50 gold coins free once they confirm their email. Posting costs 10.</p>
+        <Section title="🪙 Vibe Coins">
+          <p>Everyone gets 50 Vibe Coins free once they confirm their email. Posting costs 10.</p>
           <p>That is five submissions before you spend anything. Top-ups are optional and exist to keep the lights on and make spam expensive.</p>
-          <p>Coins have no cash value and cannot be transferred or cashed out.</p>
+          <p>Vibe Coins have no cash value and cannot be transferred or cashed out.</p>
         </Section>
 
         <Section title="🛡️ How Moderation Actually Works">
