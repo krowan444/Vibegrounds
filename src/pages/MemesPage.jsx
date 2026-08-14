@@ -152,6 +152,18 @@ export default function MemesPage() {
   const loading = hot === null || fresh === null;
   const nothing = !loading && hot.length === 0 && fresh.length === 0 && all.length === 0;
 
+  /*
+   * Highlight rows only earn their space once the board is bigger than they
+   * are. On a board of four, Hot is the whole board, so showing Hot and then
+   * the catalogue underneath is the same four pictures twice — which is the
+   * exact repetition this rebuild set out to remove.
+   *
+   * Below the threshold the catalogue alone does the job: the sort buttons
+   * already give you hot (Top rated) and new (Newest) without repeating a
+   * single tile. The rows appear on their own once there is enough to sample.
+   */
+  const showcase = total > HOT_N + NEW_N;
+
   return (
     <>
       <SiteHeader />
@@ -187,11 +199,11 @@ export default function MemesPage() {
           </div>
         )}
 
-        {!loading && hot.length > 0 && (
+        {!loading && showcase && hot.length > 0 && (
           <Row id="hot" icon="🔥" title="Hot" sub="Best scoring on the board" list={hot} keyName="hot" />
         )}
 
-        {!loading && fresh.length > 0 && (
+        {!loading && showcase && fresh.length > 0 && (
           <Row id="new" icon="🆕" title="New" sub="Straight off the press" list={fresh} keyName="fresh" />
         )}
 
@@ -202,7 +214,9 @@ export default function MemesPage() {
             <div className="vg-meme-section-head">
               <h2>📚 All Memes</h2>
               <span className="vg-meme-section-sub">
-                {tag ? `${total} tagged “${tag}”` : `The whole board — ${total} in total`}
+                {tag
+                  ? `${total} tagged “${tag}”`
+                  : `${showcase ? 'The whole board' : 'Everything on the board'} — ${total} in total`}
               </span>
             </div>
 
@@ -267,7 +281,7 @@ export default function MemesPage() {
           </section>
         )}
 
-        {!loading && hot.length === 0 && all.length > 0 && (
+        {!loading && showcase && hot.length === 0 && all.length > 0 && (
           <p className="vg-meme-note">
             Nothing has been rated yet — go and score a few and the Hot row fills up.
           </p>
