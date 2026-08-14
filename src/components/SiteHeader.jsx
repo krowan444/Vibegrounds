@@ -73,7 +73,7 @@ export default function SiteHeader({ compact = false }) {
               <>
                 <Link
                   to="/coins"
-                  title="Your gold coins — 10 per submission"
+                  title="Your Vibe Coins — 10 per submission"
                   style={{
                     fontFamily: 'var(--font-retro)', fontSize: '18px', color: 'var(--yellow)',
                     textDecoration: 'none', border: '1px solid var(--orange-dim)',
@@ -150,7 +150,7 @@ export default function SiteHeader({ compact = false }) {
           background: '#3a2f0d', borderTop: '2px solid var(--orange)', borderBottom: '2px solid var(--orange)',
           padding: '6px 12px', fontFamily: 'var(--font-retro)', fontSize: '17px', color: 'var(--yellow)',
         }}>
-          📬 Confirm your email to unlock posting and claim your 50 free coins.{' '}
+          📬 Confirm your email to unlock posting and claim your 50 free Vibe Coins.{' '}
           <Link to="/verify" style={{ color: 'var(--orange-bright)', fontWeight: 'bold' }}>Resend the link →</Link>
         </div>
       )}
@@ -180,7 +180,7 @@ export default function SiteHeader({ compact = false }) {
         <Link
           to={user ? '/upload' : '/auth?mode=signup'}
           className="vg-nav-submit"
-          title={user ? 'Post a creation — 10 coins' : 'Join and get 50 free coins'}
+          title={user ? 'Post a creation — 10 coins' : 'Join and get 50 free Vibe Coins'}
         >
           + Submit
         </Link>
