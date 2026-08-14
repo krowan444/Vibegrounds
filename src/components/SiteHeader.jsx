@@ -3,9 +3,16 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 
+/*
+ * Forum sits third, with Home and Portal, rather than last behind eight
+ * categories. It is a destination, not a category — burying it at the end of
+ * the row was why nobody found it. Everything from Games onwards is a
+ * category, so the row now reads: places to go, then things to browse.
+ */
 const NAV = [
   { to: '/',                   label: 'Home' },
   { to: '/portal',             label: 'Portal' },
+  { to: '/forum',              label: 'Forum' },
   { to: '/category/games',     label: 'Games' },
   { to: '/category/ai-movies', label: 'AI Movies' },
   { to: '/category/software',  label: 'Software' },
@@ -15,7 +22,6 @@ const NAV = [
   { to: '/memes',              label: 'Memes' },
   { to: '/charts',             label: 'Top 100' },
   { to: '/hall-of-fame',       label: 'Hall of Fame', wide: true },
-  { to: '/forum',              label: 'Forum' },
 ];
 
 export default function SiteHeader({ compact = false }) {
@@ -159,6 +165,10 @@ export default function SiteHeader({ compact = false }) {
               // The Portal is where everything actually lives, so it gets
               // pulled out of the row rather than sitting in the queue.
               n.to === '/portal' && pathname !== '/portal' ? 'vg-nav-portal' : '',
+              // Forum gets the same pulled-out treatment, in a different
+              // colour. Two identical glowing buttons side by side would just
+              // compete; the Portal stays the loudest thing in the row.
+              n.to === '/forum' && pathname !== '/forum' ? 'vg-nav-forum' : '',
             ].filter(Boolean).join(' ') || undefined}
           >
             {n.label}
