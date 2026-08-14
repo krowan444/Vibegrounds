@@ -52,7 +52,7 @@ export default function AuthPage() {
               <p>We've sent a confirmation link to <strong style={{ color: 'var(--orange)' }}>{form.email}</strong>.</p>
               <p style={{ marginTop: '10px', color: 'var(--text-secondary)' }}>
                 Click it to activate your account and collect your{' '}
-                <strong style={{ color: 'var(--yellow)' }}>50 free gold coins</strong> 🪙
+                <strong style={{ color: 'var(--yellow)' }}>50 free Vibe Coins</strong> 🪙
               </p>
               <p style={{ marginTop: '10px', color: 'var(--text-dim)', fontSize: '16px' }}>
                 Nothing yet? Check your spam folder — it likes to hide there.
@@ -219,7 +219,7 @@ export default function AuthPage() {
         <div className="retro-panel" style={{ marginTop: '16px' }}>
           <div className="section-header"><h2>🌟 Why Join VibeGrounds?</h2></div>
           <div className="retro-panel-body" style={{ fontFamily: 'var(--font-retro)', fontSize: '17px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-            <p>🪙 <strong style={{ color: 'var(--yellow)' }}>50 free gold coins</strong> the moment you verify — that&#39;s 5 submissions</p>
+            <p>🪙 <strong style={{ color: 'var(--yellow)' }}>50 free Vibe Coins</strong> the moment you verify — that&#39;s 5 submissions</p>
             <p>✦ Post games, AI movies, software, sites and glorious experiments</p>
             <p>✦ Get scored 0–5 and climb the Daily, Weekly and All-Time charts</p>
             <p>✦ Earn badges — including <strong style={{ color: 'var(--orange)' }}>OG Member</strong>, gone forever after Jan 2027</p>
