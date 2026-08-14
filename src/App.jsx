@@ -23,6 +23,7 @@ import ForumPage from './pages/ForumPage';
 import ForumCategoryPage from './pages/ForumCategoryPage';
 import ForumThreadPage from './pages/ForumThreadPage';
 
+import ProgressDrawer from './components/ProgressDrawer';
 import AuthPage from './pages/AuthPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
@@ -67,6 +68,10 @@ export default function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
           <SiteFooter />
+          {/* Fixed to the right edge, so it rides above every page rather
+              than being part of any one of them. Renders nothing when
+              signed out. */}
+          <ProgressDrawer />
         </div>
       </AuthProvider>
     </BrowserRouter>
