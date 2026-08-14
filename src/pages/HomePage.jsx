@@ -9,8 +9,6 @@ import AdSlot from '../components/AdSlot';
 import JokeAd from '../components/JokeAd';
 import HeroAd from '../components/HeroAd';
 import MemeRail from '../components/MemeRail';
-import DailyCheckIn from '../components/DailyCheckIn';
-import RatingQuest from '../components/RatingQuest';
 import Notice from '../components/Notice';
 import { compactNumber, timeAgo, scoreLabel, scoreLabelColor } from '../lib/format';
 import { thumbFor, onThumbError, LOGO_FALLBACK } from '../lib/thumbnail';
@@ -26,8 +24,12 @@ export default function HomePage() {
     (async () => {
       const settle = (r) => (r.status === 'fulfilled' ? r.value : { data: [], error: r.reason });
       const R = (await Promise.allSettled([
+        // No limit: every staff pick belongs in the rotation. The hero has
+        // arrows now, so a long list is browsable rather than a slideshow you
+        // have to wait out — and capping it meant picks 5 and up were featured
+        // in the database and invisible on the site.
         retryOnAbort(() => supabase.from('creations_public').select('*').eq('is_featured', true)
-          .order('created_at', { ascending: false }).limit(4)),
+          .order('created_at', { ascending: false })),
         // Memes are excluded from the main strip — they have their own rail
         // further down, and mixing them in here buries the actual projects.
         retryOnAbort(() => supabase.from('creations_public').select('*')
@@ -105,8 +107,6 @@ export default function HomePage() {
 
       <div className="vg-page">
         <Notice tone="error">{error}</Notice>
-        <DailyCheckIn />
-        <RatingQuest />
 
         {/* live activity strip */}
         {newest && (
