@@ -3822,3 +3822,41 @@ body { background: var(--bg-darkest); overflow-y: auto; }
   display: block; margin-top: 2px;
   font-size: 14px; color: var(--text-dim); overflow-wrap: anywhere;
 }
+
+
+/* ── BADGE SHELF ─────────────────────────────────────────────
+   Your three best badges in the header. A display case, not a list:
+   the recessed inner shadow and the lip along the bottom are what make
+   it read as a shelf rather than three loose icons. */
+.vg-shelf {
+  display: flex; align-items: center; gap: 4px;
+  padding: 3px 6px 5px; text-decoration: none;
+  background: var(--bg-input);
+  border: 1px solid var(--border-dark);
+  border-bottom: 3px solid var(--orange-dim);
+  border-radius: 4px;
+  box-shadow: inset 0 2px 5px rgba(0,0,0,.55);
+}
+.vg-shelf:hover { border-bottom-color: var(--orange); }
+
+.vg-shelf-badge {
+  display: flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; font-size: 13px; line-height: 1;
+  background: var(--bg-panel-alt);
+  border: 1px solid var(--border-dark);
+  border-radius: 3px;
+  transition: transform .12s;
+}
+/* Lifts off the shelf on hover — the smallest possible nod to it being
+   something you collected rather than something that was printed there. */
+.vg-shelf:hover .vg-shelf-badge { transform: translateY(-1px); }
+
+/* Hidden on phones: the header is already tight there, and three 22px
+   icons would push the coin balance onto its own line. */
+@media (max-width: 700px) {
+  .vg-shelf { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vg-shelf-badge { transition: none; }
+}
