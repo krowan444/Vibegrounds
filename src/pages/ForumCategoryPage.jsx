@@ -38,7 +38,13 @@ export default function ForumCategoryPage() {
       // Get threads in this category
       const { data: threadData } = await supabase
         .from('forum_threads')
-        .select('*, profiles(username, avatar_url)')
+        // The foreign key is named explicitly. Left as plain profiles(...),
+        // PostgREST has to guess which relationship is meant - and the moment
+        // any new table references both forum_threads and profiles it sees a
+        // second candidate, refuses to choose, and returns nothing. That is
+        // exactly how the thread lists silently emptied. Naming the key makes
+        // it unguessable and immune to whatever gets added later.
+        .select('*, profiles!forum_threads_author_id_fkey(username, avatar_url)')
         .eq('category_id', cat.id)
         .order('is_pinned', { ascending: false })
         .order('last_activity_at', { ascending: false })
@@ -68,7 +74,13 @@ export default function ForumCategoryPage() {
           title: form.title.trim(),
           body: form.body.trim()
         })
-        .select('*, profiles(username, avatar_url)')
+        // The foreign key is named explicitly. Left as plain profiles(...),
+        // PostgREST has to guess which relationship is meant - and the moment
+        // any new table references both forum_threads and profiles it sees a
+        // second candidate, refuses to choose, and returns nothing. That is
+        // exactly how the thread lists silently emptied. Naming the key makes
+        // it unguessable and immune to whatever gets added later.
+        .select('*, profiles!forum_threads_author_id_fkey(username, avatar_url)')
         .single();
 
       if (insertErr) throw insertErr;
