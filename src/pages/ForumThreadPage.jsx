@@ -37,7 +37,11 @@ export default function ForumThreadPage() {
 
       const { data: threadData } = await supabase
         .from('forum_threads')
-        .select('*, profiles(username, avatar_url)')
+        // Foreign key named explicitly - see the note in ForumCategoryPage.
+        // Without it PostgREST can find two routes to profiles and returns
+        // nothing, which took the thread AND its replies down with it, since
+        // this fetch bails out before it ever loads the posts.
+        .select('*, profiles!forum_threads_author_id_fkey(username, avatar_url)')
         .eq('id', id)
         .single();
 
@@ -128,7 +132,9 @@ export default function ForumThreadPage() {
         .update({ title: threadEditForm.title.trim(), body: threadEditForm.body.trim() })
         .eq('id', id)
         .eq('author_id', user.id)
-        .select('*, profiles(username, avatar_url)')
+        // Named key again - an edit that saved but came back empty would look
+        // to the author like it had failed.
+        .select('*, profiles!forum_threads_author_id_fkey(username, avatar_url)')
         .single();
       if (updateErr) throw updateErr;
 
