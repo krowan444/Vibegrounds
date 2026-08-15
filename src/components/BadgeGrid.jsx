@@ -28,6 +28,7 @@ export default function BadgeGrid({ badges = [], emptyText = 'No badges yet.' })
             style={{ borderColor: tier }}
             onClick={() => setOpen(isOpen ? null : b.slug)}
             aria-expanded={isOpen}
+            title={`${b.name} — ${b.description}`}
           >
             <span className="vg-badge-icon">{b.icon}</span>
             <span className="vg-badge-name">{b.name}</span>
@@ -35,8 +36,12 @@ export default function BadgeGrid({ badges = [], emptyText = 'No badges yet.' })
               {b.live_rarity}
             </span>
 
-            {isOpen && (
-              <span className="vg-badge-pop">
+            {/* Always rendered, shown by CSS on hover, focus or click.
+                Conditionally rendering it meant hover could never work — you
+                cannot :hover something that is not in the DOM — and hover is
+                how most people expect to read a badge. Click still works, and
+                is the only option on a touchscreen. */}
+            <span className="vg-badge-pop">
                 <span className="vg-badge-desc">{b.description}</span>
                 <span className="vg-badge-stats">
                   <span style={{ color: tier, textTransform: 'uppercase' }}>{b.tier}</span>
@@ -51,8 +56,7 @@ export default function BadgeGrid({ badges = [], emptyText = 'No badges yet.' })
                 {b.is_retired && (
                   <span className="vg-badge-retired">🔒 Can never be earned again</span>
                 )}
-              </span>
-            )}
+            </span>
           </button>
         );
       })}
