@@ -47,6 +47,31 @@ const HOUSE_ADS = [
 ];
 
 /*
+ * Ads that live in one fixed place rather than joining the rotation.
+ *
+ * These replaced two of the CSS-drawn joke banners in the left column. Same
+ * gag, better looking — but they keep the joke label, because both are still
+ * adverts for things that do not exist, and a site this small cannot afford
+ * to look like it is running real dodgy ads.
+ */
+export const PINNED_ADS = {
+  'shroom-broker': {
+    img: '/images/ads/ad-shroom-broker.webp',
+    alt: 'Shroom Broker — premium power-ups, cash only, no questions',
+    href: '/portal',
+    caption: 'See what the community made.',
+    joke: true,
+  },
+  'squirrel-adventure': {
+    img: '/images/ads/ad-squirrel-adventure.webp',
+    alt: 'Epic Squirrel Adventure — the aliens picked the wrong tree',
+    href: '/upload',
+    caption: 'Build something. Post it here.',
+    joke: true,
+  },
+};
+
+/*
  * Which ad each slot shows is offset by a number drawn once, when the module
  * first loads — so a refresh reshuffles the whole set, but nothing changes
  * underneath you while you are reading the page.
@@ -62,12 +87,16 @@ const HOUSE_ADS = [
  */
 const OFFSET = Math.floor(Math.random() * HOUSE_ADS.length);
 
-export default function AdSlot({ index = 0, sticky = false }) {
-  const ad = HOUSE_ADS[(OFFSET + index) % HOUSE_ADS.length];
+export default function AdSlot({ index = 0, sticky = false, pin = null }) {
+  // A pinned slot always shows the same ad; everything else rotates.
+  const ad = pin ? PINNED_ADS[pin] : HOUSE_ADS[(OFFSET + index) % HOUSE_ADS.length];
+  if (!ad) return null;
 
   return (
     <div className={`vg-ad ${sticky ? 'vg-ad-sticky' : ''}`}>
-      <div className="vg-ad-label">ADVERTISEMENT</div>
+      <div className={ad.joke ? 'vg-ad-label vg-ad-label-joke' : 'vg-ad-label'}>
+        {ad.joke ? '😄 JOKE AD — NOT A REAL PRODUCT' : 'ADVERTISEMENT'}
+      </div>
 
       {/* Router Link, not a bare <a>. The old anchor threw away the whole
           single-page app and reloaded from scratch on every ad click. */}
@@ -81,7 +110,8 @@ export default function AdSlot({ index = 0, sticky = false }) {
       <Link to={ad.href} className="vg-ad-caption">{ad.caption}</Link>
 
       <Link to="/advertise" className="vg-ad-foot">
-        House ad. <strong>Advertise here for real →</strong>
+        {ad.joke ? 'This is a gag. ' : 'House ad. '}
+        <strong>Advertise here for real →</strong>
       </Link>
     </div>
   );
