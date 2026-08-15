@@ -7,6 +7,7 @@ import CreationCard from '../components/CreationCard';
 import ChartRail, { CreatorRail } from '../components/ChartRail';
 import AdSlot from '../components/AdSlot';
 import JokeAd from '../components/JokeAd';
+import SponsorSlot from '../components/SponsorSlot';
 import HeroAd from '../components/HeroAd';
 import MemeRail from '../components/MemeRail';
 import Notice from '../components/Notice';
@@ -151,7 +152,11 @@ export default function HomePage() {
               title="Top 10 This Week" icon="📅" rows={d.weekly} to="/charts?chart=weekly"
               emptyText="Nothing charted this week yet."
             />
-            <JokeAd index={6} />
+            {/* Was JokeAd 6 (THE GREAT GPU RUSH). This is the first slot a
+                paying advertiser has held, and it sits above Top Creators
+                because the two chart rails above it are the reason anyone
+                looks at this column in the first place. */}
+            <SponsorSlot id="cue" />
             <CreatorRail rows={d.creators} />
             <JokeAd index={7} />
             {/* Were JokeAd 0 (DOWNLOAD MORE RAM) and 1 (VISITOR #1,000,000).
