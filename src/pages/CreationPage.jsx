@@ -150,6 +150,14 @@ export default function CreationPage() {
               <div style={{
                 position: 'relative', background: 'var(--bg-dark)',
                 borderBottom: '2px solid var(--border-panel)',
+                // width:100% is load-bearing. aspect-ratio plus max-height
+                // makes the capped height transfer back through the ratio and
+                // shrink the width to match (360 x 16/9 = 640px), leaving the
+                // picture 640px wide in an 842px panel and jammed against the
+                // left edge, well off-centre from the Launch button beneath.
+                // Stating the width outright stops the transfer: the box fills
+                // the panel and the height is what gets clamped instead.
+                width: '100%',
                 aspectRatio: '16 / 9', maxHeight: '360px', display: 'flex',
                 alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
               }}>
