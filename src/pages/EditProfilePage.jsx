@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { AVATARS, DEFAULT_AVATAR } from '../data/avatars';
+import { AVATARS, AVATAR_GROUPS, DEFAULT_AVATAR } from '../data/avatars';
 import SiteHeader from '../components/SiteHeader';
 
 export default function EditProfilePage() {
@@ -128,17 +128,34 @@ export default function EditProfilePage() {
                 </div>
               </div>
 
-              {/* Avatar grid */}
+              {/* Avatar grid, in sections.
+                  132 options in one undifferentiated grid is a wall, not a
+                  choice - people scroll two rows and take whatever is nearest.
+                  Headings turn it into "I want a dog" and a short scan. */}
               <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(10, 1fr)',
-                gap: '6px',
+                maxHeight: '420px',
+                overflowY: 'auto',
                 padding: '8px',
                 background: 'var(--bg-dark)',
                 border: '2px solid var(--border-dark)',
                 borderRadius: '2px'
               }}>
-                {AVATARS.map(avatar => {
+              {AVATAR_GROUPS.map(group => (
+                <div key={group} style={{ marginBottom: '10px' }}>
+                  <div style={{
+                    fontFamily: 'var(--font-pixel)', fontSize: '7px',
+                    color: 'var(--orange)', letterSpacing: '1px',
+                    padding: '4px 2px 6px',
+                    position: 'sticky', top: 0, background: 'var(--bg-dark)', zIndex: 1,
+                  }}>
+                    {group.toUpperCase()}
+                  </div>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(10, 1fr)',
+                    gap: '6px',
+                  }}>
+                {AVATARS.filter(a => a.group === group).map(avatar => {
                   const isSelected = form.avatar_url === avatar.path;
                   return (
                     <button
@@ -162,6 +179,7 @@ export default function EditProfilePage() {
                       <img
                         src={avatar.path}
                         alt={avatar.name}
+                        loading="lazy"
                         style={{
                           width: '100%', height: '100%', objectFit: 'cover',
                           borderRadius: '2px', display: 'block'
@@ -170,6 +188,9 @@ export default function EditProfilePage() {
                     </button>
                   );
                 })}
+                  </div>
+                </div>
+              ))}
               </div>
             </div>
 
