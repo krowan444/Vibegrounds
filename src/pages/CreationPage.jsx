@@ -150,7 +150,7 @@ export default function CreationPage() {
               <div style={{
                 position: 'relative', background: 'var(--bg-dark)',
                 borderBottom: '2px solid var(--border-panel)',
-                aspectRatio: '16 / 9', maxHeight: '260px', display: 'flex',
+                aspectRatio: '16 / 9', maxHeight: '320px', display: 'flex',
                 alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
               }}>
                 <img
