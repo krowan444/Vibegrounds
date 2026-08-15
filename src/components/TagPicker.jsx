@@ -87,6 +87,14 @@ const TOOL_TAGS = [
   'hand-coded',
 ];
 
+/*
+ * Where it actually runs. Asked as tags rather than a database column
+ * because it is the same kind of fact as everything else here, and because
+ * "does this work on my phone" is the single most common thing a visitor
+ * wants to know before clicking a link they have never heard of.
+ */
+const PLATFORM_TAGS = ['works-on-mobile', 'desktop-only', 'mobile-only'];
+
 /** Split the raw input string into clean tags, the same way submit does. */
 export function parseTags(raw) {
   return (raw || '')
@@ -141,6 +149,9 @@ const ALIASES = {
   'mobile-friendly': ['responsive', 'works on mobile', 'mobile first'],
   free:          ['no cost', 'free to play', 'completely free'],
   'no-signup':   ['no account', 'no login', 'without signing up'],
+  'works-on-mobile': ['works on phone', 'phone and desktop', 'any device', 'mobile and desktop'],
+  'desktop-only':    ['desktop only', 'not on mobile', 'keyboard required', 'needs a keyboard', 'pc only'],
+  'mobile-only':     ['phone only', 'mobile only', 'built for phones'],
 };
 
 /**
@@ -190,7 +201,7 @@ export default function TagPicker({
 
   // Everything the matcher is allowed to propose: this category's tags, the
   // generic ones, and the tools. Never invents a tag outside the vocabulary.
-  const vocabulary = [...new Set([...suggestions, ...TOOL_TAGS])];
+  const vocabulary = [...new Set([...suggestions, ...TOOL_TAGS, ...PLATFORM_TAGS])];
   const found = suggestFromText(sourceText, vocabulary);
   const fresh = found.filter((t) => !selected.includes(t));
 
@@ -247,6 +258,11 @@ export default function TagPicker({
       )}
 
       <div className="vg-tagpicker-chips">{suggestions.map(chip)}</div>
+
+      <div className="vg-tagpicker-head vg-tagpicker-head-sub">
+        <span>📱 Where does it work?</span>
+      </div>
+      <div className="vg-tagpicker-chips">{PLATFORM_TAGS.map(chip)}</div>
 
       <div className="vg-tagpicker-head vg-tagpicker-head-sub">
         <span>🛠 Built with</span>
