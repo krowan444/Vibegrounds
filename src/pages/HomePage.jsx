@@ -154,8 +154,10 @@ export default function HomePage() {
             <JokeAd index={6} />
             <CreatorRail rows={d.creators} />
             <JokeAd index={7} />
-            <JokeAd index={0} />
-            <JokeAd index={1} />
+            {/* Were JokeAd 0 (DOWNLOAD MORE RAM) and 1 (VISITOR #1,000,000).
+                Same slot, same gag, drawn properly instead of in CSS. */}
+            <AdSlot pin="squirrel-adventure" />
+            <AdSlot pin="shroom-broker" />
           </div>
 
           {/* MIDDLE — featured ad, then the sections */}
