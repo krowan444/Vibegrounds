@@ -67,6 +67,11 @@ export default function SiteHeader({ compact = false }) {
                 category, not a reason to be here. This one states the actual
                 promise: post it, and strangers will score it. */}
             {!compact && <div className="site-logo-tagline">POST IT. GET SCORED. CLIMB THE CHARTS.</div>}
+            {/* The line above says what to do here; this one says where you
+                are. Deliberately quieter - a claim this big shouts louder the
+                more softly it is set, and it must not out-weigh the call to
+                action directly above it. */}
+            {!compact && <div className="site-logo-claim">The No.1 place for vibe coded content on the web</div>}
           </div>
         </Link>
 
