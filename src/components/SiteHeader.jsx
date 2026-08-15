@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import BadgeShelf from './BadgeShelf';
+import { useForumUnreadCount } from './ForumUnread';
 
 /*
  * Forum sits third, with Home and Portal, rather than last behind eight
@@ -29,6 +30,7 @@ export default function SiteHeader({ compact = false }) {
   const { user, profile, signOut, emailVerified, isStaff, coins, banActive } = useAuth();
   const { pathname } = useLocation();
   const [openReports, setOpenReports] = useState(0);
+  const forumUnread = useForumUnreadCount();
 
   // Live count on the shield icon so a report never sits unseen.
   useEffect(() => {
@@ -177,6 +179,15 @@ export default function SiteHeader({ compact = false }) {
             ].filter(Boolean).join(' ') || undefined}
           >
             {n.label}
+            {/* Pip only on Forum, only when something is waiting. No number
+                here - the count belongs next to the thread it refers to;
+                up here it would just be a figure with no object. */}
+            {n.to === '/forum' && forumUnread > 0 && (
+              <span
+                className="vg-nav-pip"
+                title={forumUnread + ' thread' + (forumUnread === 1 ? '' : 's') + ' with something new'}
+              />
+            )}
           </Link>
         ))}
         {!compact && <Link to="/rules">Rules</Link>}
