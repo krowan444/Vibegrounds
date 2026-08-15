@@ -2,6 +2,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import BadgeShelf from './BadgeShelf';
 
 /*
  * Forum sits third, with Home and Portal, rather than last behind eight
@@ -71,6 +72,10 @@ export default function SiteHeader({ compact = false }) {
           <div className="site-auth-links" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             {user ? (
               <>
+                {/* Trophy shelf. Renders nothing until you have earned
+                    something, so a new account sees no empty furniture. */}
+                <BadgeShelf />
+
                 <Link
                   to="/coins"
                   title="Your Vibe Coins — 10 per submission"
