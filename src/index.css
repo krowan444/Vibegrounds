@@ -1650,12 +1650,29 @@ a:hover {
 .vg-badge-name { font-family: var(--font-retro); font-size: 15px; color: var(--text-primary); line-height: 1.1; margin-top: 4px; }
 .vg-badge-rarity { font-family: var(--font-pixel); font-size: 6px; margin-top: 5px; }
 
+/* Hidden by default, revealed on hover, keyboard focus or click. Uses
+   visibility rather than display:none so it can fade, and so it stays
+   reachable by assistive tech. */
 .vg-badge-pop {
   position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
   z-index: 40; width: 220px; margin-top: 6px; padding: 9px;
   background: var(--bg-panel); border: 2px solid var(--orange);
   box-shadow: 4px 4px 0 rgba(0,0,0,.5); text-align: left;
   display: flex; flex-direction: column; gap: 5px;
+  opacity: 0; visibility: hidden; pointer-events: none;
+  transition: opacity .12s ease-out;
+}
+.vg-badge:hover .vg-badge-pop,
+.vg-badge:focus-visible .vg-badge-pop,
+.vg-badge.is-open .vg-badge-pop {
+  opacity: 1; visibility: visible;
+}
+/* A badge with its panel open has to sit above its neighbours, or the next
+   badge in the grid draws over the top of the popup. */
+.vg-badge:hover, .vg-badge.is-open { z-index: 41; }
+
+@media (prefers-reduced-motion: reduce) {
+  .vg-badge-pop { transition: none; }
 }
 .vg-badge-desc    { font-family: var(--font-retro); font-size: 16px; color: var(--text-primary); }
 .vg-badge-stats   { font-family: var(--font-retro); font-size: 14px; color: var(--text-dim); }
@@ -2190,9 +2207,15 @@ body { background: var(--bg-darkest); overflow-y: auto; }
    off to the right and glides across the top of the outgoing one, which sits
    still underneath. Waiting slides are parked off-frame with no transition,
    so only the arriving card ever animates. */
+/* object-position: top is the fix for "it cuts the tops off".
+   `cover` crops from the centre by default, so a 16:9 screenshot squeezed
+   into a 21:9 box loses equal slices from top AND bottom — and the top of a
+   screenshot is where the title bar, the logo and the menu live. Anchoring
+   to the top means the crop comes off the bottom, which is usually empty
+   space or a footer nobody needs to see. */
 .vg-featured-slide {
   position: absolute; inset: 0;
-  width: 100%; height: 100%; object-fit: cover;
+  width: 100%; height: 100%; object-fit: cover; object-position: center top;
   transform: translateX(102%);
   z-index: 1;
   pointer-events: none;
@@ -2241,7 +2264,7 @@ body { background: var(--bg-darkest); overflow-y: auto; }
   overflow: hidden; background: var(--bg-dark);
   border-bottom: 2px solid var(--border-panel);
 }
-.vg-featured-shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.vg-featured-shot img { width: 100%; height: 100%; object-fit: cover; object-position: center top; display: block; }
 .vg-featured-shot:hover img.is-on { filter: brightness(1.08); }
 
 /* Phones only — desktop keeps the 21:9 crop above.
