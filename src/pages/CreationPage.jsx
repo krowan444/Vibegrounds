@@ -150,7 +150,7 @@ export default function CreationPage() {
               <div style={{
                 position: 'relative', background: 'var(--bg-dark)',
                 borderBottom: '2px solid var(--border-panel)',
-                aspectRatio: '16 / 9', maxHeight: '320px', display: 'flex',
+                aspectRatio: '16 / 9', maxHeight: '360px', display: 'flex',
                 alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
               }}>
                 <img
@@ -158,7 +158,13 @@ export default function CreationPage() {
                   alt={c.title}
                   onError={onThumbError}
                   className={thumbFor(c, 900) === LOGO_FALLBACK ? 'vg-thumb-placeholder' : undefined}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  /* objectPosition was missing, so cover cropped from the dead
+                     centre. Almost nothing people upload is 16:9 — a square or
+                     portrait screenshot lost equal slices off the top and
+                     bottom, eating the title bar and menus that are the whole
+                     point of a screenshot. Anchor to the top and the cut comes
+                     off the bottom instead. Same fix the staff picks carry. */
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }}
                 />
               </div>
 
