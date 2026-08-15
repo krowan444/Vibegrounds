@@ -3860,3 +3860,67 @@ body { background: var(--bg-darkest); overflow-y: auto; }
 @media (prefers-reduced-motion: reduce) {
   .vg-shelf-badge { transition: none; }
 }
+
+/* ============================================================
+   PAID SPONSOR SLOT
+   A real advertiser, cycling several creatives in one box.
+   ============================================================ */
+
+/* A green edge, where the house ads use the plain panel border and the gags
+   use orange. Somebody actually paid for this one, so it should not look
+   identical to the joke about mining VRAM sitting two boxes below it. */
+.vg-sponsor {
+  border-color: #2f7d52;
+  box-shadow: 0 0 0 1px rgba(47,125,82,.25);
+}
+.vg-sponsor .vg-ad-label {
+  color: #8fe0b0;
+  border-bottom-color: #2f7d52;
+  background: rgba(47,125,82,.14);
+}
+
+/* The stage holds all creatives stacked on top of each other. Height comes
+   from the first one in normal flow; the rest are absolutely positioned over
+   it, so the box never changes size as they cross-fade. */
+.vg-sponsor-stage { position: relative; }
+.vg-sponsor-shot {
+  width: 100%; height: auto; display: block;
+  opacity: 0;
+  transition: opacity 600ms ease-in-out;
+}
+/* top/left/right but deliberately not bottom. Pinning all four edges on a
+   replaced element with height:auto is over-constrained, and browsers resolve
+   that by ignoring one of them — better to not create the conflict. */
+.vg-sponsor-shot:not(:first-child) {
+  position: absolute; top: 0; left: 0; right: 0;
+}
+.vg-sponsor-shot.is-on { opacity: 1; }
+
+/* Someone who has asked for reduced motion gets a hard cut rather than a
+   fade. The component already stops the timer for them — this covers the
+   manual dot clicks that still work. */
+@media (prefers-reduced-motion: reduce) {
+  .vg-sponsor-shot { transition: none; }
+}
+
+.vg-sponsor-dots {
+  display: flex; justify-content: center; gap: 6px;
+  padding: 6px 4px;
+  border-top: 1px solid var(--border-dark);
+}
+.vg-sponsor-dot {
+  width: 9px; height: 9px; padding: 0;
+  border: 1px solid #2f7d52;
+  background: transparent;
+  cursor: pointer;
+  /* Square, not round. Everything else on this site has hard pixel corners
+     and a row of circles here would read as imported from somewhere else. */
+  border-radius: 0;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+.vg-sponsor-dot:hover { border-color: #56c98a; background: rgba(86,201,138,.35); }
+.vg-sponsor-dot.is-on { background: #56c98a; border-color: #56c98a; }
+.vg-sponsor-dot:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+
+.vg-sponsor .vg-ad-caption { color: #8fe0b0; }
+.vg-sponsor .vg-ad-caption:hover { color: #b6f2d1; }
