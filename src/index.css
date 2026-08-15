@@ -3924,3 +3924,41 @@ body { background: var(--bg-darkest); overflow-y: auto; }
 
 .vg-sponsor .vg-ad-caption { color: #8fe0b0; }
 .vg-sponsor .vg-ad-caption:hover { color: #b6f2d1; }
+
+
+/* ============================================================
+   MOBILE RUNNING ORDER (home page)
+   ============================================================
+   On a phone the three columns stack, and the old result read as:
+   every chart, then every advert, then finally the Staff Pick — the one
+   thing on the page actually worth looking at, four screens down.
+
+   display:contents dissolves the three column wrappers so their children
+   become grid items of .vg-3col directly. Nothing is lost: .vg-col only
+   sets flex/gap, and .vg-3col already supplies the same 12px gap. Once
+   they are siblings, `order` can interleave items that live in different
+   columns in the markup — which is the whole trick, since the Staff Pick
+   is in the middle column and the charts are in the left one.
+
+   Desktop is untouched. This entire block is inside the phone breakpoint.
+   ============================================================ */
+@media (max-width: 820px) {
+  .vg-3col > .vg-col { display: contents; }
+
+  /* Baseline keeps each column's items grouped and in their original
+     column sequence. nth-child rather than :not() so every rule here sits
+     at the same specificity and source order decides, which is far easier
+     to reason about later. */
+  .vg-3col > .vg-col:nth-child(1) > * { order: 20; }
+  .vg-3col > .vg-col:nth-child(2) > * { order: 40; }
+  .vg-3col > .vg-col:nth-child(3) > * { order: 60; }
+
+  /* The requested order. Charts first, then the Staff Pick, then Top
+     Creators, then the paid advert directly under it. */
+  .vg-3col > .vg-col-left  > .vg-rail-box      { order: 1; }
+  .vg-3col > .vg-col       > .vg-hero-ad       { order: 2; }
+  /* Same specificity as the .vg-rail-box rule above and written after it,
+     so this wins for the one rail that is Top Creators. */
+  .vg-3col > .vg-col-left  > .vg-creator-rail  { order: 3; }
+  .vg-3col > .vg-col-left  > .vg-sponsor       { order: 4; }
+}
