@@ -3962,3 +3962,64 @@ body { background: var(--bg-darkest); overflow-y: auto; }
   .vg-3col > .vg-col-left  > .vg-creator-rail  { order: 3; }
   .vg-3col > .vg-col-left  > .vg-sponsor       { order: 4; }
 }
+
+
+/* ============================================================
+   FORUM UNREAD MARKERS
+   ============================================================
+   Same pearlescent green as the progress drawer pip, because it already
+   means "there is something here for you" on this site and inventing a
+   second colour for the same idea would only muddy both.
+   ============================================================ */
+
+.vg-unread {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: var(--font-pixel); font-size: 7px;
+  color: #8fe0b0;
+  border: 1px solid #2f7d52;
+  background: rgba(47,125,82,.16);
+  padding: 2px 5px;
+  white-space: nowrap;
+  /* Never let the marker push the thread title out of the row. */
+  flex: 0 0 auto;
+}
+
+/* A reply in a thread you are part of. Gold, because that is already the
+   site's "this is about you" colour - the coin pill, the CTA, your rank. */
+.vg-unread.is-mine {
+  color: var(--yellow);
+  border-color: var(--orange-dim);
+  background: rgba(232,163,23,.16);
+}
+
+.vg-unread-pip {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: linear-gradient(135deg, #7CFFB2 0%, #22D67F 40%, #A8FFD4 65%, #17B86A 100%);
+  background-size: 220% 220%;
+  box-shadow: 0 0 5px rgba(52,230,140,.8), inset 0 1px 1px rgba(255,255,255,.6);
+  animation: vgPipSheen 3.6s ease-in-out infinite;
+  flex: 0 0 auto;
+}
+.vg-unread.is-mine .vg-unread-pip {
+  background: linear-gradient(135deg, #FFE9A8 0%, #E8A317 40%, #FFF3CC 65%, #C98A0F 100%);
+  background-size: 220% 220%;
+  box-shadow: 0 0 5px rgba(232,163,23,.85), inset 0 1px 1px rgba(255,255,255,.6);
+}
+
+/* The nav pip. Positioned rather than inline so adding it cannot reflow the
+   nav row and shove every category sideways. */
+.vg-nav-pip {
+  position: absolute; top: 3px; right: 2px;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: linear-gradient(135deg, #7CFFB2 0%, #22D67F 40%, #A8FFD4 65%, #17B86A 100%);
+  background-size: 220% 220%;
+  box-shadow: 0 0 6px rgba(52,230,140,.9), inset 0 1px 1px rgba(255,255,255,.6);
+  animation: vgPipSheen 3.6s ease-in-out infinite;
+  pointer-events: none;
+}
+/* The nav links are static by default; the pip needs a positioned parent. */
+.site-nav a { position: relative; }
+
+@media (prefers-reduced-motion: reduce) {
+  .vg-unread-pip, .vg-nav-pip { animation: none; }
+}
