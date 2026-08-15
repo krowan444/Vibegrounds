@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import SiteHeader from '../components/SiteHeader';
+import { useThreadUnread, ThreadPip } from '../components/ForumUnread';
 
 export default function ForumCategoryPage() {
   const { slug } = useParams();
@@ -13,6 +14,10 @@ export default function ForumCategoryPage() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ title: '', body: '' });
+
+  // One lookup for the whole page rather than one per row. Runs after the
+  // threads land, so the list paints immediately and pips arrive a beat later.
+  const unread = useThreadUnread(threads.map((t) => t.id));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -252,6 +257,9 @@ export default function ForumCategoryPage() {
                     }}>
                       {thread.title}
                     </span>
+                    {/* After the title, not before it. The title is what you
+                        scan for; the pip is what makes you stop. */}
+                    <ThreadPip info={unread.get(thread.id)} />
                   </div>
                   <div style={{
                     fontFamily: 'var(--font-retro)', fontSize: '13px', color: 'var(--text-dim)',
