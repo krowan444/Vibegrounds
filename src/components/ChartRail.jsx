@@ -59,7 +59,10 @@ export default function ChartRail({ title, icon, rows = [], to, emptyText = 'Not
 /** Compact creator leaderboard for the rail. */
 export function CreatorRail({ rows = [] }) {
   return (
-    <div className="vg-rail-box">
+    // vg-creator-rail carries no styling of its own. It exists so CSS can tell
+    // this box apart from the two chart rails, which are otherwise identical
+    // siblings — the mobile running order needs to place them separately.
+    <div className="vg-rail-box vg-creator-rail">
       <div className="vg-rail-head">
         <span>👑 Top Creators</span>
         <Link to="/charts?chart=creators">more</Link>
