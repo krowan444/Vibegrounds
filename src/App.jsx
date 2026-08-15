@@ -23,7 +23,9 @@ import ForumPage from './pages/ForumPage';
 import ForumCategoryPage from './pages/ForumCategoryPage';
 import ForumThreadPage from './pages/ForumThreadPage';
 
+import { Analytics } from '@vercel/analytics/react';
 import ProgressDrawer from './components/ProgressDrawer';
+import ScrollToTop from './components/ScrollToTop';
 import AuthPage from './pages/AuthPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
@@ -33,6 +35,9 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        {/* Inside the router, because it needs to know when the route
+            changed. Renders nothing. */}
+        <ScrollToTop />
         <div className="vg-app">
           <Routes>
             <Route path="/" element={<HomePage />} />
@@ -72,6 +77,9 @@ export default function App() {
               than being part of any one of them. Renders nothing when
               signed out. */}
           <ProgressDrawer />
+          {/* Vercel's own analytics: no cookies, no consent banner needed,
+              and it only reports in production. */}
+          <Analytics />
         </div>
       </AuthProvider>
     </BrowserRouter>
