@@ -18,12 +18,29 @@
 -- thread in the archive unread - only what is genuinely current.
 -- ============================================================
 
+-- user_id points at auth.users, NOT public.profiles, and that matters.
+--
+-- With foreign keys to both forum_threads and profiles, PostgREST reads this
+-- table as a junction between them - which gives forum_threads a second route
+-- to profiles alongside forum_threads.author_id. PostgREST refuses ambiguous
+-- embeds, so every select('*, profiles(...)') on forum_threads started
+-- failing and the thread lists rendered empty.
+--
+-- profiles.id already references auth.users(id), so cascade-delete behaviour
+-- is identical. Only the phantom relationship goes away.
 create table if not exists public.forum_thread_reads (
-  user_id      uuid not null references public.profiles(id)      on delete cascade,
+  user_id      uuid not null references auth.users(id)           on delete cascade,
   thread_id    uuid not null references public.forum_threads(id) on delete cascade,
   last_read_at timestamptz not null default now(),
   primary key (user_id, thread_id)
 );
+
+-- Repair for databases that already ran the first version of this file.
+alter table public.forum_thread_reads
+  drop constraint if exists forum_thread_reads_user_id_fkey;
+alter table public.forum_thread_reads
+  add constraint forum_thread_reads_user_id_fkey
+  foreign key (user_id) references auth.users(id) on delete cascade;
 
 -- The nav pip asks "has this user got anything unread anywhere".
 create index if not exists idx_forum_thread_reads_user
