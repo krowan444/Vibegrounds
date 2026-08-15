@@ -63,6 +63,22 @@ export default function ForumThreadPage() {
     fetchThread();
   }, [id]);
 
+  /*
+   * Mark it read.
+   *
+   * Deliberately after the posts have loaded rather than alongside them: if
+   * the fetch fails you never actually saw the replies, and clearing the pip
+   * anyway would lose them for good.
+   *
+   * Fire-and-forget. Nothing on this page depends on the result, and a failed
+   * write costs you a pip that lingers one visit longer - which is the right
+   * way round for this to break.
+   */
+  useEffect(() => {
+    if (!user || loading || !thread) return;
+    supabase.rpc('mark_thread_read', { p_thread: id }).then(() => {}, () => {});
+  }, [user, loading, thread, id]);
+
   // ── Reply ──
   const handleReply = async (e) => {
     e.preventDefault();
