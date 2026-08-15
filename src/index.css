@@ -4023,3 +4023,19 @@ body { background: var(--bg-darkest); overflow-y: auto; }
 @media (prefers-reduced-motion: reduce) {
   .vg-unread-pip, .vg-nav-pip { animation: none; }
 }
+
+
+/* Second line under the wordmark. Smaller and dimmer than the tagline above
+   it so the header still reads top-down: name, what to do, where you are. */
+.site-logo-claim {
+  font-family: var(--font-retro);
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-top: 1px;
+  letter-spacing: .2px;
+}
+/* Drops on narrow screens. The header is already three rows deep on a phone
+   and a strapline is the first thing that should give up its space. */
+@media (max-width: 700px) {
+  .site-logo-claim { display: none; }
+}
