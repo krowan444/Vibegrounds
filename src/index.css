@@ -4039,3 +4039,58 @@ body { background: var(--bg-darkest); overflow-y: auto; }
 @media (max-width: 700px) {
   .site-logo-claim { display: none; }
 }
+
+
+/* ============================================================
+   TROPHY CABINET (/badges)
+   ============================================================ */
+
+.vg-badge-filters { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+.vg-badge-filter {
+  font-family: var(--font-pixel); font-size: 8px;
+  color: var(--text-dim);
+  background: var(--bg-panel);
+  border: 2px solid var(--border-dark);
+  padding: 7px 12px; cursor: pointer;
+  transition: color 140ms ease, border-color 140ms ease;
+}
+.vg-badge-filter:hover { color: var(--text-secondary); border-color: var(--orange-dim); }
+.vg-badge-filter.is-on { color: var(--orange); border-color: var(--orange); background: rgba(232,163,23,.12); }
+
+/* auto-fill rather than a fixed count, so the board reflows from four across
+   on a desktop down to one on a phone without a media query per step */
+.vg-badge-board {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 8px; padding: 10px;
+}
+
+.vg-badge-card {
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 9px 10px;
+  background: var(--bg-dark);
+  border: 2px solid var(--border-dark);
+  /* Locked ones sit back so the earned ones carry the eye. */
+  opacity: .72;
+  transition: opacity 140ms ease, transform 140ms ease;
+}
+.vg-badge-card.is-earned { opacity: 1; background: rgba(232,163,23,.05); }
+.vg-badge-card:hover { transform: translateY(-1px); opacity: 1; }
+
+.vg-badge-card-body { min-width: 0; }   /* lets long text wrap instead of stretching the grid */
+.vg-badge-card-name {
+  font-family: var(--font-pixel); font-size: 8px;
+  line-height: 1.5; margin-bottom: 4px;
+}
+.vg-badge-card-desc {
+  font-family: var(--font-retro); font-size: 15px;
+  color: var(--text-secondary); line-height: 1.35;
+}
+.vg-badge-card-meta {
+  font-family: var(--font-retro); font-size: 13px;
+  color: var(--text-dim); margin-top: 4px; text-transform: capitalize;
+}
+.vg-badge-card-got {
+  font-family: var(--font-retro); font-size: 13px;
+  color: #7ddc9a; margin-top: 3px;
+}
