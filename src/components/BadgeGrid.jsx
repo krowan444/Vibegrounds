@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { TIER_COLORS, RARITY_COLORS, shortDate } from '../lib/format';
+import BadgeIcon from './BadgeIcon';
 
 /**
  * Badge showcase. Shows both the *designed* tier (legendary, epic…) and
@@ -30,7 +31,7 @@ export default function BadgeGrid({ badges = [], emptyText = 'No badges yet.' })
             aria-expanded={isOpen}
             title={`${b.name} — ${b.description}`}
           >
-            <span className="vg-badge-icon">{b.icon}</span>
+            <span className="vg-badge-icon"><BadgeIcon slug={b.slug} icon={b.icon} size={30} /></span>
             <span className="vg-badge-name">{b.name}</span>
             <span className="vg-badge-rarity" style={{ color: rarity }}>
               {b.live_rarity}
