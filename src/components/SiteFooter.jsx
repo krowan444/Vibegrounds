@@ -26,6 +26,7 @@ export default function SiteFooter() {
           <Link to="/portal">The Portal</Link>
           <Link to="/charts">Top 100</Link>
           <Link to="/hall-of-fame">Hall of Fame</Link>
+            <Link to="/badges">Trophy Cabinet</Link>
           <Link to="/forum">Forum</Link>
         </div>
 
