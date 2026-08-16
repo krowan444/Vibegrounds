@@ -10,6 +10,7 @@ import CategoryPage from './pages/CategoryPage';
 import PortalPage from './pages/PortalPage';
 import ChartsPage from './pages/ChartsPage';
 import HallOfFamePage from './pages/HallOfFamePage';
+import BadgesPage from './pages/BadgesPage';
 import SiteFooter from './components/SiteFooter';
 import EditCreationPage from './pages/EditCreationPage';
 import MemesPage from './pages/MemesPage';
@@ -43,7 +44,8 @@ export default function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/portal" element={<PortalPage />} />
             <Route path="/charts" element={<ChartsPage />} />
-            <Route path="/hall-of-fame" element={<HallOfFamePage />} />
+            <Route path="/badges" element={<BadgesPage />} />
+          <Route path="/hall-of-fame" element={<HallOfFamePage />} />
             <Route path="/category/:category" element={<CategoryPage />} />
             <Route path="/creation/:id" element={<CreationPage />} />
             <Route path="/creation/:id/edit" element={<EditCreationPage />} />
