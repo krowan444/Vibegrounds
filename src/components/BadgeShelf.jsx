@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { TIER_COLORS } from '../lib/format';
+import BadgeIcon from './BadgeIcon';
 
 /**
  * Your three best badges, on a shelf in the header.
@@ -54,9 +55,9 @@ export default function BadgeShelf() {
 
   return (
     <Link
-      to={`/profile/${profile?.username || ''}`}
+      to="/badges"
       className="vg-shelf"
-      title="Your best badges — see them all"
+      title="Your best badges — see the whole cabinet"
     >
       {badges.map((b) => (
         <span
@@ -67,7 +68,7 @@ export default function BadgeShelf() {
           // and a floating panel here would cover the nav underneath it.
           title={`${b.name} — ${b.description}`}
         >
-          {b.icon}
+          <BadgeIcon slug={b.slug} icon={b.icon} size={18} />
         </span>
       ))}
     </Link>
