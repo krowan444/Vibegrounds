@@ -4094,3 +4094,192 @@ body { background: var(--bg-darkest); overflow-y: auto; }
   font-family: var(--font-retro); font-size: 13px;
   color: #7ddc9a; margin-top: 3px;
 }
+
+/* ==========================================================
+   FORUM TABLES — responsive
+
+   These grids used to be declared inline in the JSX, which meant no
+   media query could reach them. On a 360px phone the fixed columns
+   alone (80 + 80 + 140) ate 300px before the board name got a pixel,
+   so the row rendered wider than the screen and .vg-app's
+   overflow-x:hidden clipped the right-hand half with no way to scroll
+   to it. That is the "can only see the left half of the forum" bug.
+   ========================================================== */
+
+.vg-forum-head,
+.vg-forum-row {
+  display: grid;
+  grid-template-columns: 1fr 80px 80px 140px;
+  gap: 0;
+  align-items: center;
+}
+
+.vg-threads-head,
+.vg-threads-row {
+  display: grid;
+  grid-template-columns: 1fr 120px;
+  gap: 0;
+  align-items: center;
+}
+
+.vg-threads-head { grid-template-columns: 1fr 80px 120px; }
+.vg-threads-row  { grid-template-columns: 1fr 80px 120px; }
+
+/* Lets a long thread title shrink and clip instead of forcing the whole
+   row wider than the viewport. Same reasoning as .vg-creation-layout. */
+.vg-forum-row > *,
+.vg-threads-row > * { min-width: 0; }
+
+@media (max-width: 700px) {
+  /* Column headings describe a table that stops existing once the row
+     stacks, so they go rather than floating above nothing. */
+  .vg-forum-head,
+  .vg-threads-head { display: none; }
+
+  .vg-forum-row {
+    grid-template-columns: auto auto 1fr;
+    row-gap: 6px;
+    column-gap: 12px;
+    align-items: baseline;
+  }
+  .vg-forum-row > :nth-child(1) { grid-column: 1 / -1; }
+  .vg-forum-row > :nth-child(2),
+  .vg-forum-row > :nth-child(3) {
+    text-align: left !important;
+    font-size: 15px !important;
+  }
+  .vg-forum-row > :nth-child(4) { text-align: right !important; }
+  /* A moment ago these two numbers had headings above them. Stacked, they
+     are bare integers, so they have to say what they count. */
+  .vg-forum-row > :nth-child(2)::after { content: ' threads'; color: var(--text-dim); }
+  .vg-forum-row > :nth-child(3)::after { content: ' replies'; color: var(--text-dim); }
+
+  .vg-threads-row {
+    grid-template-columns: auto 1fr;
+    row-gap: 6px;
+    column-gap: 12px;
+    align-items: baseline;
+  }
+  .vg-threads-row > :nth-child(1) { grid-column: 1 / -1; }
+  .vg-threads-row > :nth-child(2) {
+    text-align: left !important;
+    font-size: 15px !important;
+  }
+  .vg-threads-row > :nth-child(2)::after { content: ' replies'; color: var(--text-dim); }
+  .vg-threads-row > :nth-child(3) { text-align: right !important; }
+}
+
+/* ==========================================================
+   PHONE / DESKTOP SWAPS
+
+   Keyed to 820px, the same breakpoint where .vg-creation-layout drops
+   its sidebar under the main column. Anything that needs to sit in a
+   different place once that happens uses these.
+   ========================================================== */
+
+.vg-only-mobile  { display: none; }
+
+@media (max-width: 820px) {
+  .vg-only-mobile  { display: block; }
+  .vg-only-desktop { display: none !important; }
+}
+
+/* ==========================================================
+   CREATOR STRIP — phone only
+
+   On a phone the sidebar stacks under the main column, which puts the
+   Creator card below the description, the reviews and the ideas: several
+   screens beneath the button everyone came to press. A creation with no
+   visible maker is just a link. This puts the person back next to their
+   work, with enough standing on show to be worth tapping.
+   ========================================================== */
+
+.vg-creator-strip {
+  display: none;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--border-dark);
+  text-decoration: none;
+  color: inherit;
+}
+
+@media (max-width: 820px) {
+  .vg-creator-strip { display: flex; }
+}
+
+.vg-creator-strip img,
+.vg-creator-strip .vg-creator-strip-avatar {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  object-fit: cover;
+  border: 2px solid var(--border-dark);
+  display: grid;
+  place-items: center;
+  font-size: 24px;
+}
+
+.vg-creator-strip-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.vg-creator-strip-name {
+  font-family: var(--font-retro);
+  font-size: 19px;
+  font-weight: bold;
+  color: var(--orange);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* One line each, clipped rather than wrapped. A rank title breaking mid
+   phrase — "Portal Legend" then "· level 14" underneath — reads as a
+   mistake, and it makes the strip taller than the button above it. */
+.vg-creator-strip-meta,
+.vg-creator-strip-stats {
+  font-family: var(--font-retro);
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vg-creator-strip-meta  { font-size: 15px; }
+.vg-creator-strip-stats { font-size: 14px; }
+
+/* Sits on the right where there is room, drops to its own line where
+   there is not, rather than squeezing the name into a narrow column. */
+.vg-creator-strip-go {
+  margin-left: auto;
+  font-family: var(--font-retro);
+  font-size: 14px;
+  color: var(--blue-link);
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+/* ==========================================================
+   FOOTER EMAIL — make it look like the link it already was
+
+   It was a real mailto all along, styled the same as the body copy
+   around it, so it read as a line of text rather than something you
+   could press.
+   ========================================================== */
+
+.vg-footer-email {
+  color: var(--orange);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  word-break: break-word;
+}
+
+.vg-footer-email:hover,
+.vg-footer-email:focus-visible {
+  color: var(--orange-bright, var(--orange));
+}
