@@ -52,7 +52,7 @@ const ROUTES = {
     'Vibe coding memes, jokes and the general nonsense of building things with AI.'],
   '/memes/post': ['Post a Meme', 'Share a vibe coding meme with the VibeGrounds community.'],
 
-  '/forum': ['Forum',
+  '/community': ['Community',
     'Talk to other vibe coders. Ask beginner questions without embarrassment, show off what you made, argue about tools.'],
 
   '/upload': ['Submit Your Project',
