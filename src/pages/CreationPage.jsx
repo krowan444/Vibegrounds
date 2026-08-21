@@ -6,6 +6,7 @@ import SiteHeader from '../components/SiteHeader';
 import VoteWidget from '../components/VoteWidget';
 import ReviewSection from '../components/ReviewSection';
 import IdeasSection from '../components/IdeasSection';
+import UpdatesSection from '../components/UpdatesSection';
 import ReportButton from '../components/ReportButton';
 import ShareBar from '../components/ShareBar';
 import CreationCard from '../components/CreationCard';
@@ -380,6 +381,12 @@ export default function CreationPage() {
                 </div>
               )}
             </div>
+
+            {/* The creator's devlog. Sits between the description and the
+                reviews on purpose: what it is, then what changed, then what
+                people made of it. Renders nothing at all when there are no
+                updates and you are not the owner. */}
+            <UpdatesSection creation={c} />
 
             {/* Phone only. The sidebar copy of this button ends up below the
                 reviews once the layout stacks, so it needs one here, above
