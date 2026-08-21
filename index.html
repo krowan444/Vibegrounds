@@ -8,7 +8,13 @@
     <link rel="icon" type="image/png" href="/images/favicon.png" />
     <link rel="apple-touch-icon" href="/images/apple-touch-icon.png" />
 
-    <title>VibeGrounds — Post What You Vibe Coded</title>
+    <!--
+      The starting title, before React runs. Every route overwrites it via
+      src/lib/pageMeta.js — this is what a crawler sees first and what shows
+      in the tab for the half-second before the app boots, so it matches the
+      og:title below rather than contradicting it.
+    -->
+    <title>VibeGrounds — A Home For Vibe Coders</title>
     <meta name="description" content="VibeGrounds is where vibe coders share what they built — games, AI movies, software, websites and glorious experiments. Get scored 0–5 and climb the Daily, Weekly and All-Time charts." />
 
     <!--
