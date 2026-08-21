@@ -9,6 +9,7 @@ import LevelBar from '../components/LevelBar';
 import ReportButton from '../components/ReportButton';
 import Notice from '../components/Notice';
 import { compactNumber, shortDate } from '../lib/format';
+import { useDocumentTitle } from '../lib/pageMeta';
 
 const TABS = [
   { id: 'creations', label: 'Creations' },
@@ -28,6 +29,14 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [error] = useState('');
+
+  useDocumentTitle(
+    profile?.username ? `${profile.username}'s Profile` : undefined,
+    profile?.username
+      ? `${profile.username} on VibeGrounds — what they have built, the badges they hold and how far up the charts they have got.`
+      : undefined,
+  );
+
 
   const isOwn = !authLoading && user && profile && user.id === profile.id;
 

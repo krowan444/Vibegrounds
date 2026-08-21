@@ -12,6 +12,7 @@ import CreationCard from '../components/CreationCard';
 import Notice from '../components/Notice';
 import { compactNumber, shortDate, hostOf } from '../lib/format';
 import { thumbFor, onThumbError, LOGO_FALLBACK } from '../lib/thumbnail';
+import { useDocumentTitle } from '../lib/pageMeta';
 
 /**
  * The invitation to review.
@@ -91,6 +92,17 @@ export default function CreationPage() {
   const [notFound, setNotFound] = useState(false);
   const [error, setError] = useState('');
   const [confirmOpen, setConfirmOpen] = useState(false);
+
+  // Titles the browser tab and the search result with the creation itself,
+  // rather than every page on the site sharing one name. Waits for the
+  // fetch — passing nothing leaves the previous title alone.
+  useDocumentTitle(
+    c?.title,
+    c?.description
+      ? `${c.description.slice(0, 155)}${c.description.length > 155 ? '…' : ''}`
+      : undefined,
+  );
+
   const viewed = useRef(false);
 
   useEffect(() => {

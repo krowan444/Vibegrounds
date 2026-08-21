@@ -1,6 +1,7 @@
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { useDocumentTitle } from '../lib/pageMeta';
 import { useAuth } from '../contexts/AuthContext';
 import SiteHeader from '../components/SiteHeader';
 import { useThreadUnread, ThreadPip } from '../components/ForumUnread';
@@ -20,6 +21,12 @@ export default function ForumCategoryPage() {
   const unread = useThreadUnread(threads.map((t) => t.id));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  useDocumentTitle(
+    category?.name,
+    category?.description || undefined,
+  );
+
 
   useEffect(() => {
     const fetchData = async () => {

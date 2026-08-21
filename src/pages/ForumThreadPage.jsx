@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import SiteHeader from '../components/SiteHeader';
 import { renderPostBody } from '../lib/postText';
+import { useDocumentTitle } from '../lib/pageMeta';
 
 export default function ForumThreadPage() {
   const { id } = useParams();
@@ -23,6 +24,9 @@ export default function ForumThreadPage() {
   const [threadEditLoading, setThreadEditLoading] = useState(false);
   const [threadEditError, setThreadEditError] = useState('');
   const [threadEditSuccess, setThreadEditSuccess] = useState('');
+
+  useDocumentTitle(thread?.title);
+
 
   // Reply edit state
   const [editingPostId, setEditingPostId] = useState(null);

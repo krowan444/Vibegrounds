@@ -7,6 +7,7 @@ import Notice from '../components/Notice';
 import SubmitCta from '../components/SubmitCta';
 import CreditNote from '../components/CreditNote';
 import { compactNumber } from '../lib/format';
+import { useDocumentTitle } from '../lib/pageMeta';
 
 /*
  * Categories where most of the best work is made by people outside this
@@ -54,6 +55,9 @@ export default function CategoryPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [notFound, setNotFound] = useState(false);
+
+  useDocumentTitle(meta?.name, meta?.tagline || undefined);
+
 
   useEffect(() => {
     let alive = true;
