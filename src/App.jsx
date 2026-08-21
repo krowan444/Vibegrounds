@@ -31,6 +31,7 @@ import AuthPage from './pages/AuthPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import VerifyEmailPage from './pages/VerifyEmailPage';
+import RouteMeta from './lib/pageMeta';
 
 export default function App() {
   return (
@@ -39,6 +40,10 @@ export default function App() {
         {/* Inside the router, because it needs to know when the route
             changed. Renders nothing. */}
         <ScrollToTop />
+        {/* Title, description and canonical URL per route. Fixed routes are
+            listed in pageMeta.js; pages whose name depends on a fetch set
+            their own with useDocumentTitle. Also renders nothing. */}
+        <RouteMeta />
         <div className="vg-app">
           <Routes>
             <Route path="/" element={<HomePage />} />
