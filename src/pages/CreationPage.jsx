@@ -13,6 +13,72 @@ import Notice from '../components/Notice';
 import { compactNumber, shortDate, hostOf } from '../lib/format';
 import { thumbFor, onThumbError, LOGO_FALLBACK } from '../lib/thumbnail';
 
+/**
+ * The invitation to review.
+ *
+ * Rendered twice, in two places, with only one ever visible. On a wide
+ * screen it belongs in the sidebar beside the reviews. On a phone the
+ * sidebar stacks *under* the main column — under the reviews it was
+ * pointing at — so up there it was a button asking you to scroll down to
+ * something you had already scrolled past. The phone copy sits in the
+ * main column instead, just above the reviews themselves.
+ *
+ * One component rather than two blocks of copy-pasted markup, so the
+ * wording can never drift apart between them.
+ */
+function ReviewJump({ count = 0, className = '' }) {
+  return (
+    <button
+      type="button"
+      className={`vg-jump-reviews ${className}`.trim()}
+      onClick={() => {
+        document.getElementById('reviews')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Focus after the smooth scroll has had a moment, otherwise the
+        // browser snaps straight there and the animation is lost.
+        setTimeout(() => document.getElementById('vg-review-input')?.focus(), 550);
+      }}
+    >
+      <span className="vg-jump-reviews-top">
+        💬 {count} {count === 1 ? 'review' : 'reviews'}
+      </span>
+      <span className="vg-jump-reviews-cta">
+        {count ? 'Read them or add yours ↓' : 'Be the first to review it ↓'}
+      </span>
+    </button>
+  );
+}
+
+/**
+ * Who made this, shown on phones directly under the Launch button.
+ *
+ * The full Creator card lives in the sidebar, which on a narrow screen
+ * lands below the description, the reviews and the ideas — long past the
+ * point anyone is still scrolling. A creation with no visible maker is
+ * just a link, so this puts the person back beside their work, with
+ * enough standing on display (rank, level, what else they have made) to
+ * be worth tapping through to.
+ */
+function CreatorStrip({ author }) {
+  if (!author) return null;
+  return (
+    <Link to={`/profile/${author.username}`} className="vg-creator-strip">
+      {author.avatar_url
+        ? <img src={author.avatar_url} alt="" />
+        : <span className="vg-creator-strip-avatar" aria-hidden="true">👾</span>}
+      <span className="vg-creator-strip-text">
+        <span className="vg-creator-strip-name">{author.username}</span>
+        <span className="vg-creator-strip-meta" style={author.rank_colour ? { color: author.rank_colour } : undefined}>
+          {author.rank_title} · level {author.level}
+        </span>
+        <span className="vg-creator-strip-stats">
+          {author.submission_count} submissions · {author.badge_count} badges
+        </span>
+      </span>
+      <span className="vg-creator-strip-go">see their stuff →</span>
+    </Link>
+  );
+}
+
 export default function CreationPage() {
   const { id } = useParams();
   const { user, isStaff } = useAuth();
@@ -195,6 +261,10 @@ export default function CreationPage() {
                 </div>
               </div>
 
+              {/* Phone only — hidden on desktop, where the full Creator card
+                  is already sitting in the sidebar. */}
+              <CreatorStrip author={author} />
+
               {/* Description */}
               <div className="vg-desc-body" style={{
                 padding: '12px', borderTop: '1px solid var(--border-dark)',
@@ -299,6 +369,13 @@ export default function CreationPage() {
               )}
             </div>
 
+            {/* Phone only. The sidebar copy of this button ends up below the
+                reviews once the layout stacks, so it needs one here, above
+                the thing it points at. */}
+            <div className="vg-only-mobile">
+              <ReviewJump count={c.review_count} />
+            </div>
+
             {/* Anchor target for the "write a review" jump below. */}
             <div id="reviews" style={{ marginTop: '14px', scrollMarginTop: '14px' }}>
               <ReviewSection creationId={c.id} />
@@ -324,23 +401,7 @@ export default function CreationPage() {
               so it gets a real invitation rather than being left to be
               scrolled past.
             */}
-            <button
-              type="button"
-              className="vg-jump-reviews"
-              onClick={() => {
-                document.getElementById('reviews')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                // Focus after the smooth scroll has had a moment, otherwise
-                // the browser snaps straight there and the animation is lost.
-                setTimeout(() => document.getElementById('vg-review-input')?.focus(), 550);
-              }}
-            >
-              <span className="vg-jump-reviews-top">
-                💬 {c.review_count || 0} {c.review_count === 1 ? 'review' : 'reviews'}
-              </span>
-              <span className="vg-jump-reviews-cta">
-                {c.review_count ? 'Read them or add yours ↓' : 'Be the first to review it ↓'}
-              </span>
-            </button>
+            <ReviewJump count={c.review_count} className="vg-only-desktop" />
 
             <ShareBar creation={c} />
 

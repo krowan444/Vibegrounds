@@ -81,10 +81,11 @@ export default function ForumPage() {
 
         {/* Category List */}
         <div className="retro-panel">
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 80px 80px 140px',
-            gap: '0',
+          {/* The grid lives in CSS, not here. Column widths have to change on
+              a phone and a media query cannot reach an inline style — which
+              is exactly why this table ran off the right edge of every
+              narrow screen. See .vg-forum-head / .vg-forum-row. */}
+          <div className="vg-forum-head" style={{
             background: 'linear-gradient(180deg, #333 0%, #222 100%)',
             borderBottom: '2px solid var(--orange)',
             padding: '8px 12px',
@@ -112,16 +113,13 @@ export default function ForumPage() {
               <Link
                 key={cat.id}
                 to={`/forum/category/${cat.slug}`}
+                className="vg-forum-row"
                 style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 80px 80px 140px',
-                  gap: '0',
                   padding: '12px',
                   borderBottom: '1px solid var(--border-dark)',
                   textDecoration: 'none',
                   color: 'inherit',
                   transition: 'background 0.15s',
-                  alignItems: 'center'
                 }}
                 onMouseOver={e => e.currentTarget.style.background = 'rgba(232,163,23,0.05)'}
                 onMouseOut={e => e.currentTarget.style.background = 'transparent'}

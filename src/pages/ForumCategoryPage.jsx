@@ -215,10 +215,9 @@ export default function ForumCategoryPage() {
         {/* Thread List */}
         <div className="retro-panel">
           {/* Table Header */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 80px 120px',
-            gap: '0',
+          {/* Grid lives in CSS so a media query can reach it — see
+              .vg-threads-head / .vg-threads-row. */}
+          <div className="vg-threads-head" style={{
             background: 'linear-gradient(180deg, #333 0%, #222 100%)',
             borderBottom: '2px solid var(--orange)',
             padding: '8px 12px',
@@ -245,16 +244,13 @@ export default function ForumCategoryPage() {
               <Link
                 key={thread.id}
                 to={`/forum/thread/${thread.id}`}
+                className="vg-threads-row"
                 style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 80px 120px',
-                  gap: '0',
                   padding: '10px 12px',
                   borderBottom: '1px solid var(--border-dark)',
                   textDecoration: 'none',
                   color: 'inherit',
                   transition: 'background 0.15s',
-                  alignItems: 'center'
                 }}
                 onMouseOver={e => e.currentTarget.style.background = 'rgba(232,163,23,0.05)'}
                 onMouseOut={e => e.currentTarget.style.background = 'transparent'}
