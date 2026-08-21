@@ -203,6 +203,25 @@ export default function SiteHeader({ compact = false }) {
           + Submit
         </Link>
       </nav>
+
+      {/* The world strip. Sits under the nav rather than above it, so the
+          things people navigate with stay at the very top of the screen and
+          the scenery does not push them down. Hidden in compact mode — a
+          creation page is somebody else's work and does not need our
+          scenery over the top of it. */}
+      {!compact && (
+        <div className="vg-world-banner">
+          <img
+            className="vg-world-banner-art"
+            src="/images/world-banner.png"
+            alt=""
+            aria-hidden="true"
+          />
+          <div className="vg-world-banner-mark">
+            <img src="/images/wordmark.png" alt="" aria-hidden="true" />
+          </div>
+        </div>
+      )}
     </header>
   );
 }
