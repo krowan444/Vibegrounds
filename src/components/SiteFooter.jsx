@@ -39,8 +39,12 @@ export default function SiteFooter() {
 
         <div className="vg-footer-col">
           <div className="vg-footer-head">GET IN TOUCH</div>
-          <a href="mailto:kierandrowan@gmail.com?subject=VibeGrounds">
-            kierandrowan@gmail.com
+          {/* Underlined and orange. It was already a real mailto link, but it
+              was styled like the copy around it, so it read as a line of text
+              rather than something you press — which is why it got reported
+              as not clickable. */}
+          <a className="vg-footer-email" href="mailto:kierandrowan@gmail.com?subject=VibeGrounds">
+            ✉ kierandrowan@gmail.com
           </a>
           <p className="vg-footer-small">
             Bugs, ideas, complaints, or if something on here isn&#39;t right —
