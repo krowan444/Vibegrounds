@@ -4358,3 +4358,180 @@ body { background: var(--bg-darkest); overflow-y: auto; }
   .vg-world-banner { height: 62px; }
   .vg-world-banner-mark img { height: 40px; }
 }
+
+/* ==========================================================
+   UPDATES — the creator's devlog on a creation
+
+   Sits between the description and the reviews. Only the owner can
+   post; everyone can read. Renders nothing at all when a creation
+   has no updates and you are not its owner, so the page does not
+   grow an empty box it has nothing to put in.
+   ========================================================== */
+
+.vg-updates-count {
+  font-family: var(--font-retro);
+  font-size: 15px;
+  color: var(--text-dim);
+  margin-left: auto;
+}
+
+.vg-updates-empty,
+.vg-updates-foot {
+  font-family: var(--font-retro);
+  font-size: 16px;
+  color: var(--text-dim);
+  margin: 8px 0 0;
+}
+
+.vg-updates-add {
+  font-family: var(--font-retro);
+  font-size: 16px;
+  color: var(--orange);
+  background: transparent;
+  border: 1px dashed var(--orange-dim);
+  border-radius: 3px;
+  padding: 7px 12px;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+}
+
+.vg-updates-add:hover:not(:disabled) {
+  background: rgba(232, 163, 23, .08);
+  border-style: solid;
+}
+
+.vg-updates-add:disabled { opacity: .5; cursor: default; }
+
+/* ---- the form ---- */
+
+.vg-update-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.vg-update-input {
+  width: 100%;
+  padding: 7px 9px;
+  background: var(--bg-input);
+  border: 2px solid var(--border-dark);
+  color: var(--text-primary);
+  font-family: var(--font-retro);
+  font-size: 17px;
+}
+
+.vg-update-input:focus {
+  outline: none;
+  border-color: var(--orange-dim);
+}
+
+.vg-update-body-input {
+  resize: vertical;
+  line-height: 1.45;
+}
+
+.vg-update-form-foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.vg-update-chars {
+  font-family: var(--font-retro);
+  font-size: 14px;
+  color: var(--text-dim);
+  margin-right: auto;
+}
+
+.vg-update-cancel {
+  font-family: var(--font-retro);
+  font-size: 15px;
+  color: var(--text-dim);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* ---- the list ---- */
+
+/* A timeline rather than a stack of panels: the vertical rule is what
+   makes four updates read as a history instead of four separate boxes. */
+.vg-update-list {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0 0 0 16px;
+  border-left: 2px solid var(--border-dark);
+}
+
+.vg-update {
+  position: relative;
+  padding-bottom: 14px;
+}
+
+.vg-update + .vg-update { padding-top: 14px; }
+
+.vg-update::before {
+  content: '';
+  position: absolute;
+  left: -21px;
+  top: 6px;
+  width: 8px;
+  height: 8px;
+  background: var(--orange);
+  border: 2px solid var(--bg-panel);
+  border-radius: 50%;
+}
+
+.vg-update + .vg-update::before { top: 20px; }
+
+.vg-update-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.vg-update-title {
+  font-family: var(--font-retro);
+  font-size: 19px;
+  font-weight: bold;
+  color: var(--orange);
+  margin: 0;
+}
+
+.vg-update-when {
+  font-family: var(--font-retro);
+  font-size: 14px;
+  color: var(--text-dim);
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+/* pre-wrap keeps the line breaks the creator typed without pulling in a
+   markdown parser for what is usually two sentences. */
+.vg-update-body {
+  font-family: var(--font-retro);
+  font-size: 17px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-top: 3px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.vg-update-delete {
+  font-family: var(--font-retro);
+  font-size: 13px;
+  color: var(--text-dim);
+  background: none;
+  border: none;
+  padding: 2px 0 0;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.vg-update-delete:hover { color: var(--red); }
