@@ -107,7 +107,7 @@ export default function ForumCategoryPage() {
       <>
         <SiteHeader />
         <div style={{ padding: '40px', textAlign: 'center', fontFamily: 'var(--font-retro)', fontSize: '20px', color: 'var(--text-dim)' }}>
-          Category not found. <Link to="/forum" style={{ color: 'var(--orange)' }}>Back to forums →</Link>
+          Board not found. <Link to="/community" style={{ color: 'var(--orange)' }}>Back to the community →</Link>
         </div>
       </>
     );
@@ -123,7 +123,7 @@ export default function ForumCategoryPage() {
           fontFamily: 'var(--font-retro)', fontSize: '16px', color: 'var(--text-dim)',
           marginBottom: '8px', padding: '4px 0'
         }}>
-          <Link to="/forum" style={{ color: 'var(--orange)' }}>Forum</Link>
+          <Link to="/community" style={{ color: 'var(--orange)' }}>Community</Link>
           {' → '}
           <span style={{ color: 'var(--text-secondary)' }}>{category?.name || 'Loading...'}</span>
         </div>
@@ -250,7 +250,7 @@ export default function ForumCategoryPage() {
             threads.map(thread => (
               <Link
                 key={thread.id}
-                to={`/forum/thread/${thread.id}`}
+                to={`/community/thread/${thread.id}`}
                 className="vg-threads-row"
                 style={{
                   padding: '10px 12px',

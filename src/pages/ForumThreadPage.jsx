@@ -194,7 +194,7 @@ export default function ForumThreadPage() {
       <>
         <SiteHeader />
         <div style={{ padding: '40px', textAlign: 'center', fontFamily: 'var(--font-retro)', fontSize: '20px', color: 'var(--text-dim)' }}>
-          Thread not found. <Link to="/forum" style={{ color: 'var(--orange)' }}>Back to forums →</Link>
+          Thread not found. <Link to="/community" style={{ color: 'var(--orange)' }}>Back to the community →</Link>
         </div>
       </>
     );
@@ -210,11 +210,11 @@ export default function ForumThreadPage() {
           fontFamily: 'var(--font-retro)', fontSize: '16px', color: 'var(--text-dim)',
           marginBottom: '8px', padding: '4px 0'
         }}>
-          <Link to="/forum" style={{ color: 'var(--orange)' }}>Forum</Link>
+          <Link to="/community" style={{ color: 'var(--orange)' }}>Community</Link>
           {category && (
             <>
               {' → '}
-              <Link to={`/forum/category/${category.slug}`} style={{ color: 'var(--orange)' }}>{category.name}</Link>
+              <Link to={`/community/category/${category.slug}`} style={{ color: 'var(--orange)' }}>{category.name}</Link>
             </>
           )}
           {' → '}

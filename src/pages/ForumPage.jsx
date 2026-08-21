@@ -69,13 +69,13 @@ export default function ForumPage() {
         {/* Forum Header */}
         <div className="retro-panel" style={{ marginBottom: '8px' }}>
           <div className="section-header">
-            <h2>💬 VIBEGROUNDS COMMUNITY FORUM</h2>
+            <h2>💬 VIBEGROUNDS COMMUNITY</h2>
           </div>
           <div style={{
             padding: '10px 12px', fontFamily: 'var(--font-retro)', fontSize: '17px',
             color: 'var(--text-secondary)', borderBottom: '1px solid var(--border-dark)'
           }}>
-            Welcome to the forums! Discuss projects, share tips, and connect with fellow vibers.
+            Welcome in. Discuss projects, share tips, ask the daft questions, and find other people building things.
           </div>
         </div>
 
@@ -106,13 +106,13 @@ export default function ForumPage() {
               fontFamily: 'var(--font-retro)', fontSize: '20px', color: 'var(--orange)',
               textAlign: 'center', padding: '30px'
             }}>
-              ⏳ Loading forums...
+              ⏳ Loading boards...
             </div>
           ) : categories.length > 0 ? (
             categories.map(cat => (
               <Link
                 key={cat.id}
-                to={`/forum/category/${cat.slug}`}
+                to={`/community/category/${cat.slug}`}
                 className="vg-forum-row"
                 style={{
                   padding: '12px',
@@ -173,7 +173,7 @@ export default function ForumPage() {
               fontFamily: 'var(--font-retro)', fontSize: '18px', color: 'var(--text-dim)',
               textAlign: 'center', padding: '30px'
             }}>
-              Forum categories are loading... Make sure to run the forum.sql script!
+              Boards are loading... Make sure to run the forum.sql script!
             </div>
           )}
         </div>
