@@ -6,15 +6,15 @@ import BadgeShelf from './BadgeShelf';
 import { useForumUnreadCount } from './ForumUnread';
 
 /*
- * Forum sits third, with Home and Portal, rather than last behind eight
- * categories. It is a destination, not a category — burying it at the end of
+ * Community sits third, with Home and Portal, rather than last behind
+ * eight categories. It is a destination, not a category — burying it at the end of
  * the row was why nobody found it. Everything from Games onwards is a
  * category, so the row now reads: places to go, then things to browse.
  */
 const NAV = [
   { to: '/',                   label: 'Home' },
   { to: '/portal',             label: 'Portal' },
-  { to: '/forum',              label: 'Forum' },
+  { to: '/community',          label: 'Community' },
   { to: '/category/games',     label: 'Games' },
   { to: '/category/ai-movies', label: 'AI Movies' },
   { to: '/category/software',  label: 'Software' },
@@ -174,17 +174,17 @@ export default function SiteHeader({ compact = false }) {
               // The Portal is where everything actually lives, so it gets
               // pulled out of the row rather than sitting in the queue.
               n.to === '/portal' && pathname !== '/portal' ? 'vg-nav-portal' : '',
-              // Forum gets the same pulled-out treatment, in a different
+              // Community gets the same pulled-out treatment, in a different
               // colour. Two identical glowing buttons side by side would just
               // compete; the Portal stays the loudest thing in the row.
-              n.to === '/forum' && pathname !== '/forum' ? 'vg-nav-forum' : '',
+              n.to === '/community' && pathname !== '/community' ? 'vg-nav-forum' : '',
             ].filter(Boolean).join(' ') || undefined}
           >
             {n.label}
-            {/* Pip only on Forum, only when something is waiting. No number
+            {/* Pip only on Community, only when something is waiting. No number
                 here - the count belongs next to the thread it refers to;
                 up here it would just be a figure with no object. */}
-            {n.to === '/forum' && forumUnread > 0 && (
+            {n.to === '/community' && forumUnread > 0 && (
               <span
                 className="vg-nav-pip"
                 title={forumUnread + ' thread' + (forumUnread === 1 ? '' : 's') + ' with something new'}

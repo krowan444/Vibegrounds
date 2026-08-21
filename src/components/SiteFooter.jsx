@@ -27,7 +27,7 @@ export default function SiteFooter() {
           <Link to="/charts">Top 100</Link>
           <Link to="/hall-of-fame">Hall of Fame</Link>
             <Link to="/badges">Trophy Cabinet</Link>
-          <Link to="/forum">Forum</Link>
+          <Link to="/community">Community</Link>
         </div>
 
         <div className="vg-footer-col">
