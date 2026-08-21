@@ -447,7 +447,18 @@ a:hover {
   background: linear-gradient(180deg, #333 0%, #222 100%);
   border-top: 1px solid var(--border-dark);
   overflow-x: auto;
+
+  /* The row still scrolls — fourteen items will not fit a laptop, never
+     mind a phone — but the scrollbar itself is hidden. Left visible it
+     painted a slider strip the full width of the site directly under the
+     menu, which reads as a broken layout rather than as "there is more
+     nav over here". Swipe and trackpad scrolling are untouched. */
+  scrollbar-width: none;            /* Firefox */
+  -ms-overflow-style: none;         /* old Edge */
+  overscroll-behavior-x: contain;   /* a nav swipe should not trigger back-navigation */
 }
+
+.site-nav::-webkit-scrollbar { display: none; }   /* Chrome, Safari */
 
 .site-nav a.vg-nav-hero {}
 .site-nav a {
@@ -4282,4 +4293,68 @@ body { background: var(--bg-darkest); overflow-y: auto; }
 .vg-footer-email:hover,
 .vg-footer-email:focus-visible {
   color: var(--orange-bright, var(--orange));
+}
+
+/* ==========================================================
+   WORLD BANNER — the strip under the nav
+
+   The artwork is 2560x128, which is 20:1. Left to scale by width
+   it would be 72px tall on a laptop and 19px on a phone — a line of
+   coloured noise. So it gets a fixed height and is cropped from the
+   middle instead: you see less of the world on a narrow screen, but
+   what you see stays legible, which is the whole point of putting it
+   there.
+   ========================================================== */
+
+.vg-world-banner {
+  position: relative;
+  height: 92px;
+  overflow: hidden;
+  border-bottom: 3px solid var(--orange);
+  background: #0a0a12;
+}
+
+.vg-world-banner img.vg-world-banner-art {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+/* The wordmark sits on the art rather than beside it. The dark scrim
+   behind it is doing real work — the banner is busy, and gold letters
+   over a lit window are unreadable. */
+.vg-world-banner-mark {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.vg-world-banner-mark::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 40% 100% at 50% 50%, rgba(4, 4, 16, .82) 0%, rgba(4, 4, 16, .55) 45%, transparent 75%);
+}
+
+.vg-world-banner-mark img {
+  position: relative;
+  height: 62px;
+  width: auto;
+  max-width: 82%;
+  display: block;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, .9));
+}
+
+@media (max-width: 900px) {
+  .vg-world-banner { height: 76px; }
+  .vg-world-banner-mark img { height: 50px; }
+}
+
+@media (max-width: 560px) {
+  .vg-world-banner { height: 62px; }
+  .vg-world-banner-mark img { height: 40px; }
 }
