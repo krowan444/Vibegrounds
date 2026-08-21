@@ -63,10 +63,12 @@ export default function SiteHeader({ compact = false }) {
           />
           <div>
             <div className="site-logo-text" style={compact ? { fontSize: '10px' } : undefined}>VIBEGROUNDS</div>
-            {/* The old line ("the future of AI creativity, today!") described a
-                category, not a reason to be here. This one states the actual
-                promise: post it, and strangers will score it. */}
-            {!compact && <div className="site-logo-tagline">POST IT. GET SCORED. CLIMB THE CHARTS.</div>}
+            {/* Says who the place is for, rather than what it asks of you.
+                "Post it, get scored, climb the charts" is a set of
+                instructions aimed at people who already decided to stay; a
+                first-time visitor needs to know they are in the right room
+                before being told what to do in it. */}
+            {!compact && <div className="site-logo-tagline">A HOME FOR VIBE CODERS</div>}
           </div>
         </Link>
 
