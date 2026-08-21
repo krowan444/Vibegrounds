@@ -65,9 +65,9 @@ export default function App() {
             <Route path="/edit-profile" element={<EditProfilePage />} />
             <Route path="/settings" element={<EditProfilePage />} />
 
-            <Route path="/forum" element={<ForumPage />} />
-            <Route path="/forum/category/:slug" element={<ForumCategoryPage />} />
-            <Route path="/forum/thread/:id" element={<ForumThreadPage />} />
+            <Route path="/community" element={<ForumPage />} />
+            <Route path="/community/category/:slug" element={<ForumCategoryPage />} />
+            <Route path="/community/thread/:id" element={<ForumThreadPage />} />
 
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/login" element={<Navigate to="/auth" replace />} />
