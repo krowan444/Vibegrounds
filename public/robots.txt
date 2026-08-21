@@ -1,0 +1,18 @@
+# VibeGrounds — https://www.vibegrounds.com
+#
+# Everything public is fair game. The only things closed off are pages
+# that need an account and hold nothing worth indexing: a crawler that
+# fetches them gets a sign-in wall, which is a wasted visit for it and a
+# thin, duplicate-looking page for us.
+
+User-agent: *
+Allow: /
+
+Disallow: /admin
+Disallow: /settings
+Disallow: /edit-profile
+Disallow: /reset-password
+Disallow: /forgot-password
+Disallow: /verify
+
+Sitemap: https://www.vibegrounds.com/sitemap.xml
