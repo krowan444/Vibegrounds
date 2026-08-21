@@ -11,15 +11,27 @@
     <title>VibeGrounds — Post What You Vibe Coded</title>
     <meta name="description" content="VibeGrounds is where vibe coders share what they built — games, AI movies, software, websites and glorious experiments. Get scored 0–5 and climb the Daily, Weekly and All-Time charts." />
 
-    <!-- Social preview: uses the full lockup so links look right when shared -->
+    <!--
+      Social preview: uses the full lockup so links look right when shared.
+
+      Every URL here is absolute. Facebook, X, Discord, Slack, WhatsApp and
+      the rest fetch these tags from outside the site, so a relative path
+      like "/images/logo-full.png" has no domain to resolve against and the
+      preview silently falls back to a bare grey link. For a site that grows
+      by people pasting links, that was the most expensive missing detail in
+      the codebase.
+    -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="VibeGrounds" />
-    <meta property="og:title" content="VibeGrounds — Post What You Vibe Coded" />
+    <meta property="og:url" content="https://vibegrounds.com/" />
+    <meta property="og:title" content="VibeGrounds — A Home For Vibe Coders" />
     <meta property="og:description" content="Games, AI movies, software, websites and experiments. Get scored 0–5 and climb the charts." />
-    <meta property="og:image" content="/images/logo-full.png" />
+    <meta property="og:image" content="https://vibegrounds.com/images/logo-full.png" />
+    <meta property="og:image:alt" content="The VibeGrounds logo" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="VibeGrounds — Post What You Vibe Coded" />
-    <meta name="twitter:image" content="/images/logo-full.png" />
+    <meta name="twitter:title" content="VibeGrounds — A Home For Vibe Coders" />
+    <meta name="twitter:description" content="Games, AI movies, software, websites and experiments. Get scored 0–5 and climb the charts." />
+    <meta name="twitter:image" content="https://vibegrounds.com/images/logo-full.png" />
   </head>
   <body>
     <div id="root"></div>

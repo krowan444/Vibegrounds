@@ -1,4 +1,8 @@
 {
+  "redirects": [
+    { "source": "/arcade", "destination": "/portal", "permanent": true },
+    { "source": "/arcade/:path*", "destination": "/portal", "permanent": true }
+  ],
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]
