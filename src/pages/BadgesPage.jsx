@@ -4,7 +4,6 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { TIER_COLORS } from '../lib/format';
 import SiteHeader from '../components/SiteHeader';
-import SiteFooter from '../components/SiteFooter';
 import BadgeIcon from '../components/BadgeIcon';
 
 /**
@@ -183,7 +182,9 @@ export default function BadgesPage() {
           ))
         )}
       </div>
-      <SiteFooter />
+      {/* No SiteFooter here. App.jsx already renders it once, outside the
+          routes, for every page — having it here too printed the whole
+          footer twice on this page and nowhere else. */}
     </>
   );
 }
