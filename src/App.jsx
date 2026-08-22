@@ -17,6 +17,7 @@ import MemesPage from './pages/MemesPage';
 import ComicsPage from './pages/ComicsPage';
 import ComicPage from './pages/ComicPage';
 import PostComicPage from './pages/PostComicPage';
+import EditComicPage from './pages/EditComicPage';
 import PostMemePage from './pages/PostMemePage';
 import CoinsPage from './pages/CoinsPage';
 import RulesPage from './pages/RulesPage';
@@ -63,6 +64,7 @@ export default function App() {
             <Route path="/comics" element={<ComicsPage />} />
             <Route path="/comics/post" element={<PostComicPage />} />
             <Route path="/comics/:id" element={<ComicPage />} />
+            <Route path="/comics/:id/edit" element={<EditComicPage />} />
             <Route path="/memes/post" element={<PostMemePage />} />
             <Route path="/upload" element={<UploadPage />} />
             <Route path="/coins" element={<CoinsPage />} />
