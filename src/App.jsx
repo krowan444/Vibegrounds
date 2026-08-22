@@ -14,6 +14,9 @@ import BadgesPage from './pages/BadgesPage';
 import SiteFooter from './components/SiteFooter';
 import EditCreationPage from './pages/EditCreationPage';
 import MemesPage from './pages/MemesPage';
+import ComicsPage from './pages/ComicsPage';
+import ComicPage from './pages/ComicPage';
+import PostComicPage from './pages/PostComicPage';
 import PostMemePage from './pages/PostMemePage';
 import CoinsPage from './pages/CoinsPage';
 import RulesPage from './pages/RulesPage';
@@ -55,6 +58,11 @@ export default function App() {
             <Route path="/creation/:id" element={<CreationPage />} />
             <Route path="/creation/:id/edit" element={<EditCreationPage />} />
             <Route path="/memes" element={<MemesPage />} />
+
+            {/* /comics/post before /comics/:id, or "post" is read as an id. */}
+            <Route path="/comics" element={<ComicsPage />} />
+            <Route path="/comics/post" element={<PostComicPage />} />
+            <Route path="/comics/:id" element={<ComicPage />} />
             <Route path="/memes/post" element={<PostMemePage />} />
             <Route path="/upload" element={<UploadPage />} />
             <Route path="/coins" element={<CoinsPage />} />

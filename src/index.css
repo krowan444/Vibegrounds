@@ -1951,7 +1951,17 @@ body { background: var(--bg-darkest); overflow-y: auto; }
   background: var(--bg-panel);
   text-align: center;
 }
-.vg-hero-ad img { width: 100%; height: auto; display: block; max-height: 200px; object-fit: cover; }
+/* The :not() is load-bearing, and was found by measuring rather than reading.
+   `.vg-hero-ad img` is specificity 0-1-1 and `.vg-featured-art` is 0-1-0, so
+   this rule wins every property it names. It used to clamp the picture to
+   200px inside a 250px frame (a dead strip under every staff pick) — and even
+   after dropping that, `height: auto` still sized the image to its natural
+   ratio, 302px tall in a 197px frame, so it overflowed and object-fit had
+   nothing left to do. Excluding the two featured images by name lets the
+   rules written for them actually apply. */
+.vg-hero-ad img:not(.vg-featured-art):not(.vg-featured-blur) {
+  width: 100%; height: auto; display: block;
+}
 
 /* activity ticker — cheap way to make the place feel alive */
 .vg-ticker {
@@ -2224,13 +2234,36 @@ body { background: var(--bg-darkest); overflow-y: auto; }
    screenshot is where the title bar, the logo and the menu live. Anchoring
    to the top means the crop comes off the bottom, which is usually empty
    space or a footer nobody needs to see. */
+/* Now a container holding two <img>s rather than being the image itself:
+   a blurred backdrop and the whole picture on top of it. */
 .vg-featured-slide {
   position: absolute; inset: 0;
-  width: 100%; height: 100%; object-fit: cover; object-position: center top;
+  width: 100%; height: 100%;
+  overflow: hidden;
   transform: translateX(102%);
   z-index: 1;
   pointer-events: none;
   box-shadow: -12px 0 22px rgba(0, 0, 0, .55);
+  background: var(--bg-dark);
+}
+
+/* The backdrop. scale() hides the soft transparent edge blur leaves behind,
+   and the dimming keeps it from competing with the real picture in front. */
+.vg-featured-blur {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover; object-position: center;
+  filter: blur(20px) brightness(.42) saturate(1.1);
+  transform: scale(1.2);
+}
+
+/* The picture itself, whole. contain rather than cover: a screenshot is
+   mostly information, and cropping it to fill a 21:9 slot was cutting off
+   the half that carried the information. */
+.vg-featured-art {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: contain; object-position: center;
 }
 .vg-featured-slide.is-prev {
   transform: translateX(0);
@@ -2269,14 +2302,17 @@ body { background: var(--bg-darkest); overflow-y: auto; }
 
 /* 16:9 left too much dead space under the screenshot in the box. A shallower
    crop keeps the image readable while tightening the whole slot. */
+/* 35/12 is 21/9 made 20% shallower — the slot was taking more of the front
+   page than a single staff pick has earned, now that the whole picture
+   shows rather than a cropped strip of it. */
 .vg-featured-shot {
   position: relative;
-  display: block; width: 100%; aspect-ratio: 21 / 9;
+  display: block; width: 100%; aspect-ratio: 35 / 12;
   overflow: hidden; background: var(--bg-dark);
   border-bottom: 2px solid var(--border-panel);
 }
-.vg-featured-shot img { width: 100%; height: 100%; object-fit: cover; object-position: center top; display: block; }
-.vg-featured-shot:hover img.is-on { filter: brightness(1.08); }
+.vg-featured-shot img { display: block; }
+.vg-featured-shot:hover .is-on .vg-featured-art { filter: brightness(1.08); }
 
 /* Phones only — desktop keeps the 21:9 crop above.
    A 21:9 letterbox is a wide, shallow strip: fine at 850px, but on a ~360px
@@ -2284,7 +2320,8 @@ body { background: var(--bg-darkest); overflow-y: auto; }
    unreadable sliver. A 16:9 crop is roughly 200px tall at the same width,
    which is enough to actually see what was built. */
 @media (max-width: 640px) {
-  .vg-featured-shot { aspect-ratio: 16 / 9; }
+  /* 2:1 — the same 20% trim applied to the old 16:9 phone crop. */
+  .vg-featured-shot { aspect-ratio: 2 / 1; }
 }
 
 .vg-featured-body { padding: 9px 12px 10px; }
@@ -4535,3 +4572,350 @@ body { background: var(--bg-darkest); overflow-y: auto; }
 }
 
 .vg-update-delete:hover { color: var(--red); }
+
+/* ==========================================================
+   COMICS
+
+   Three screens: the shelf, the poster, the reader. The reader is
+   the one that matters — a comic page is a picture somebody spent
+   hours on, so it gets the window and the furniture stays at the
+   edges.
+   ========================================================== */
+
+/* ---------- the shelf ---------- */
+
+.vg-comics-intro p { font-family: var(--font-retro); font-size: 17px; color: var(--text-secondary); margin: 0 0 8px; }
+.vg-comics-spec   { color: var(--text-dim) !important; font-size: 16px !important; }
+.vg-comics-spec strong { color: var(--orange); }
+
+.vg-comics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.vg-comic-card {
+  display: flex; flex-direction: column;
+  background: var(--bg-panel);
+  border: 2px solid var(--border-panel);
+  text-decoration: none; color: inherit;
+  transition: border-color .12s, transform .12s;
+}
+.vg-comic-card:hover { border-color: var(--orange); transform: translateY(-2px); }
+
+/* 2:3 — the recommended page shape, so a cover drawn to spec fills the
+   frame exactly and anything else letterboxes rather than being cropped. */
+.vg-comic-cover-frame {
+  position: relative;
+  aspect-ratio: 2 / 3;
+  background: var(--bg-dark);
+  overflow: hidden;
+  border-bottom: 2px solid var(--border-panel);
+}
+.vg-comic-cover-frame img { width: 100%; height: 100%; object-fit: cover; object-position: center top; display: block; }
+
+.vg-comic-nocover { display: grid; place-items: center; height: 100%; font-size: 44px; opacity: .35; }
+
+.vg-comic-pages {
+  position: absolute; right: 6px; bottom: 6px;
+  font-family: var(--font-pixel); font-size: 8px;
+  background: rgba(0,0,0,.78); color: var(--orange);
+  padding: 3px 5px; border: 1px solid var(--orange-dim);
+}
+
+.vg-comic-card-body { padding: 8px 9px 10px; display: flex; flex-direction: column; gap: 2px; }
+.vg-comic-card-title {
+  font-family: var(--font-retro); font-size: 18px; font-weight: bold;
+  color: var(--blue-link); line-height: 1.2;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.vg-comic-card-by { font-family: var(--font-retro); font-size: 14px; color: var(--text-dim); }
+
+/* ---------- posting one ---------- */
+
+.vg-comic-hint {
+  font-family: var(--font-retro); font-size: 16px;
+  color: var(--text-secondary); line-height: 1.5;
+  margin: 0 0 12px;
+}
+.vg-comic-hint code {
+  font-family: var(--font-mono, monospace); font-size: 14px;
+  background: var(--bg-input); padding: 1px 4px; color: var(--orange);
+}
+.vg-comic-hint strong { color: var(--orange); }
+
+/* Five to a row on a desktop, as asked: it reads like a contact sheet, and
+   five is enough to see a whole scene's worth of pages at once. */
+.vg-comic-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+@media (max-width: 900px) { .vg-comic-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 640px) { .vg-comic-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 400px) { .vg-comic-grid { grid-template-columns: repeat(2, 1fr); } }
+
+.vg-comic-tile,
+.vg-comic-slot {
+  position: relative;
+  aspect-ratio: 2 / 3;
+  border: 2px solid var(--border-dark);
+  background: var(--bg-dark);
+  overflow: hidden;
+}
+
+.vg-comic-tile { cursor: grab; }
+.vg-comic-tile:active { cursor: grabbing; }
+.vg-comic-tile img { width: 100%; height: 100%; object-fit: contain; display: block; }
+
+/* Being dragged: faded, so the gap it leaves is obvious. */
+.vg-comic-tile.is-lifting { opacity: .35; }
+/* Being dropped onto: a bright edge, so it is unambiguous where it lands. */
+.vg-comic-tile.is-target { border-color: var(--orange); box-shadow: inset 0 0 0 2px var(--orange-bright); }
+
+/* The page number is the loudest thing on the tile on purpose. Reading
+   order is the one thing that goes wrong, and it goes wrong invisibly. */
+.vg-comic-num {
+  position: absolute; top: 0; left: 0;
+  min-width: 26px; padding: 3px 6px;
+  font-family: var(--font-pixel); font-size: 11px;
+  background: var(--orange); color: #241500;
+  text-align: center; z-index: 2;
+}
+
+.vg-comic-dims {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  font-family: var(--font-retro); font-size: 12px;
+  color: var(--text-dim); background: rgba(0,0,0,.72);
+  text-align: center; padding: 1px 0;
+}
+
+.vg-comic-bad {
+  position: absolute; top: 4px; right: 4px; z-index: 2;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--red); color: #fff;
+  font-family: var(--font-retro); font-size: 14px;
+  display: grid; place-items: center;
+}
+
+/* Tools sit hidden until hover on a mouse, but are always there on touch —
+   where there is no hover and a permanently hidden control is no control. */
+.vg-comic-tools {
+  position: absolute; left: 0; right: 0; bottom: 18px;
+  display: flex; justify-content: center; gap: 4px;
+  opacity: 0; transition: opacity .12s; z-index: 3;
+}
+.vg-comic-tile:hover .vg-comic-tools,
+.vg-comic-tile:focus-within .vg-comic-tools { opacity: 1; }
+@media (hover: none) { .vg-comic-tools { opacity: 1; } }
+
+.vg-comic-tools button {
+  width: 26px; height: 24px;
+  background: rgba(0,0,0,.82);
+  border: 1px solid var(--orange-dim);
+  color: var(--orange);
+  font-family: var(--font-retro); font-size: 17px; line-height: 1;
+  cursor: pointer;
+}
+.vg-comic-tools button:hover:not(:disabled) { background: var(--orange); color: #241500; }
+.vg-comic-tools button:disabled { opacity: .3; cursor: default; }
+.vg-comic-tools .vg-comic-del:hover { background: var(--red); border-color: var(--red); color: #fff; }
+
+/* Empty slots. Numbered, so twenty of them read as "this holds twenty
+   pages" rather than as decoration. */
+.vg-comic-slot {
+  display: grid; place-items: center;
+  border-style: dashed;
+  cursor: pointer;
+  color: var(--text-dim);
+}
+.vg-comic-slot:hover { border-color: var(--orange); color: var(--orange); background: rgba(232,163,23,.05); }
+.vg-comic-slot.is-next { border-color: var(--orange-dim); color: var(--orange); }
+
+.vg-comic-plus { font-family: var(--font-retro); font-size: 30px; line-height: 1; }
+.vg-comic-slotnum {
+  position: absolute; top: 3px; left: 5px;
+  font-family: var(--font-pixel); font-size: 8px; opacity: .45;
+}
+
+.vg-comic-count {
+  font-family: var(--font-retro); font-size: 16px;
+  color: var(--text-dim); margin-bottom: 12px;
+}
+
+.vg-comic-input {
+  width: 100%; padding: 7px 9px;
+  background: var(--bg-input); border: 2px solid var(--border-dark);
+  color: var(--text-primary); font-family: var(--font-retro); font-size: 17px;
+}
+.vg-comic-input:focus { outline: none; border-color: var(--orange-dim); }
+.vg-comic-opt { color: var(--text-dim); font-size: 14px; }
+
+.vg-comic-nsfw {
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--font-retro); font-size: 16px;
+  color: var(--text-secondary); margin: 10px 0 14px;
+  cursor: pointer;
+}
+
+.vg-comic-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.vg-comic-busy { font-family: var(--font-retro); font-size: 16px; color: var(--orange); }
+
+/* ---------- reading one ---------- */
+
+.vg-comic-head {
+  display: flex; align-items: flex-start; gap: 12px; flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.vg-comic-title {
+  font-family: var(--font-retro); font-size: 26px; font-weight: bold;
+  color: var(--orange); margin: 0; line-height: 1.15;
+}
+.vg-comic-meta { font-family: var(--font-retro); font-size: 15px; color: var(--text-dim); }
+.vg-comic-meta a { color: var(--blue-link); }
+.vg-comic-back { font-family: var(--font-retro); font-size: 16px; color: var(--blue-link); margin-left: auto; }
+
+.vg-comic-cover {
+  display: grid; place-items: center; gap: 10px;
+  padding: 48px 20px; text-align: center;
+  background: var(--bg-panel); border: 2px solid var(--red);
+  font-family: var(--font-retro); font-size: 18px; color: var(--text-secondary);
+}
+.vg-comic-cover-badge {
+  font-family: var(--font-pixel); font-size: 16px;
+  color: #fff; background: var(--red); padding: 6px 10px;
+}
+
+/* The stage. max-height keeps a tall page inside the window so the reader
+   sees a whole page at a time rather than scrolling through one. */
+.vg-comic-stage {
+  position: relative;
+  display: grid; place-items: center;
+  background: #07070d;
+  border: 2px solid var(--border-panel);
+  min-height: 40vh;
+}
+
+.vg-comic-page {
+  display: block;
+  max-width: 100%;
+  max-height: 82vh;
+  width: auto; height: auto;
+  object-fit: contain;
+  cursor: pointer;
+}
+
+/* Fit-to-width. The page fills the column and you scroll down it — the only
+   way a webtoon strip is readable, and the only way small lettering on a
+   dense page is legible on a laptop. No max-height, no pointer: there is
+   nothing to click, you scroll. */
+.vg-comic-stage.is-wide { display: block; }
+.vg-comic-stage.is-wide .vg-comic-page {
+  width: 100%; max-width: 100%;
+  max-height: none; height: auto;
+  margin: 0 auto;
+  cursor: default;
+}
+/* Edge buttons would sit over the whole strip and swallow text selection
+   and scroll-drag, so in this mode the bar underneath does the paging. */
+.vg-comic-stage.is-wide .vg-comic-edge { display: none; }
+
+.vg-comic-fit {
+  margin-left: 6px;
+  font-family: var(--font-retro); font-size: 15px;
+  background: transparent; border: 1px solid var(--border-dark);
+  color: var(--text-secondary); padding: 4px 10px; cursor: pointer;
+}
+.vg-comic-bar .vg-comic-fit:hover { background: var(--border-dark); color: var(--orange); }
+
+/* Resume note. Says what happened and undoes it in one press — a reader
+   who did not expect page 7 should not have to work out why. */
+.vg-comic-resume {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 6px 10px; margin-bottom: 6px;
+  background: rgba(232,163,23,0.10); border: 1px solid var(--orange-dim);
+  font-family: var(--font-retro); font-size: 16px; color: var(--yellow);
+}
+.vg-comic-resume button {
+  font-family: var(--font-retro); font-size: 15px;
+  background: transparent; border: 1px solid var(--orange-dim);
+  color: var(--orange); padding: 2px 10px; cursor: pointer;
+}
+.vg-comic-resume button:hover { background: var(--orange); color: #241500; }
+.vg-comic-resume-x { margin-left: auto; border-color: transparent !important; }
+
+/* Big invisible click targets down each side. A reader should be able to
+   page through with one thumb without aiming at anything. */
+.vg-comic-edge {
+  position: absolute; top: 0; bottom: 0; width: 22%;
+  border: none; background: transparent; cursor: pointer;
+  display: grid; place-items: center;
+  color: var(--orange); font-family: var(--font-retro); font-size: 40px;
+  opacity: 0; transition: opacity .15s, background .15s;
+  z-index: 2;
+}
+.vg-comic-edge-prev { left: 0; }
+.vg-comic-edge-next { right: 0; }
+.vg-comic-stage:hover .vg-comic-edge:not(:disabled) { opacity: .55; }
+.vg-comic-edge:hover:not(:disabled) { opacity: 1 !important; background: linear-gradient(90deg, rgba(0,0,0,.55), transparent); }
+.vg-comic-edge-next:hover:not(:disabled) { background: linear-gradient(270deg, rgba(0,0,0,.55), transparent); }
+.vg-comic-edge:disabled { cursor: default; }
+@media (hover: none) { .vg-comic-edge { opacity: .3; } }
+
+.vg-comic-bar {
+  display: flex; align-items: center; justify-content: center; gap: 14px;
+  padding: 8px; background: var(--bg-panel);
+  border: 2px solid var(--border-panel); border-top: none;
+}
+.vg-comic-bar button {
+  font-family: var(--font-retro); font-size: 17px;
+  background: transparent; border: 1px solid var(--orange-dim);
+  color: var(--orange); padding: 4px 12px; cursor: pointer;
+}
+.vg-comic-bar button:hover:not(:disabled) { background: var(--orange); color: #241500; }
+.vg-comic-bar button:disabled { opacity: .3; cursor: default; }
+.vg-comic-counter { font-family: var(--font-retro); font-size: 17px; color: var(--text-secondary); }
+.vg-comic-counter b { color: var(--orange); font-variant-numeric: tabular-nums; }
+
+/* Jump rail. Scrolls sideways on its own so a 60-page comic does not push
+   the page wide. */
+.vg-comic-rail {
+  display: flex; gap: 6px;
+  overflow-x: auto; padding: 8px 4px;
+  scrollbar-width: thin;
+}
+.vg-comic-thumb {
+  position: relative; flex: 0 0 auto;
+  width: 54px; height: 78px;
+  padding: 0; border: 2px solid var(--border-dark);
+  background: var(--bg-dark); cursor: pointer; overflow: hidden;
+}
+.vg-comic-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: .55; }
+.vg-comic-thumb:hover img { opacity: .85; }
+.vg-comic-thumb.is-on { border-color: var(--orange); }
+.vg-comic-thumb.is-on img { opacity: 1; }
+.vg-comic-thumb span {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  font-family: var(--font-pixel); font-size: 8px;
+  background: rgba(0,0,0,.78); color: var(--orange); padding: 2px 0;
+}
+
+.vg-comic-about { margin-top: 14px; }
+.vg-comic-desc {
+  font-family: var(--font-retro); font-size: 17px;
+  color: var(--text-secondary); line-height: 1.5;
+  white-space: pre-wrap; overflow-wrap: anywhere;
+}
+
+.vg-comic-foot {
+  display: flex; align-items: center; gap: 12px;
+  margin-top: 12px; flex-wrap: wrap;
+}
+.vg-comic-staff { font-family: var(--font-retro); font-size: 14px; color: var(--text-dim); }
+
+@media (prefers-reduced-motion: reduce) {
+  .vg-comic-card, .vg-comic-edge, .vg-comic-tools { transition: none; }
+  .vg-comic-card:hover { transform: none; }
+}
