@@ -11,18 +11,23 @@ import { timeAgo, compactNumber } from '../lib/format';
 /**
  * Read a comic.
  *
- * One page at a time, fitted to the screen. The whole design is in service
- * of one thing: getting out of the way. A comic page is a picture somebody
- * spent hours on, so the reader gives it the entire window and keeps the
- * furniture at the edges.
+ * The whole design is in service of one thing: getting out of the way. A
+ * comic page is a picture somebody spent hours on, so it gets the width of
+ * the screen and the furniture stays at the edges.
  *
- * Moving through it: click the right half of the page, press → or space,
- * or use the arrows. Click the left half or press ← to go back. The
- * thumbnail rail underneath is for jumping, not for scrolling — a reader
- * who wants page 14 should not have to click Next eleven times.
+ * Two ways to read, because people genuinely differ:
  *
- * Neighbouring pages are preloaded, which is the difference between a
- * comic that reads like a comic and one that flashes white between pages.
+ *   Scroll — every page stacked, full width, one continuous fall. Panels
+ *            arrive as you go, which is closer to turning pages than
+ *            clicking is, and it is the only sane way to read a tall strip.
+ *            This is the default.
+ *   Page   — one page fitted to the window, click or arrow to advance. Still
+ *            the right answer on a small screen, or for dense pages you want
+ *            whole in front of you.
+ *
+ * In both, moving to a page puts the top of that page at the top of the
+ * screen. Landing halfway down a page you have not read yet is disorienting
+ * in a way that is hard to name and easy to feel.
  */
 export default function ComicPage() {
   const { id } = useParams();
@@ -35,27 +40,24 @@ export default function ComicPage() {
   const [notFound, setNotFound] = useState(false);
   const [error, setError] = useState('');
   const [revealed, setRevealed] = useState(false);
-  const counted = useRef(false);
-  const stageRef = useRef(null);
-  const railRef = useRef(null);
-  const touch = useRef(null);
+  const [resumed, setResumed] = useState(0);
 
-  // Whole page on screen, or full width and scroll down it. Tall webtoon
-  // strips are unreadable fitted to a laptop screen — the lettering ends up
-  // three pixels high — so the reader needs both and remembers which you
-  // picked. Wrapped because a locked-down browser can throw on the read.
-  const [fit, setFit] = useState(() => {
-    try { return localStorage.getItem('vg-comic-fit') === 'width' ? 'width' : 'page'; }
-    catch { return 'page'; }
+  const counted = useRef(false);
+  const railRef = useRef(null);
+  const sheetRefs = useRef([]);
+  const stageRef = useRef(null);
+  const touch = useRef(null);
+  // Set while a jump is in flight, so the observer watching what is on
+  // screen does not fight the scroll it is watching.
+  const jumping = useRef(false);
+
+  const [mode, setMode] = useState(() => {
+    try { return localStorage.getItem('vg-comic-mode') === 'page' ? 'page' : 'scroll'; }
+    catch { return 'scroll'; }
   });
   useEffect(() => {
-    try { localStorage.setItem('vg-comic-fit', fit); } catch { /* private mode */ }
-  }, [fit]);
-
-  // "You were on page 7" — shown, not done silently, with a way back to the
-  // start. Landing somewhere in the middle of a comic with no explanation
-  // reads as a bug.
-  const [resumed, setResumed] = useState(0);
+    try { localStorage.setItem('vg-comic-mode', mode); } catch { /* private mode */ }
+  }, [mode]);
 
   useDocumentTitle(comic?.title, comic?.description || undefined);
 
@@ -65,6 +67,7 @@ export default function ComicPage() {
     setNotFound(false);
     setI(0);
     setResumed(0);
+    sheetRefs.current = [];
 
     (async () => {
       const [c, p] = await Promise.all([
@@ -80,8 +83,6 @@ export default function ComicPage() {
       setPages(p.data || []);
       setLoading(false);
 
-      // Pick the reader back up where they stopped. Only worth doing past
-      // page two — restoring somebody to page 2 of 40 is not a favour.
       const last = p.data?.length || 0;
       try {
         const saved = parseInt(localStorage.getItem(`vg-comic-at:${id}`) || '', 10);
@@ -90,7 +91,6 @@ export default function ComicPage() {
 
       if (!counted.current) {
         counted.current = true;
-        // A read is the least important thing here — never let it break the page.
         supabase.rpc('register_comic_view', { p_comic: id }).then(
           () => {}, (e) => console.warn('view not counted:', e),
         );
@@ -101,7 +101,29 @@ export default function ComicPage() {
   }, [id]);
 
   const total = pages.length;
-  const go = useCallback((n) => setI((cur) => Math.min(Math.max(n, 0), Math.max(total - 1, 0))), [total]);
+
+  /**
+   * Go to a page, and put its top edge at the top of the screen.
+   *
+   * The flag is the fiddly bit: a smooth scroll takes about half a second,
+   * during which the observer sees three or four pages slide past and would
+   * happily rewrite the page number under the reader's feet. It stays set
+   * until the scrolling stops.
+   */
+  const go = useCallback((n) => {
+    const target = Math.min(Math.max(n, 0), Math.max(total - 1, 0));
+    setI(target);
+
+    const smooth = !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    jumping.current = true;
+    window.clearTimeout(go._t);
+    go._t = window.setTimeout(() => { jumping.current = false; }, smooth ? 700 : 60);
+
+    requestAnimationFrame(() => {
+      const el = sheetRefs.current[target] || stageRef.current;
+      el?.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'start' });
+    });
+  }, [total]);
 
   // Keyboard. Space and → forward, ← back, Home and End to the ends.
   useEffect(() => {
@@ -116,8 +138,48 @@ export default function ComicPage() {
     return () => window.removeEventListener('keydown', onKey);
   }, [i, total, go]);
 
-  // Preload the next two and the previous one, so paging forward is instant
-  // and paging back does not re-fetch what you just looked at.
+  /**
+   * In scroll mode the page number follows the reader rather than the other
+   * way round. Whichever sheet covers the middle of the screen is the page
+   * you are on — measuring against the middle rather than the top means a
+   * tall page stays "the page you are on" for the whole time you are inside
+   * it, instead of flicking over the moment its bottom edge appears.
+   */
+  useEffect(() => {
+    if (mode !== 'scroll' || !total) return undefined;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (jumping.current) return;
+        const seen = entries.filter((e) => e.isIntersecting);
+        if (!seen.length) return;
+        const best = seen.reduce((a, b) => (a.intersectionRatio >= b.intersectionRatio ? a : b));
+        const n = Number(best.target.dataset.n);
+        if (!Number.isNaN(n)) setI(n);
+      },
+      { rootMargin: '-45% 0px -45% 0px', threshold: [0, 0.01, 0.5, 1] },
+    );
+    sheetRefs.current.forEach((el) => el && io.observe(el));
+    return () => io.disconnect();
+  }, [mode, total, revealed]);
+
+  /** Panels arriving as you reach them, rather than all at once up front. */
+  useEffect(() => {
+    if (mode !== 'scroll' || !total) return undefined;
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+      sheetRefs.current.forEach((el) => el?.classList.add('is-here'));
+      return undefined;
+    }
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) { e.target.classList.add('is-here'); io.unobserve(e.target); }
+      });
+    }, { rootMargin: '0px 0px -8% 0px' });
+    sheetRefs.current.forEach((el) => el && io.observe(el));
+    return () => io.disconnect();
+  }, [mode, total, revealed]);
+
+  // Preload around where you are, so paging forward is instant and paging
+  // back does not re-fetch what you just looked at.
   useEffect(() => {
     [i + 1, i + 2, i - 1].forEach((n) => {
       const p = pages[n];
@@ -125,8 +187,8 @@ export default function ComicPage() {
     });
   }, [i, pages]);
 
-  // Remember the page. Cleared on the last page: finishing a comic and
-  // coming back should start you at the front, not at the end.
+  // Remember the page. Cleared on the last one: finishing a comic and coming
+  // back should start you at the front, not at the end.
   useEffect(() => {
     if (!total || !id) return;
     try {
@@ -135,8 +197,8 @@ export default function ComicPage() {
     } catch { /* private mode */ }
   }, [i, total, id]);
 
-  // Keep the current thumbnail in the rail. Without this the rail sits at
-  // page 1 while you read page 30, and the jump strip stops being useful.
+  // Keep the current thumbnail in view, or the jump strip stops being useful
+  // the moment you are past page six.
   useEffect(() => {
     const rail = railRef.current;
     const thumb = rail?.children?.[i];
@@ -145,16 +207,8 @@ export default function ComicPage() {
     rail.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
   }, [i, total]);
 
-  // Back to the top of the page when it changes in fit-to-width, where you
-  // are usually scrolled to the bottom of the previous one.
-  useEffect(() => {
-    if (fit === 'width') stageRef.current?.scrollIntoView({ block: 'start', behavior: 'auto' });
-  }, [i, fit]);
-
-  // Swipe. Most comics get read on a phone, and on a phone the edge buttons
-  // are a thin target — a flick across the page is the natural gesture.
-  // Horizontal-only, and only past 45px, so scrolling down a tall page never
-  // turns the page by accident.
+  // Swipe, for page mode on a phone. Horizontal only, and only past 45px, so
+  // scrolling down a tall page never turns it by accident.
   const onTouchStart = (e) => {
     const t = e.changedTouches?.[0];
     touch.current = t ? { x: t.clientX, y: t.clientY } : null;
@@ -202,6 +256,7 @@ export default function ComicPage() {
 
   const page = pages[i];
   const hidden = comic.is_nsfw && !revealed;
+  const mine = user && user.id === comic.creator_id;
 
   return (
     <>
@@ -218,7 +273,12 @@ export default function ComicPage() {
               {' · '}{timeAgo(comic.created_at)}
             </div>
           </div>
-          <Link to="/comics" className="vg-comic-back">← all comics</Link>
+          <div className="vg-comic-headlinks">
+            {(mine || isStaff) && (
+              <Link to={`/comics/${id}/edit`} className="vg-comic-edit">✏️ Edit</Link>
+            )}
+            <Link to="/comics" className="vg-comic-back">← all comics</Link>
+          </div>
         </div>
 
         <Notice tone="error">{error}</Notice>
@@ -238,72 +298,89 @@ export default function ComicPage() {
             {resumed > 0 && (
               <div className="vg-comic-resume">
                 <span>📑 Picked you up on page {resumed}.</span>
-                <button type="button" onClick={() => { go(0); setResumed(0); }}>
-                  Start from page 1
-                </button>
+                <button type="button" onClick={() => { go(0); setResumed(0); }}>Start from page 1</button>
                 <button type="button" className="vg-comic-resume-x" onClick={() => setResumed(0)} aria-label="Dismiss">✕</button>
               </div>
             )}
 
-            {/* ---- the page ---- */}
-            <div
-              ref={stageRef}
-              className={`vg-comic-stage ${fit === 'width' ? 'is-wide' : ''}`}
-              onTouchStart={onTouchStart}
-              onTouchEnd={onTouchEnd}
-            >
-              <button
-                type="button"
-                className="vg-comic-edge vg-comic-edge-prev"
-                onClick={() => go(i - 1)}
-                disabled={i === 0}
-                aria-label="Previous page"
-              ><span>‹</span></button>
+            {mode === 'scroll' ? (
+              /* ---- the whole comic, falling ---- */
+              <div className="vg-comic-reel" ref={stageRef}>
+                {pages.map((p, n) => (
+                  <figure
+                    key={p.id}
+                    className="vg-comic-sheet"
+                    data-n={n}
+                    ref={(el) => { sheetRefs.current[n] = el; }}
+                  >
+                    <img
+                      src={p.image_url}
+                      alt={`${comic.title}, page ${n + 1}`}
+                      width={p.width || undefined}
+                      height={p.height || undefined}
+                      // Never blown up past the size it was drawn at — a
+                      // 900px page stretched over a 1600px screen is just a
+                      // blurrier version of the same picture.
+                      style={p.width ? { maxWidth: `${p.width}px` } : undefined}
+                      loading={n < 2 ? 'eager' : 'lazy'}
+                      decoding="async"
+                    />
+                    <figcaption>{n + 1}</figcaption>
+                  </figure>
+                ))}
+                <div className="vg-comic-end">
+                  <p>That&#39;s the lot — {total} page{total === 1 ? '' : 's'} by {comic.creator_username}.</p>
+                  <Link to="/comics" className="retro-cta">📖 MORE COMICS</Link>
+                </div>
+              </div>
+            ) : (
+              /* ---- one page at a time ---- */
+              <div
+                className="vg-comic-stage"
+                ref={stageRef}
+                onTouchStart={onTouchStart}
+                onTouchEnd={onTouchEnd}
+              >
+                <button
+                  type="button" className="vg-comic-edge vg-comic-edge-prev"
+                  onClick={() => go(i - 1)} disabled={i === 0} aria-label="Previous page"
+                ><span>‹</span></button>
 
-              <img
-                key={page.id}
-                className="vg-comic-page"
-                src={page.image_url}
-                alt={`${comic.title}, page ${i + 1}`}
-                width={page.width || undefined}
-                height={page.height || undefined}
-                // Fill the width, but never past the size it was drawn at.
-                // A 800px webtoon strip stretched across a 1400px column is
-                // just a blurrier version of the same picture.
-                style={fit === 'width' && page.width ? { maxWidth: `${page.width}px` } : undefined}
-                onClick={fit === 'page' ? () => go(i + 1) : undefined}
-              />
+                <img
+                  key={page.id}
+                  className="vg-comic-page"
+                  src={page.image_url}
+                  alt={`${comic.title}, page ${i + 1}`}
+                  width={page.width || undefined}
+                  height={page.height || undefined}
+                  onClick={() => go(i + 1)}
+                />
 
-              <button
-                type="button"
-                className="vg-comic-edge vg-comic-edge-next"
-                onClick={() => go(i + 1)}
-                disabled={i === total - 1}
-                aria-label="Next page"
-              ><span>›</span></button>
-            </div>
+                <button
+                  type="button" className="vg-comic-edge vg-comic-edge-next"
+                  onClick={() => go(i + 1)} disabled={i === total - 1} aria-label="Next page"
+                ><span>›</span></button>
+              </div>
+            )}
 
-            {/* ---- where you are ---- */}
+            {/* ---- where you are. Sticks to the bottom so it is still there
+                    thirty pages down, without ever covering the page. ---- */}
             <div className="vg-comic-bar">
               <button type="button" onClick={() => go(i - 1)} disabled={i === 0}>‹ Prev</button>
-              <span className="vg-comic-counter">
-                Page <b>{i + 1}</b> of {total}
-              </span>
+              <span className="vg-comic-counter">Page <b>{i + 1}</b> of {total}</span>
               <button type="button" onClick={() => go(i + 1)} disabled={i === total - 1}>Next ›</button>
-              {/* Long strips need the width option or the lettering shrinks to
-                  nothing; ordinary pages need the fit option or you scroll
-                  through every one. Neither is the right default for both. */}
               <button
                 type="button"
                 className="vg-comic-fit"
-                onClick={() => setFit((f) => (f === 'page' ? 'width' : 'page'))}
-                title={fit === 'page' ? 'Fill the width and scroll — better for tall strips' : 'Fit the whole page on screen'}
+                onClick={() => setMode((m) => (m === 'scroll' ? 'page' : 'scroll'))}
+                title={mode === 'scroll'
+                  ? 'One page at a time, fitted to the window'
+                  : 'The whole comic, full width, scroll straight through it'}
               >
-                {fit === 'page' ? '⇕ Fit width' : '⤢ Fit page'}
+                {mode === 'scroll' ? '⤢ One page' : '⇕ Scroll it'}
               </button>
             </div>
 
-            {/* ---- jump anywhere ---- */}
             <div className="vg-comic-rail" role="tablist" aria-label="Jump to a page" ref={railRef}>
               {pages.map((p, n) => (
                 <button
@@ -331,9 +408,7 @@ export default function ComicPage() {
         )}
 
         <div className="vg-comic-foot">
-          {user && user.id !== comic.creator_id && (
-            <ReportButton targetType="comic" targetId={comic.id} />
-          )}
+          {user && !mine && <ReportButton targetType="comic" targetId={comic.id} />}
           {isStaff && <span className="vg-comic-staff">Staff: moderate from the control room.</span>}
         </div>
       </div>
