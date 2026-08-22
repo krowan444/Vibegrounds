@@ -97,18 +97,36 @@ export default function HeroAd({ creation, creations }) {
           {picks.map((p, i) => {
             const psrc = thumbFor(p, 900);
             return (
-              <img
+              /*
+                Two copies of the same picture. The back one is blown up,
+                blurred and dimmed to fill the frame; the front one is shown
+                whole, letterboxed inside it.
+
+                It used to be a single image cropped to fill, which threw
+                away 46% of a typical screenshot — including the parts people
+                bother to screenshot: titles, menus, scores. The backdrop
+                costs nothing (same file, already downloaded) and stops the
+                slot having bare black bars down both sides.
+              */
+              <div
                 key={p.id}
-                src={psrc}
-                alt={i === index ? p.title : ''}
                 aria-hidden={i !== index || undefined}
-                onError={onThumbError}
                 className={[
                   'vg-featured-slide',
                   i === index ? 'is-on' : (i === prev ? 'is-prev' : ''),
-                  psrc === LOGO_FALLBACK ? 'vg-thumb-placeholder' : '',
                 ].filter(Boolean).join(' ')}
-              />
+              >
+                <img src={psrc} alt="" aria-hidden="true" className="vg-featured-blur" />
+                <img
+                  src={psrc}
+                  alt={i === index ? p.title : ''}
+                  onError={onThumbError}
+                  className={[
+                    'vg-featured-art',
+                    psrc === LOGO_FALLBACK ? 'vg-thumb-placeholder' : '',
+                  ].filter(Boolean).join(' ')}
+                />
+              </div>
             );
           })}
         </Link>

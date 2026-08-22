@@ -22,6 +22,7 @@ const NAV = [
   { to: '/category/art',       label: 'Art',   wide: true },
   { to: '/category/audio',     label: 'Audio', wide: true },
   { to: '/memes',              label: 'Memes' },
+  { to: '/comics',             label: 'Comics' },
   { to: '/charts',             label: 'Top 100' },
   { to: '/hall-of-fame',       label: 'Hall of Fame', wide: true },
 ];
