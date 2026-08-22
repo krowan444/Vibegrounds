@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { supabase, retryOnAbort } from '../lib/supabase';
+import { supabase, retryOnAbort, describeError } from '../lib/supabase';
 import SiteHeader from '../components/SiteHeader';
 import AdSlot from '../components/AdSlot';
 import Notice from '../components/Notice';
@@ -73,6 +73,7 @@ export default function PortalPage() {
 
   const [categories, setCategories] = useState([]);
   const [newest, setNewest] = useState([]);
+  const [weekly, setWeekly] = useState([]);
   const [monthly, setMonthly] = useState([]);
   const [alltime, setAlltime] = useState([]);
   const [total, setTotal] = useState(0);
@@ -102,9 +103,15 @@ export default function PortalPage() {
     };
 
     const settle = (r) => (r.status === 'fulfilled' ? r.value : { data: [], error: r.reason });
-    const [n, m, a, c] = (await Promise.allSettled([
+    const [n, w, m, a, c] = (await Promise.allSettled([
       retryOnAbort(() => apply(supabase.from('creations_public').select('*'))
         .order('created_at', { ascending: false }).limit(50)),
+      // This week, sitting directly under Newest. The gap between "posted
+      // recently" and "posted three months ago and still winning" was the
+      // whole month — long enough that something good posted on Tuesday had
+      // nowhere to show up except the newest list, where it scrolls away.
+      retryOnAbort(() => apply(supabase.from('chart_weekly').select('*'))
+        .order('rank').limit(50)),
       retryOnAbort(() => apply(supabase.from('chart_monthly').select('*'))
         .order('rank').limit(100)),
       retryOnAbort(() => apply(supabase.from('chart_alltime').select('*'))
@@ -112,10 +119,15 @@ export default function PortalPage() {
       retryOnAbort(() => apply(supabase.from('creations_public').select('id', { count: 'exact', head: true }))),
     ])).map(settle);
 
-    const firstError = [n, m, a].find((r) => r.error)?.error;
-    setError(firstError ? `Could not load everything: ${firstError.message || firstError}` : '');
+    // describeError rather than `err.message || err`: an error object with an
+    // empty message used to fall through to the object itself and render as
+    // "[object Object]", which told nobody anything. Same fix as the home page.
+    const firstError = [n, w, m, a].find((r) => r.error)?.error;
+    if (firstError) console.warn('[VibeGrounds] portal load failure:', [n, w, m, a].filter((r) => r.error));
+    setError(firstError ? `Could not load everything: ${describeError(firstError)}` : '');
 
     setNewest(n.data || []);
+    setWeekly(w.data || []);
     setMonthly(m.data || []);
     setAlltime(a.data || []);
     setTotal(c.count || 0);
@@ -224,13 +236,21 @@ export default function PortalPage() {
               </div>
             ) : (
               <>
-                {/* LEFT — newest. Recency, so no medals. */}
+                {/* LEFT — newest, then this week. Recency first, then the
+                    best of the last seven days: something good posted on
+                    Tuesday used to have nowhere to appear except the newest
+                    list, where it scrolled away by Thursday. */}
                 <div className="vg-col">
                   <ChartColumn
                     title="Newest 50" icon="🆕" rows={newest} showAge
                     ranked={false}
                     to="/charts?chart=daily"
                     empty="Nothing posted yet. Be the first."
+                  />
+                  <ChartColumn
+                    title="Top 50 This Week" icon="📅" rows={weekly}
+                    to="/charts?chart=weekly"
+                    empty="Nothing charted this week yet."
                   />
                 </div>
 

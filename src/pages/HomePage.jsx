@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { supabase, retryOnAbort } from '../lib/supabase';
+import { supabase, retryOnAbort, describeError } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import SiteHeader from '../components/SiteHeader';
 import CreationCard from '../components/CreationCard';
@@ -13,6 +13,31 @@ import MemeRail from '../components/MemeRail';
 import Notice from '../components/Notice';
 import { compactNumber, timeAgo, scoreLabel, scoreLabelColor } from '../lib/format';
 import { thumbFor, onThumbError, LOGO_FALLBACK } from '../lib/thumbnail';
+
+/*
+ * What each of the eleven home page queries is, in the order they are fired
+ * below. Used only to name the failing one in the error message — if you add
+ * or reorder a query, add or reorder its label here too.
+ */
+const PARTS = [
+  'the staff picks',
+  'the newest submissions',
+  "today's chart",
+  "this week's chart",
+  'the all-time chart',
+  'the categories',
+  'the top creators',
+  'the submission count',
+  'the member count',
+  'the memes',
+  "this month's chart",
+];
+
+/** ['a'] → "a"; ['a','b'] → "a and b"; ['a','b','c'] → "a, b and c". */
+function listOf(items) {
+  if (items.length === 1) return items[0];
+  return `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
+}
 
 export default function HomePage() {
   const { user, profile } = useAuth();
@@ -52,8 +77,30 @@ export default function HomePage() {
       const [featured, latest, daily, weekly, alltime, cats, creators, cCount, uCount, memes, monthly] = R;
       if (!alive) return;
 
-      const firstError = R.find((r) => r.error)?.error;
-      if (firstError) setError(`Could not load everything: ${firstError.message || firstError}`);
+      /*
+       * Eleven queries go out at once and any one of them can come back
+       * unhappy on its own. Two rules, learned the hard way from a report
+       * that read "Could not load everything: [object Object]":
+       *
+       *   1. Say which part failed. A named part ("the submission count")
+       *      is something you can act on; "everything" is not, especially
+       *      when ten of the eleven plainly worked.
+       *   2. Put the real objects in the console. The banner is for the
+       *      person looking at the page; the console is for whoever has to
+       *      fix it, and they need more than one sentence.
+       */
+      const failed = R
+        .map((r, i) => (r?.error ? { part: PARTS[i], error: r.error } : null))
+        .filter(Boolean);
+
+      if (failed.length) {
+        console.warn('[VibeGrounds] home page partial load failure:', failed);
+        setError(
+          failed.length === R.length
+            ? `Nothing loaded: ${describeError(failed[0].error)}`
+            : `Could not load ${listOf(failed.map((f) => f.part))}. The rest of the page is fine — refresh to try again.`,
+        );
+      }
 
       setD({
         featured: featured.data || [],
@@ -63,20 +110,24 @@ export default function HomePage() {
         alltime: alltime.data || [],
         categories: cats.data || [],
         creators: creators.data || [],
-        total: cCount.count || 0,
-        members: uCount.count || 0,
+        // null, not 0, when the count itself failed. Printing a confident
+        // "0 submissions" over a site that has 28 is worse than printing
+        // nothing — it tells a visitor the place is empty.
+        total: cCount.error ? null : (cCount.count ?? 0),
+        members: uCount.error ? null : (uCount.count ?? 0),
         memes: memes.data || [],
         monthly: monthly.data || [],
       });
     })().catch((e) => {
       if (!alive) return;
-      setError(e?.message || 'Something went wrong loading the Portal.');
+      setError(describeError(e) || 'Something went wrong loading the Portal.');
       // Every array the render touches must be present here, or the failure
       // path throws on .length and takes the page down harder than the
-      // original error did.
+      // original error did. Counts are null rather than 0 for the same
+      // reason as above: unknown is not the same as none.
       setD({ featured: [], latest: [], daily: [], weekly: [], alltime: [],
              monthly: [], memes: [],
-             categories: [], creators: [], total: 0, members: 0 });
+             categories: [], creators: [], total: null, members: null });
     });
     return () => { alive = false; };
   }, []);
@@ -114,8 +165,12 @@ export default function HomePage() {
           <div className="vg-ticker">
             <span className="vg-ticker-label">LIVE</span>
             <span>
-              <b>{compactNumber(d.total)}</b> submissions ·{' '}
-              <b>{compactNumber(d.members)}</b> members · newest:{' '}
+              {/* A count that failed to load is skipped entirely rather than
+                  shown as zero. The strip still says what is newest, which is
+                  the part people actually click. */}
+              {d.total != null && <><b>{compactNumber(d.total)}</b> submissions · </>}
+              {d.members != null && <><b>{compactNumber(d.members)}</b> members · </>}
+              newest:{' '}
               <Link to={`/creation/${newest.id}`} style={{ color: 'var(--blue-link)' }}>
                 {newest.title}
               </Link>{' '}
