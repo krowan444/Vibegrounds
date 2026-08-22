@@ -180,6 +180,11 @@ function render(c) {
     <title>${esc(c.title)}</title>
     <meta name="description" content="${esc(c.description)}" />
     <link rel="canonical" href="${esc(c.url)}" />
+    <!-- Search engines are never sent here, but ?_card=1 is a real URL that
+         anyone can paste around. If one ever got crawled, this stub is not
+         what should turn up in results — the actual page is. Link-preview
+         scrapers ignore this tag, so the cards are unaffected. -->
+    <meta name="robots" content="noindex, follow" />
 
     <meta property="og:site_name" content="VibeGrounds" />
     <meta property="og:type" content="${esc(c.type || 'website')}" />
