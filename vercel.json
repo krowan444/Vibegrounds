@@ -7,6 +7,56 @@
     { "source": "/forum/:path*", "destination": "/community/:path*", "permanent": true }
   ],
   "rewrites": [
+    {
+      "source": "/creation/:id",
+      "has": [{ "type": "query", "key": "_card" }],
+      "destination": "/api/share?type=creation&id=:id"
+    },
+    {
+      "source": "/comics/:id",
+      "has": [{ "type": "query", "key": "_card" }],
+      "destination": "/api/share?type=comic&id=:id"
+    },
+    {
+      "source": "/profile/:username",
+      "has": [{ "type": "query", "key": "_card" }],
+      "destination": "/api/share?type=profile&id=:username"
+    },
+
+    {
+      "source": "/creation/:id",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(facebookexternalhit|Facebot|Twitterbot|Discordbot|Slackbot|Slack-ImgProxy|WhatsApp|TelegramBot|LinkedInBot|Pinterest|redditbot|Applebot|SkypeUriPreview|vkShare|Iframely|Embedly|Mastodon|Bluesky|Bskybot|Snapchat).*"
+        }
+      ],
+      "destination": "/api/share?type=creation&id=:id"
+    },
+    {
+      "source": "/comics/:id",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(facebookexternalhit|Facebot|Twitterbot|Discordbot|Slackbot|Slack-ImgProxy|WhatsApp|TelegramBot|LinkedInBot|Pinterest|redditbot|Applebot|SkypeUriPreview|vkShare|Iframely|Embedly|Mastodon|Bluesky|Bskybot|Snapchat).*"
+        }
+      ],
+      "destination": "/api/share?type=comic&id=:id"
+    },
+    {
+      "source": "/profile/:username",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(facebookexternalhit|Facebot|Twitterbot|Discordbot|Slackbot|Slack-ImgProxy|WhatsApp|TelegramBot|LinkedInBot|Pinterest|redditbot|Applebot|SkypeUriPreview|vkShare|Iframely|Embedly|Mastodon|Bluesky|Bskybot|Snapchat).*"
+        }
+      ],
+      "destination": "/api/share?type=profile&id=:username"
+    },
+
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
