@@ -98,6 +98,42 @@ const TRANSIENT = /abort|lock broken|issued at future|jwtissuedatfuture|not yet 
  */
 const CLOCK_SKEW = /future|not yet valid/i;
 
+/**
+ * Turn whatever a failure hands us into a sentence.
+ *
+ * Written because the home page did this:
+ *
+ *     `Could not load everything: ${err.message || err}`
+ *
+ * and an error object whose `message` happens to be empty falls through to
+ * the object itself, which a template literal renders as the immortal
+ * "[object Object]". That is worse than no message: it looks like a bug in
+ * the site AND says nothing about what broke, so the one report a member
+ * bothers to send you is unactionable.
+ *
+ * Supabase spreads the useful part across message / details / hint / code
+ * depending on where the failure happened, so take the first that says
+ * something, and fall back to JSON rather than to stringification.
+ */
+export function describeError(e) {
+  if (!e) return 'Unknown error';
+  if (typeof e === 'string') return e;
+
+  const parts = [e.message, e.details, e.hint].filter(
+    (s) => typeof s === 'string' && s.trim(),
+  );
+  if (parts.length) return parts[0] + (e.code ? ` (${e.code})` : '');
+  if (e.code) return `Error code ${e.code}`;
+
+  // Last resort — still not "[object Object]".
+  try {
+    const json = JSON.stringify(e);
+    if (json && json !== '{}') return json.slice(0, 200);
+  } catch { /* circular reference — fall through */ }
+
+  return e.name || 'Unknown error';
+}
+
 export async function retryOnAbort(run, attempts = 2, timeoutMs = 22000) {
   let last;
   for (let i = 0; i < attempts; i++) {
