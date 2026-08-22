@@ -52,6 +52,11 @@ const ROUTES = {
     'Vibe coding memes, jokes and the general nonsense of building things with AI.'],
   '/memes/post': ['Post a Meme', 'Share a vibe coding meme with the VibeGrounds community.'],
 
+  '/comics': ['Comics',
+    'Comics made by the VibeGrounds community — single pages, one-shots and longer series, free to read.'],
+  '/comics/post': ['Post a Comic',
+    'Upload your comic to VibeGrounds. Any page size, up to 200 pages, free to read.'],
+
   '/community': ['Community',
     'Talk to other vibe coders. Ask beginner questions without embarrassment, show off what you made, argue about tools.'],
 
