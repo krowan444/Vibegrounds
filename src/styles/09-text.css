@@ -1,0 +1,381 @@
+/* ============================================================
+   Long text, replies, screenshots, reviews, sharing
+   ------------------------------------------------------------
+   Split out of index.css. The ORDER of these files is the order
+   the rules used to be in, and changing it changes which rule
+   wins — so index.css imports them by number, and a new file
+   goes at the end unless it genuinely belongs earlier.
+   ============================================================ */
+
+/* ==========================================================
+   LONG TEXT CONTAINMENT
+   A submission titled with a whole sentence was stretching the
+   page sideways. The cause was not the text itself but flexbox:
+   a flex item defaults to min-width:auto, which means it refuses
+   to shrink below its own content. So an 80-character title in
+   .section-header pushed the header wider than its parent, and
+   the whole panel and page followed it.
+   min-width:0 lets those items shrink; overflow-wrap lets a long
+   unbroken string (a URL with no spaces) break rather than push.
+   ========================================================== */
+.section-header { gap: 10px; min-width: 0; }
+.section-header h2 {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.section-header-links { flex-shrink: 0; }
+
+/* Descriptions are free text and may contain a pasted URL with no
+   spaces in it, which pre-wrap alone will not break. */
+.vg-desc-body,
+.vg-featured-desc,
+.vg-card-title,
+.vg-card-author,
+.vg-row-meta,
+.vg-meme-name,
+.vg-featured-title,
+.vg-review-body {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  min-width: 0;
+}
+
+/* Flex children that hold text need to be shrinkable too. */
+.vg-card-body,
+.vg-meme-body,
+.vg-featured-body,
+.vg-rail-body,
+.vg-thread { min-width: 0; }
+
+/* Last line of defence. If some future element still overflows,
+   the page clips it rather than the whole layout growing a
+   horizontal scrollbar.
+
+   `clip` rather than `hidden`, and the difference is not cosmetic:
+   overflow-x: hidden forces overflow-y to compute as auto, which quietly
+   makes this element a scrolling container for everything inside it. Any
+   position: sticky descendant then sticks to *this box* — which is as tall
+   as the whole page — instead of to the window, so it never appears to
+   stick at all. That cost the comic reader its page bar, and would have
+   cost the same to every sticky thing added from here on. `clip` does the
+   same clipping without becoming a scroll container. The `hidden` above it
+   stays as the fallback for anything too old to know `clip`. */
+.vg-app { overflow-x: hidden; overflow-x: clip; }
+.retro-panel { max-width: 100%; overflow: hidden; }
+
+/* ==========================================================
+   THREADED REPLIES
+   ========================================================== */
+.vg-review-reply {
+  margin-left: 26px;
+  border-left: 2px solid var(--border-dark);
+  background: rgba(255, 255, 255, .015);
+}
+.vg-review-reply::before {
+  content: '↳';
+  color: var(--text-dim);
+  font-family: var(--font-retro);
+  font-size: 14px;
+  margin-right: 4px;
+}
+
+.vg-reply-box { margin-top: 8px; }
+.vg-reply-box textarea {
+  width: 100%; min-height: 56px; padding: 7px;
+  background: var(--bg-input); border: 2px solid var(--border-dark);
+  color: var(--text-primary); font-family: var(--font-retro);
+  font-size: 16px; resize: vertical;
+}
+.vg-reply-actions { display: flex; gap: 6px; margin-top: 5px; align-items: center; }
+
+/* ==========================================================
+   SCREENSHOT APPROVAL
+   ========================================================== */
+.vg-shot-state {
+  font-family: var(--font-retro); font-size: 15px;
+  padding: 8px 10px; border-radius: 3px; margin-bottom: 8px;
+  line-height: 1.35;
+}
+.vg-shot-pending  { background: rgba(232,163,23,.12); border: 1px solid var(--orange-dim); color: var(--text-primary); }
+.vg-shot-approved { background: rgba(51,204,51,.12);  border: 1px solid #2a8f2a; color: var(--text-primary); }
+.vg-shot-rejected { background: rgba(204,51,51,.12);  border: 1px solid #8f2a2a; color: var(--text-primary); }
+
+.vg-shot-queue { display: flex; flex-direction: column; gap: 14px; padding: 12px; }
+.vg-shot-item {
+  background: var(--bg-panel-alt);
+  border: 1px solid var(--border-panel);
+  border-radius: 4px; padding: 10px;
+}
+.vg-shot-item-head { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; margin-bottom: 8px; }
+.vg-shot-item-title {
+  font-family: var(--font-retro); font-size: 17px; font-weight: bold;
+  color: var(--blue-link); text-decoration: none; overflow-wrap: anywhere;
+}
+.vg-shot-item-by { font-family: var(--font-retro); font-size: 14px; color: var(--text-dim); }
+.vg-shot-item-by a { color: var(--text-secondary); text-decoration: none; }
+
+.vg-shot-compare {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+}
+.vg-shot-compare img {
+  width: 100%; height: 150px; object-fit: contain;
+  background: var(--bg-darkest);
+  border: 1px solid var(--border-dark); border-radius: 3px; display: block;
+}
+.vg-shot-label {
+  font-family: var(--font-pixel); font-size: 7px;
+  color: var(--text-dim); text-transform: uppercase;
+  letter-spacing: 1px; margin-bottom: 4px;
+}
+.vg-shot-label-new { color: var(--orange); }
+
+.vg-shot-buttons { display: flex; gap: 7px; margin-top: 10px; flex-wrap: wrap; align-items: center; }
+.vg-shot-buttons a { text-decoration: none; display: inline-block; }
+
+@media (max-width: 560px) {
+  .vg-shot-compare { grid-template-columns: 1fr; }
+  .vg-review-reply { margin-left: 12px; }
+}
+
+/* ==========================================================
+   REVIEW VISIBILITY
+   Reviews live at the bottom of a long page. Without a way in
+   from the top, people who wanted to leave one simply never
+   found the box.
+   ========================================================== */
+.vg-jump-reviews {
+  display: flex; flex-direction: column; gap: 3px;
+  width: 100%; margin-top: 12px; padding: 11px 13px;
+  background: var(--bg-panel);
+  border: 2px solid var(--orange-dim);
+  border-radius: 4px;
+  text-align: left; cursor: pointer;
+  font: inherit; color: inherit;
+  transition: border-color .12s, background .12s;
+}
+.vg-jump-reviews:hover {
+  border-color: var(--orange);
+  background: rgba(232, 163, 23, .08);
+}
+.vg-jump-reviews:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+
+.vg-jump-reviews-top {
+  font-family: var(--font-retro); font-size: 17px;
+  color: var(--text-bright); font-weight: bold;
+}
+.vg-jump-reviews-cta {
+  font-family: var(--font-retro); font-size: 14px;
+  color: var(--orange);
+}
+
+/* Give the reviews panel itself a bit of presence once you land on it,
+   so it reads as a destination rather than more page. */
+.vg-reviews-panel { border-color: var(--orange-dim); }
+.vg-reviews-panel .section-header { border-bottom-color: var(--orange); }
+
+/* Newest and Top Rated stacked on one screen, rather than hidden behind
+   tabs. A meme with no votes yet is the one that most needs eyes on it. */
+.vg-meme-section { margin-bottom: 26px; }
+.vg-meme-section-head {
+  display: flex; align-items: baseline; gap: 10px;
+  margin-bottom: 10px; flex-wrap: wrap;
+  border-bottom: 1px solid var(--border-dark); padding-bottom: 6px;
+}
+.vg-meme-section-head h2 {
+  font-family: var(--font-retro); font-size: 20px;
+  color: var(--orange); margin: 0;
+}
+.vg-meme-section-sub {
+  font-family: var(--font-retro); font-size: 14px; color: var(--text-dim);
+}
+.vg-meme-note {
+  font-family: var(--font-retro); font-size: 15px;
+  color: var(--text-dim); text-align: center; margin: 4px 0 20px;
+}
+
+/* ── MEME BOARD: highlight rows, catalogue controls, tags ──────────────
+   Hot and New are a shop window, so their tiles are smaller than the
+   catalogue's — that size difference is most of what tells you at a glance
+   that they are a sample and the grid below is the real list. */
+.vg-meme-grid-row {
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 12px;
+}
+.vg-meme-grid-row .vg-meme-shot img,
+.vg-meme-grid-row .vg-meme-shot,
+.vg-meme-grid-row .vg-meme-img { height: 190px; }
+
+.vg-meme-controls {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; flex-wrap: wrap; margin-bottom: 12px;
+}
+
+.vg-meme-sorts { display: flex; gap: 6px; flex-wrap: wrap; }
+.vg-meme-sort {
+  font-family: var(--font-retro); font-size: 16px; line-height: 1;
+  padding: 6px 11px; cursor: pointer;
+  background: var(--bg-input); color: var(--text-secondary);
+  border: 1px solid var(--border-dark); border-radius: 3px;
+}
+.vg-meme-sort:hover { border-color: var(--orange); color: var(--orange-bright); }
+.vg-meme-sort.is-on {
+  background: var(--orange-dim); border-color: var(--orange-bright);
+  color: #000; font-weight: bold;
+}
+
+.vg-meme-tagbar { display: flex; gap: 6px; flex-wrap: wrap; }
+.vg-meme-tagpill {
+  font-family: var(--font-retro); font-size: 15px; line-height: 1;
+  padding: 5px 9px; cursor: pointer;
+  background: var(--bg-panel-alt); color: var(--text-secondary);
+  border: 1px solid var(--border-dark); border-radius: 999px;
+}
+.vg-meme-tagpill:hover { border-color: var(--orange); color: var(--orange-bright); }
+.vg-meme-tagpill.is-on {
+  background: var(--orange-dim); border-color: var(--orange-bright);
+  color: #000; font-weight: bold;
+}
+.vg-meme-tagpill-n { opacity: .65; font-size: 13px; }
+
+/* Tags on a tile. Non-interactive here — the filter row above is the
+   control; these are a label, so they must not look like buttons. */
+.vg-meme-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 5px; }
+.vg-meme-tag {
+  font-family: var(--font-retro); font-size: 13px; line-height: 1;
+  padding: 3px 6px; color: var(--text-dim);
+  background: var(--bg-input); border: 1px solid var(--border-dark);
+  border-radius: 3px;
+}
+
+.vg-meme-more { display: block; width: 100%; margin-top: 14px; }
+/* ==========================================================
+   CREDITED SHARING
+   Sharing other people's work is encouraged; taking credit
+   for it is not. The copy carries that, the styling makes it
+   read as an invitation rather than a warning notice.
+   ========================================================== */
+.vg-credit-note {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  border-left: 4px solid var(--orange);
+  border-radius: 4px;
+  padding: 13px 15px;
+  margin-bottom: 16px;
+}
+.vg-credit-head {
+  font-family: var(--font-retro); font-size: 17px;
+  color: var(--orange); font-weight: bold; margin-bottom: 5px;
+}
+.vg-credit-body {
+  font-family: var(--font-retro); font-size: 15px;
+  color: var(--text-primary); line-height: 1.45; margin: 0 0 6px;
+}
+.vg-credit-body strong { color: var(--text-bright); }
+.vg-credit-rule {
+  font-family: var(--font-retro); font-size: 14px;
+  color: var(--text-dim); line-height: 1.4; margin: 0;
+}
+
+.vg-shoutout {
+  margin-top: 12px; padding: 11px 13px;
+  background: var(--bg-panel-alt);
+  border: 1px solid var(--border-dark); border-radius: 4px;
+}
+.vg-shoutout-label {
+  font-family: var(--font-pixel); font-size: 8px;
+  color: var(--yellow); letter-spacing: 1px; margin-bottom: 6px;
+}
+.vg-shoutout-body {
+  font-family: var(--font-retro); font-size: 15px;
+  color: var(--text-primary); line-height: 1.45;
+}
+.vg-shoutout-body strong { color: var(--text-bright); }
+.vg-shoutout-body a { color: var(--blue-link); text-decoration: none; }
+.vg-shoutout-body a:hover { color: var(--orange); text-decoration: underline; }
+
+
+/* ── TAG PICKER ──────────────────────────────────────────────
+   One-click tag suggestions under the tags input on the upload
+   and edit forms. Chips are buttons, so they toggle both ways. */
+.vg-tagpicker {
+  margin-top: 8px;
+  padding: 9px 10px;
+  background: var(--bg-panel-alt);
+  border: 1px solid var(--border-dark);
+  border-radius: 4px;
+}
+
+.vg-tagpicker-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-family: var(--font-pixel);
+  font-size: 7px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 7px;
+}
+
+.vg-tagpicker-count { color: var(--text-dim); }
+.vg-tagpicker-count.is-full { color: var(--orange); }
+
+/* Second heading, for the "Built with" row. Ruled off above so the two groups
+   read as separate questions rather than one long list of chips. */
+.vg-tagpicker-head-sub {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-dark);
+  color: var(--orange);
+}
+
+.vg-tagpicker-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.vg-tag-chip {
+  font-family: var(--font-retro);
+  font-size: 16px;
+  line-height: 1;
+  padding: 5px 9px;
+  background: var(--bg-input);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-dark);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+
+.vg-tag-chip:hover:not(:disabled) {
+  border-color: var(--orange);
+  color: var(--orange-bright);
+}
+
+.vg-tag-chip.is-on {
+  background: var(--orange-dim);
+  border-color: var(--orange-bright);
+  color: #000;
+  font-weight: bold;
+}
+
+.vg-tag-chip.is-on:hover:not(:disabled) {
+  background: var(--red);
+  border-color: var(--red);
+  color: #fff;
+}
+
+.vg-tag-chip:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.vg-tagpicker-note {
+  font-family: var(--font-retro);
+  font-size: 14px;
+  color: var(--orange);
+  margin-top: 7px;
+}

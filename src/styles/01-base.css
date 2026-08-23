@@ -1,0 +1,133 @@
+/* ============================================================
+   Design tokens, the reset, and prose
+   ------------------------------------------------------------
+   Split out of index.css. The ORDER of these files is the order
+   the rules used to be in, and changing it changes which rule
+   wins — so index.css imports them by number, and a new file
+   goes at the end unless it genuinely belongs earlier.
+   ============================================================ */
+
+/* ============================================================
+   PROSE — anything somebody wrote in sentences
+   ============================================================
+   One class, used for forum posts, reviews, replies, descriptions,
+   devlog updates and bios. Changing the typeface alone would only have
+   fixed part of the problem, so this also sets the three things that
+   actually decide whether a paragraph is comfortable:
+
+     size        16px, not 17-18px of a font with a tiny x-height
+     leading     1.65, so lines do not crowd each other
+     measure     72 characters, because past about 75 the eye starts
+                 losing its place on the trip back to the left margin
+
+   Everything else on the site keeps the retro type. This is only for the
+   places where somebody is reading rather than scanning. */
+.vg-prose {
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--text-primary);
+  max-width: 72ch;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Slightly quieter, for supporting text rather than the main body. */
+.vg-prose-soft { color: var(--text-secondary); }
+
+/* A whole page of prose — the Rules, mostly — where the measure matters
+   even more and the headings still want to be loud. */
+.vg-prose p { margin-bottom: .85em; }
+.vg-prose p:last-child { margin-bottom: 0; }
+.vg-prose a { color: var(--blue-link); }
+.vg-prose strong, .vg-prose b { color: var(--text-primary); font-weight: 700; }
+
+/* ── RESET ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  /* Core Palette */
+  --bg-darkest: #0a0a12;
+  --bg-dark: #141420;
+  --bg-panel: #1a1a2e;
+  --bg-panel-header: #252540;
+  --bg-panel-alt: #16213e;
+  --bg-input: #0f0f1a;
+
+  /* Accent Colors */
+  --orange: #e8a317;
+  --orange-bright: #ff9900;
+  --orange-dim: #b47800;
+  --yellow: #ffd700;
+  --red: #cc3333;
+  --green: #33cc33;
+  --blue-link: #6699ff;
+
+  /* Text */
+  --text-primary: #e0e0e0;
+  --text-secondary: #999;
+  --text-dim: #666;
+  --text-bright: #ffffff;
+
+  /* Borders */
+  --border-dark: #333;
+  --border-orange: #e8a317;
+  --border-panel: #2a2a40;
+
+  /* XP Chrome */
+  --xp-blue: #0055e5;
+  --xp-blue-light: #3d7df7;
+  --xp-blue-dark: #003399;
+  --xp-gray: #d4d0c8;
+  --xp-gray-light: #ece9d8;
+  --xp-gray-dark: #808080;
+  --xp-toolbar: #f0ede4;
+  --xp-titlebar-start: #0058e6;
+  --xp-titlebar-end: #3a8cfb;
+  --xp-titlebar-inactive: #7f9db9;
+
+  /* Fonts */
+  --font-pixel: 'Press Start 2P', monospace;
+  --font-retro: 'VT323', monospace;
+
+  /* For anything longer than a line.
+     VT323 is a terminal face: every character the same width, shapes kept
+     deliberately coarse. Wonderful on a score, a button, a nav item — and
+     genuinely tiring by the third sentence, because there is nothing for
+     the eye to catch hold of.
+     Atkinson Hyperlegible was drawn by the Braille Institute for readers
+     with low vision. Every letter that usually gets confused with another —
+     I l 1, O 0, b d — is drawn to be unmistakable. It has enough character
+     not to read as a corporate default, and it sits happily next to pixel
+     type without either one fighting the other. */
+  --font-body: 'Atkinson Hyperlegible', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-system: 'Trebuchet MS', 'Tahoma', Arial, sans-serif;
+}
+
+html, body, #root {
+  min-height: 100%;
+  width: 100%;
+}
+
+body {
+  font-family: var(--font-retro);
+  font-size: 16px;
+  color: var(--text-primary);
+  background: #3a6ea5;
+}
+
+a {
+  color: var(--orange);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+a:hover {
+  color: var(--yellow);
+  text-decoration: underline;
+}

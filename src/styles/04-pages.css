@@ -1,0 +1,474 @@
+/* ============================================================
+   Creation, upload, profile, auth, footer, ticker
+   ------------------------------------------------------------
+   Split out of index.css. The ORDER of these files is the order
+   the rules used to be in, and changing it changes which rule
+   wins — so index.css imports them by number, and a new file
+   goes at the end unless it genuinely belongs earlier.
+   ============================================================ */
+
+/* ==========================================
+   CREATION DETAIL PAGE
+   ========================================== */
+
+.creation-detail {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.creation-detail-header {
+  margin-bottom: 16px;
+}
+
+.creation-detail-title {
+  font-family: var(--font-pixel);
+  font-size: 14px;
+  color: var(--orange);
+  text-transform: uppercase;
+  text-shadow: 2px 2px 0 #000;
+  margin-bottom: 4px;
+}
+
+.creation-detail-creator {
+  font-family: var(--font-retro);
+  font-size: 20px;
+  color: var(--text-secondary);
+}
+
+.creation-detail-creator a {
+  color: var(--blue-link);
+}
+
+.creation-detail-preview {
+  width: 100%;
+  aspect-ratio: 16/9;
+  background: var(--bg-panel);
+  border: 3px solid var(--border-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+
+.creation-detail-actions {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  align-items: center;
+}
+
+.vote-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: 2px solid var(--border-dark);
+  background: var(--bg-panel);
+  color: var(--text-primary);
+  font-family: var(--font-retro);
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.vote-btn:hover {
+  border-color: var(--orange);
+  background: var(--bg-panel-header);
+}
+
+.vote-btn.active {
+  border-color: var(--orange);
+  color: var(--orange);
+}
+
+.vote-count {
+  font-family: var(--font-pixel);
+  font-size: 10px;
+}
+
+.view-count {
+  font-family: var(--font-retro);
+  font-size: 18px;
+  color: var(--text-dim);
+  margin-left: auto;
+}
+
+.creation-detail-desc {
+  font-family: var(--font-retro);
+  font-size: 20px;
+  color: var(--text-primary);
+  line-height: 1.4;
+  padding: 12px;
+  background: var(--bg-panel);
+  border: 2px solid var(--border-dark);
+  margin-bottom: 16px;
+}
+
+/* ── Comments ── */
+.comments-section {
+  margin-top: 16px;
+}
+
+.comment {
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  border-bottom: 1px solid var(--border-dark);
+}
+
+.comment-avatar {
+  width: 36px;
+  height: 36px;
+  background: var(--bg-dark);
+  border: 2px solid var(--border-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.comment-body {
+  flex: 1;
+}
+
+.comment-user {
+  font-family: var(--font-pixel);
+  font-size: 8px;
+  color: var(--orange);
+  margin-bottom: 3px;
+}
+
+.comment-text {
+  font-family: var(--font-retro);
+  font-size: 17px;
+  color: var(--text-secondary);
+  line-height: 1.3;
+}
+
+.comment-date {
+  font-family: var(--font-retro);
+  font-size: 14px;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+
+.comment-form {
+  display: flex;
+  gap: 8px;
+  padding: 10px;
+  border-top: 2px solid var(--border-dark);
+}
+
+.comment-form textarea {
+  flex: 1;
+  background: var(--bg-input);
+  border: 2px solid var(--border-dark);
+  color: var(--text-primary);
+  font-family: var(--font-retro);
+  font-size: 17px;
+  padding: 8px;
+  resize: vertical;
+  min-height: 60px;
+  outline: none;
+}
+
+.comment-form textarea:focus {
+  border-color: var(--orange);
+}
+
+.comment-form button {
+  background: var(--orange);
+  color: #000;
+  border: 2px solid var(--orange-dim);
+  font-family: var(--font-pixel);
+  font-size: 8px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-weight: bold;
+  align-self: flex-end;
+}
+
+/* ==========================================
+   UPLOAD PAGE
+   ========================================== */
+
+.upload-page {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.retro-form-group {
+  margin-bottom: 14px;
+}
+
+.retro-form-group label {
+  display: block;
+  font-family: var(--font-pixel);
+  font-size: 8px;
+  color: var(--orange);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  letter-spacing: 1px;
+}
+
+.retro-form-group input,
+.retro-form-group textarea,
+.retro-form-group select {
+  width: 100%;
+  background: var(--bg-input);
+  border: 2px solid var(--border-dark);
+  color: var(--text-primary);
+  font-family: var(--font-retro);
+  font-size: 18px;
+  padding: 8px 10px;
+  outline: none;
+}
+
+.retro-form-group input:focus,
+.retro-form-group textarea:focus,
+.retro-form-group select:focus {
+  border-color: var(--orange);
+}
+
+.retro-form-group textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.retro-form-group select {
+  cursor: pointer;
+}
+
+.retro-form-group select option {
+  background: var(--bg-dark);
+}
+
+.retro-submit-btn {
+  display: block;
+  width: 100%;
+  background: linear-gradient(180deg, #ff9900 0%, #cc7700 100%);
+  color: #000;
+  border: 3px solid #ffaa00;
+  font-family: var(--font-pixel);
+  font-size: 11px;
+  padding: 14px;
+  cursor: pointer;
+  text-transform: uppercase;
+  font-weight: bold;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.3);
+  letter-spacing: 1px;
+  transition: all 0.15s;
+}
+
+.retro-submit-btn:hover {
+  background: linear-gradient(180deg, #ffc000 0%, #e89900 100%);
+  transform: scale(1.01);
+}
+
+/* ==========================================
+   PROFILE PAGE
+   ========================================== */
+
+.profile-page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.profile-header {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  padding: 16px;
+  background: var(--bg-panel);
+  border: 2px solid var(--border-dark);
+  margin-bottom: 16px;
+}
+
+.profile-avatar {
+  width: 80px;
+  height: 80px;
+  background: var(--bg-dark);
+  border: 3px solid var(--orange);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  flex-shrink: 0;
+}
+
+.profile-info h1 {
+  font-family: var(--font-pixel);
+  font-size: 14px;
+  color: var(--orange);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.profile-bio {
+  font-family: var(--font-body);
+  font-size: 15.5px;
+  line-height: 1.6;
+  max-width: 68ch;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.profile-stats {
+  display: flex;
+  gap: 16px;
+  font-family: var(--font-retro);
+  font-size: 16px;
+  color: var(--text-dim);
+}
+
+.profile-stat-value {
+  color: var(--orange);
+  font-weight: bold;
+}
+
+/* ==========================================
+   AUTH PAGE
+   ========================================== */
+
+.auth-page {
+  max-width: 400px;
+  margin: 40px auto;
+  padding: 16px;
+}
+
+.auth-form {
+  padding: 20px;
+}
+
+/* ==========================================
+   CREATOR LIST (Featured Creators panel)
+   ========================================== */
+
+.creator-list-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  border-bottom: 1px solid #1a1a2e;
+  font-family: var(--font-retro);
+  font-size: 16px;
+}
+
+.creator-list-item:last-child {
+  border-bottom: none;
+}
+
+.creator-list-avatar {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.creator-list-name {
+  color: var(--blue-link);
+  flex: 1;
+}
+
+.creator-list-stats {
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+/* ==========================================
+   SITE FOOTER
+   ========================================== */
+
+.site-footer {
+  background: linear-gradient(180deg, #0a0a12 0%, #000 100%);
+  border-top: 3px solid var(--orange);
+  padding: 16px;
+  text-align: center;
+  font-family: var(--font-retro);
+  font-size: 16px;
+  color: var(--text-dim);
+}
+
+.site-footer-links {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.site-footer-links a {
+  color: var(--text-secondary);
+}
+
+.site-footer-copyright {
+  font-size: 14px;
+}
+
+/* ==========================================
+   NEWS TICKER BAR (like Newgrounds date bar)
+   ========================================== */
+
+.news-ticker {
+  background: linear-gradient(90deg, #1a1a2e 0%, #252540 50%, #1a1a2e 100%);
+  border-top: 1px solid var(--border-dark);
+  border-bottom: 1px solid var(--border-dark);
+  padding: 4px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-retro);
+  font-size: 16px;
+}
+
+.news-ticker-date {
+  color: var(--text-secondary);
+  font-weight: bold;
+}
+
+.news-ticker-text {
+  color: var(--orange);
+  flex: 1;
+  text-align: center;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.news-ticker-posted {
+  color: var(--text-dim);
+}
+
+/* ==========================================
+   RESPONSIVE (keep it usable but stay retro)
+   ========================================== */
+
+@media (max-width: 900px) {
+  .portal-layout {
+    flex-direction: column;
+  }
+
+  .portal-sidebar-left,
+  .portal-sidebar-right {
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .portal-sidebar-left > *,
+  .portal-sidebar-right > * {
+    flex: 1;
+    min-width: 180px;
+  }
+
+  .creations-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .site-header-top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

@@ -1,0 +1,630 @@
+/* ============================================================
+   Featured slot, joke ads, quest, share bar, confirmation
+   ------------------------------------------------------------
+   Split out of index.css. The ORDER of these files is the order
+   the rules used to be in, and changing it changes which rule
+   wins — so index.css imports them by number, and a new file
+   goes at the end unless it genuinely belongs earlier.
+   ============================================================ */
+
+/* ============================================================
+   FEATURED SLOT — a real staff pick, not a fake advert.
+   Visitors said the old joke ad here made the site look scammy.
+   ============================================================ */
+.vg-featured {
+  border: 2px solid var(--orange);
+  border-top: 4px solid var(--orange-bright);
+  background: var(--bg-panel);
+}
+
+.vg-featured-kicker {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  font-family: var(--font-pixel); font-size: 9px; letter-spacing: 1.5px;
+  color: #2a1800; background: linear-gradient(90deg, var(--orange-bright), var(--orange));
+  padding: 7px 10px;
+}
+.vg-featured-count { font-size: 8px; color: #6a3d00; letter-spacing: 1px; }
+
+/* Slide-over. Every pick is stacked in the same box; the incoming one starts
+   off to the right and glides across the top of the outgoing one, which sits
+   still underneath. Waiting slides are parked off-frame with no transition,
+   so only the arriving card ever animates. */
+/* object-position: top is the fix for "it cuts the tops off".
+   `cover` crops from the centre by default, so a 16:9 screenshot squeezed
+   into a 21:9 box loses equal slices from top AND bottom — and the top of a
+   screenshot is where the title bar, the logo and the menu live. Anchoring
+   to the top means the crop comes off the bottom, which is usually empty
+   space or a footer nobody needs to see. */
+/* Now a container holding two <img>s rather than being the image itself:
+   a blurred backdrop and the whole picture on top of it. */
+.vg-featured-slide {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  overflow: hidden;
+  transform: translateX(102%);
+  z-index: 1;
+  pointer-events: none;
+  box-shadow: -12px 0 22px rgba(0, 0, 0, .55);
+  background: var(--bg-dark);
+}
+
+/* The backdrop. scale() hides the soft transparent edge blur leaves behind,
+   and the dimming keeps it from competing with the real picture in front. */
+.vg-featured-blur {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover; object-position: center;
+  filter: blur(20px) brightness(.42) saturate(1.1);
+  transform: scale(1.2);
+}
+
+/* The picture itself, whole. contain rather than cover: a screenshot is
+   mostly information, and cropping it to fill a 21:9 slot was cutting off
+   the half that carried the information. */
+.vg-featured-art {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: contain; object-position: center;
+}
+.vg-featured-slide.is-prev {
+  transform: translateX(0);
+  z-index: 2;
+  box-shadow: none;
+}
+.vg-featured-slide.is-on {
+  transform: translateX(0);
+  z-index: 3;
+  pointer-events: auto;
+  transition: transform 1s cubic-bezier(.22, .61, .36, 1);
+  will-change: transform;
+}
+
+/* The copy underneath swaps instantly, which jars against a 0.9s fade above.
+   A short rise softens the hand-off. */
+.vg-featured-body { animation: vgFeatRise .55s ease-out; }
+@keyframes vgFeatRise {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.vg-featured-dots { display: flex; gap: 6px; margin-top: 7px; }
+.vg-featured-dot {
+  width: 26px; height: 6px; padding: 0; cursor: pointer;
+  background: var(--border-dark); border: 1px solid var(--border-panel);
+}
+.vg-featured-dot.is-on { background: var(--orange); border-color: var(--orange-dim); }
+.vg-featured-dot:hover { background: var(--orange-dim); }
+
+@media (prefers-reduced-motion: reduce) {
+  .vg-featured-slide.is-on { transition: none; }
+  .vg-featured-body { animation: none; }
+}
+.vg-featured-star { color: #6a3d00; }
+
+/* 16:9 left too much dead space under the screenshot in the box. A shallower
+   crop keeps the image readable while tightening the whole slot. */
+/* 35/12 is 21/9 made 20% shallower — the slot was taking more of the front
+   page than a single staff pick has earned, now that the whole picture
+   shows rather than a cropped strip of it. */
+.vg-featured-shot {
+  position: relative;
+  display: block; width: 100%; aspect-ratio: 35 / 12;
+  overflow: hidden; background: var(--bg-dark);
+  border-bottom: 2px solid var(--border-panel);
+}
+.vg-featured-shot img { display: block; }
+.vg-featured-shot:hover .is-on .vg-featured-art { filter: brightness(1.08); }
+
+/* Phones only — desktop keeps the 21:9 crop above.
+   A 21:9 letterbox is a wide, shallow strip: fine at 850px, but on a ~360px
+   screen it collapses to about 150px tall and the screenshot becomes an
+   unreadable sliver. A 16:9 crop is roughly 200px tall at the same width,
+   which is enough to actually see what was built. */
+@media (max-width: 640px) {
+  /* 2:1 — the same 20% trim applied to the old 16:9 phone crop. */
+  .vg-featured-shot { aspect-ratio: 2 / 1; }
+}
+
+.vg-featured-body { padding: 9px 12px 10px; }
+
+.vg-featured-title {
+  font-family: var(--font-retro); font-size: 23px; line-height: 1.15;
+  color: var(--blue-link); font-weight: bold; text-decoration: none;
+  display: inline-block;
+}
+.vg-featured-title:hover { text-decoration: underline; }
+
+.vg-featured-by {
+  font-family: var(--font-retro); font-size: 18px;
+  color: var(--text-secondary); margin-top: 4px;
+}
+.vg-featured-by strong { color: var(--orange); }
+
+.vg-featured-desc {
+  font-family: var(--font-retro); font-size: 17px; line-height: 1.4;
+  color: var(--text-primary); margin-top: 5px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.vg-featured-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; flex-wrap: wrap; margin-top: 9px;
+}
+.vg-featured-score { font-family: var(--font-pixel); font-size: 12px; }
+
+.vg-featured-btn {
+  font-family: var(--font-pixel); font-size: 9px; letter-spacing: 1px;
+  padding: 10px 16px; text-decoration: none; white-space: nowrap;
+  color: #2a1800; background: linear-gradient(180deg, #ffc247, var(--orange));
+  border: 1px solid var(--orange-dim);
+}
+.vg-featured-btn:hover { filter: brightness(1.1); color: #2a1800; text-decoration: none; }
+
+.vg-featured-empty {
+  border: 2px dashed var(--border-panel); background: var(--bg-panel);
+  padding: 24px 18px; text-align: center;
+}
+.vg-featured-empty h2 {
+  font-family: var(--font-pixel); font-size: 13px; color: var(--text-secondary);
+  margin: 10px 0 0;
+}
+.vg-featured-empty p {
+  font-family: var(--font-retro); font-size: 18px; color: var(--text-dim);
+  margin: 10px auto 14px; max-width: 420px; line-height: 1.45;
+}
+.vg-featured-empty .vg-featured-kicker {
+  display: inline-block; background: none; color: var(--text-dim); padding: 0;
+}
+
+/* Joke ads, labelled honestly at both ends. */
+.vg-ad-label-joke {
+  background: #3a2f0d !important;
+  color: var(--yellow) !important;
+  letter-spacing: .5px;
+}
+.vg-joke-small {
+  font-family: var(--font-retro); font-size: 13px; line-height: 1.3;
+  color: rgba(0,0,0,.62); margin-top: 2px;
+}
+.vg-joke-foot {
+  display: block; text-align: center;
+  font-family: var(--font-retro); font-size: 14px;
+  color: var(--text-dim); text-decoration: none;
+  padding: 6px 8px; border-top: 1px solid var(--border-dark);
+  background: var(--bg-panel);
+}
+.vg-joke-foot strong { color: var(--orange); }
+.vg-joke-foot:hover { color: var(--text-secondary); text-decoration: none; }
+
+/* ============================================================
+   HERO JOKE AD — a 16-bit console advert, circa 1993.
+   Deep space-blue box art, chunky pixel sprites, arcade type.
+   ============================================================ */
+.vg-16bit {
+  position: relative;
+  display: block;
+  text-decoration: none;
+  padding: 14px 14px 12px;
+  background:
+    radial-gradient(circle at 50% 22%, rgba(90,150,255,.30), transparent 62%),
+    linear-gradient(180deg, #16123a 0%, #1d1550 48%, #100c2c 100%);
+  border: 3px solid #0a0820;
+  box-shadow:
+    inset 0 0 0 2px #4a3fa8,
+    inset 0 0 0 4px #0a0820,
+    0 4px 16px rgba(0,0,0,.55);
+  overflow: hidden;
+}
+.vg-16bit:hover { text-decoration: none; filter: brightness(1.07) saturate(1.08); }
+
+/* Faint starfield, drawn with gradients so it costs nothing. */
+.vg-16bit::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    radial-gradient(1px 1px at 12% 18%, #fff, transparent),
+    radial-gradient(1px 1px at 78% 12%, #cfe4ff, transparent),
+    radial-gradient(1px 1px at 33% 72%, #fff, transparent),
+    radial-gradient(1px 1px at 88% 62%, #bcd8ff, transparent),
+    radial-gradient(1px 1px at 58% 34%, #fff, transparent);
+  opacity: .55; pointer-events: none;
+}
+
+.vg-16bit-new {
+  position: absolute; top: 8px; right: 8px; z-index: 2;
+  font-family: var(--font-pixel); font-size: 8px; letter-spacing: 1px;
+  color: #2a1000; background: #ffd24a;
+  padding: 4px 7px;
+  border: 2px solid #a8700a;
+  transform: rotate(7deg);
+  box-shadow: 2px 2px 0 rgba(0,0,0,.5);
+}
+
+.vg-16bit-stage {
+  position: relative; z-index: 1;
+  display: flex; align-items: flex-end; justify-content: center;
+  gap: 10px;
+}
+
+.vg-16bit-sprite {
+  width: 92px; height: auto; flex-shrink: 0;
+  image-rendering: pixelated;
+  filter: drop-shadow(3px 3px 0 rgba(0,0,0,.55));
+}
+.vg-16bit-dude { animation: vgFlex 1.9s steps(2, end) infinite; }
+.vg-16bit-bot  { animation: vgFlex 1.9s steps(2, end) infinite .95s; }
+@keyframes vgFlex {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-3px); }
+}
+.vg-16bit-bot { transform-origin: center; }
+
+.vg-16bit-copy { text-align: center; padding-bottom: 4px; min-width: 0; }
+
+.vg-16bit-kicker {
+  font-family: var(--font-pixel); font-size: 7px; letter-spacing: 1px;
+  color: #7fe8ff; margin-bottom: 7px;
+}
+
+.vg-16bit-title {
+  font-family: var(--font-pixel);
+  font-size: 26px; line-height: 1.02; letter-spacing: 1px;
+  color: #ffd24a;
+  text-shadow:
+    2px 2px 0 #a8300a,
+    4px 4px 0 rgba(0,0,0,.6);
+}
+.vg-16bit-title2 { font-size: 19px; color: #ff8fbe; text-shadow: 2px 2px 0 #6a1040, 4px 4px 0 rgba(0,0,0,.6); }
+
+.vg-16bit-specs {
+  font-family: var(--font-pixel); font-size: 7px; letter-spacing: .5px;
+  color: #cfe4ff; margin-top: 9px; line-height: 1.7;
+}
+
+.vg-16bit-tag {
+  position: relative; z-index: 1;
+  font-family: var(--font-retro); font-size: 19px;
+  color: #dfe8ff; text-align: center; margin-top: 11px;
+}
+.vg-16bit-tag b { color: #ff8fbe; }
+
+.vg-16bit-btn {
+  position: relative; z-index: 1;
+  display: block; width: fit-content; margin: 10px auto 0;
+  font-family: var(--font-pixel); font-size: 11px; letter-spacing: 1px;
+  color: #1a0800;
+  padding: 10px 20px;
+  background: linear-gradient(180deg, #ffe07f, #f0a91e);
+  border: 3px solid #0a0820;
+  box-shadow: inset 0 0 0 2px #fff3c9, 3px 3px 0 rgba(0,0,0,.5);
+}
+.vg-16bit:hover .vg-16bit-btn { background: linear-gradient(180deg, #fff3c9, #ffc247); }
+
+.vg-16bit-small {
+  position: relative; z-index: 1;
+  font-family: var(--font-retro); font-size: 13px;
+  color: rgba(207,228,255,.6); text-align: center;
+  margin-top: 9px; line-height: 1.4;
+}
+
+@media (max-width: 620px) {
+  .vg-16bit-sprite { width: 58px; }
+  .vg-16bit-title { font-size: 17px; }
+  .vg-16bit-title2 { font-size: 13px; }
+  .vg-16bit-tag { font-size: 16px; }
+  .vg-16bit-btn { font-size: 9px; padding: 9px 14px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vg-16bit-dude, .vg-16bit-bot { animation: none; }
+  .vg-16bit .blink { animation: none; }
+}
+
+/* ============================================================
+   DAILY RATING QUEST — the habit loop that works at any size.
+   ============================================================ */
+.vg-quest {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 14px; flex-wrap: wrap;
+  border: 2px solid var(--border-panel);
+  border-left: 4px solid #4fc3f7;
+  background: var(--bg-panel);
+  padding: 10px 12px;
+  margin-bottom: 8px;
+}
+.vg-quest-done { border-left-color: #2f7d32; }
+
+.vg-quest-text {
+  flex: 1; min-width: 240px;
+  font-family: var(--font-retro);
+  font-size: 18px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.vg-quest-bar {
+  height: 10px;
+  background: var(--bg-dark);
+  border: 1px solid var(--border-dark);
+  margin-top: 6px;
+  overflow: hidden;
+}
+.vg-quest-bar span {
+  display: block; height: 100%;
+  background: linear-gradient(90deg, #4fc3f7, #2f8fc4);
+  transition: width .3s ease;
+}
+.vg-quest-count {
+  font-family: var(--font-pixel);
+  font-size: 8px;
+  color: var(--text-dim);
+  margin-top: 5px;
+  letter-spacing: .5px;
+}
+
+.vg-quest-btn {
+  font-family: var(--font-pixel); font-size: 9px; letter-spacing: 1px;
+  padding: 9px 15px; white-space: nowrap; cursor: pointer;
+  text-decoration: none; color: #04222f;
+  background: linear-gradient(180deg, #7fd8ff, #4fc3f7);
+  border: 1px solid #2f8fc4;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.35);
+}
+.vg-quest-btn:hover { filter: brightness(1.12); color: #04222f; text-decoration: none; }
+.vg-quest-btn:disabled { opacity: .55; cursor: default; }
+.vg-quest-btn-quiet {
+  background: transparent; color: var(--text-dim);
+  border: 1px solid var(--border-dark); box-shadow: none;
+}
+.vg-quest-btn-quiet:hover { color: var(--orange); }
+
+/* Edit-submission screen */
+.vg-edit-hint {
+  font-family: var(--font-retro); font-size: 14px;
+  color: var(--text-dim); margin-top: 3px; line-height: 1.35;
+}
+.vg-edit-actions {
+  display: flex; align-items: center; gap: 10px;
+  flex-wrap: wrap; margin-top: 6px;
+}
+.vg-edit-cancel {
+  font-family: var(--font-retro); font-size: 17px;
+  color: var(--text-dim); text-decoration: none;
+}
+.vg-edit-cancel:hover { color: var(--orange); text-decoration: underline; }
+.vg-edit-note {
+  font-family: var(--font-retro); font-size: 15px;
+  color: var(--text-dim); margin-top: 10px; line-height: 1.4;
+}
+
+/* ============================================================
+   SHARE BAR — the growth loop.
+   ============================================================ */
+.vg-share {
+  border: 2px solid var(--border-panel);
+  background: var(--bg-panel);
+  margin-top: 8px;
+}
+.vg-share-label {
+  font-family: var(--font-pixel); font-size: 9px; letter-spacing: 1px;
+  color: var(--text-bright); background: var(--bg-panel-header);
+  padding: 7px 10px; border-bottom: 1px solid var(--border-dark);
+}
+.vg-share-row {
+  display: flex; flex-wrap: wrap; gap: 6px; padding: 10px;
+}
+.vg-share-compact { border: none; background: none; }
+.vg-share-compact .vg-share-row { padding: 0; justify-content: center; }
+
+.vg-share-btn {
+  font-family: var(--font-retro); font-size: 16px;
+  padding: 8px 12px; cursor: pointer; text-decoration: none;
+  color: var(--text-primary); background: var(--bg-input);
+  border: 2px solid var(--border-dark);
+  line-height: 1;
+}
+.vg-share-btn:hover {
+  border-color: var(--orange); color: var(--orange); text-decoration: none;
+}
+.vg-share-copy { font-weight: bold; }
+.vg-share-x:hover  { border-color: #fff; color: #fff; }
+.vg-share-rd:hover { border-color: #ff4500; color: #ff4500; }
+.vg-share-wa:hover { border-color: #25d366; color: #25d366; }
+.vg-share-fb:hover { border-color: #1877f2; color: #1877f2; }
+
+.vg-share-note {
+  font-family: var(--font-retro); font-size: 14px;
+  color: var(--text-dim); padding: 0 10px 10px; line-height: 1.4;
+}
+
+.vg-posted-share {
+  margin-top: 16px; padding-top: 14px;
+  border-top: 1px solid var(--border-dark);
+}
+.vg-posted-share-head {
+  font-family: var(--font-retro); font-size: 18px;
+  color: var(--text-secondary); margin-bottom: 10px;
+}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+.vg-footer {
+  border-top: 3px solid var(--orange);
+  background: var(--bg-panel);
+  margin-top: 24px;
+}
+.vg-footer-inner {
+  display: flex; flex-wrap: wrap; gap: 24px;
+  padding: 22px 16px 18px;
+  max-width: 1100px; margin: 0 auto;
+}
+.vg-footer-col { flex: 1 1 190px; min-width: 170px; display: flex; flex-direction: column; gap: 5px; }
+.vg-footer-brand {
+  font-family: var(--font-pixel); font-size: 13px;
+  color: var(--orange); letter-spacing: 1px;
+}
+.vg-footer-blurb, .vg-footer-small {
+  font-family: var(--font-retro); font-size: 16px;
+  color: var(--text-dim); line-height: 1.45; margin-top: 4px;
+}
+.vg-footer-head {
+  font-family: var(--font-pixel); font-size: 8px; letter-spacing: 1px;
+  color: var(--text-secondary); margin-bottom: 4px;
+}
+.vg-footer-col a {
+  font-family: var(--font-retro); font-size: 17px;
+  color: var(--blue-link); text-decoration: none; width: fit-content;
+}
+.vg-footer-col a:hover { color: var(--orange); text-decoration: underline; }
+.vg-footer-bar {
+  border-top: 1px solid var(--border-dark);
+  padding: 10px 16px; text-align: center;
+  font-family: var(--font-retro); font-size: 15px; color: var(--text-dim);
+}
+
+/* ============================================================
+   POST-SUBMISSION CONFIRMATION — the "yes, that worked" moment.
+   ============================================================ */
+.vg-posted {
+  border: 2px solid #2f7d32;
+  border-top: 4px solid #43a047;
+  background: var(--bg-panel);
+  padding: 26px 20px 22px;
+  text-align: center;
+  max-width: 640px;
+  margin: 0 auto;
+}
+.vg-posted-tick { font-size: 42px; line-height: 1; }
+.vg-posted h2 {
+  font-family: var(--font-pixel); font-size: 15px; letter-spacing: 1px;
+  color: #66bb6a; margin: 12px 0 0;
+}
+.vg-posted-title {
+  font-family: var(--font-retro); font-size: 24px;
+  color: var(--text-bright); margin-top: 10px; word-break: break-word;
+}
+.vg-posted-sub {
+  font-family: var(--font-retro); font-size: 19px;
+  color: var(--text-secondary); margin-top: 8px; line-height: 1.5;
+}
+.vg-posted-note {
+  font-family: var(--font-retro); font-size: 16px;
+  color: var(--text-dim); margin-top: 10px; line-height: 1.45;
+}
+.vg-posted-actions {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  justify-content: center; margin-top: 18px;
+}
+.vg-posted-btn {
+  font-family: var(--font-pixel); font-size: 9px; letter-spacing: 1px;
+  padding: 11px 16px; cursor: pointer; text-decoration: none;
+  color: #eaffea;
+  background: linear-gradient(180deg, #2f7d32, #1c521f);
+  border: 1px solid #14401a;
+}
+.vg-posted-btn:hover { background: linear-gradient(180deg, #43a047, #2f7d32); color: #fff; text-decoration: none; }
+.vg-posted-btn-quiet {
+  background: transparent; color: var(--text-dim);
+  border: 1px solid var(--border-dark);
+}
+.vg-posted-btn-quiet:hover { background: transparent; color: var(--orange); }
+
+/* Single-column Portal, used while there is too little to fill three. */
+.vg-1col {
+  display: block;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.vg-rail-note {
+  border: 2px solid var(--border-panel);
+  border-top: none;
+  background: var(--bg-panel);
+  padding: 10px 12px;
+  font-family: var(--font-retro);
+  font-size: 16px;
+  color: var(--text-dim);
+  line-height: 1.45;
+}
+.vg-rail-note a { color: var(--orange); font-weight: bold; }
+
+/* Inline submit prompt used at the foot of browse pages. */
+.vg-submit-cta {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap;
+  border: 2px solid var(--border-panel); background: var(--bg-panel);
+  padding: 10px 12px; margin-top: 8px;
+}
+.vg-submit-cta-text {
+  font-family: var(--font-retro); font-size: 18px; color: var(--text-secondary);
+}
+.vg-submit-cta-btn {
+  font-family: var(--font-pixel); font-size: 10px; letter-spacing: 1px;
+  text-decoration: none; white-space: nowrap;
+  padding: 9px 16px; color: #eaffea;
+  background: linear-gradient(180deg, #2f7d32, #1c521f);
+  border: 1px solid #14401a;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.18);
+}
+.vg-submit-cta-btn:hover {
+  background: linear-gradient(180deg, #43a047, #2f7d32);
+  color: #fff; text-decoration: none;
+}
+
+@keyframes vgPortalPulse {
+  0%, 100% { box-shadow: inset 0 0 0 1px rgba(255,255,255,.25), 0 0 10px rgba(255,153,0,.35); }
+  50%      { box-shadow: inset 0 0 0 1px rgba(255,255,255,.4),  0 0 20px rgba(255,153,0,.75); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-nav a.vg-nav-portal { animation: none; }
+}
+
+@media (max-width: 700px) {
+  .site-nav a { font-size: 8px !important; padding: 6px 8px !important; }
+  .site-nav a.vg-nav-submit { margin-left: 0; }
+}
+
+/* ============================================================
+   HOUSE JOKE ADS — 2004 banner energy, drawn in CSS.
+   Same width as the column they sit in, so the left rail stays tidy.
+   ============================================================ */
+.vg-joke { border: 2px solid var(--border-panel); background: var(--bg-panel); }
+
+.vg-joke-body {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 12px 8px; text-decoration: none; text-align: center;
+  border-top: 1px solid var(--border-dark);
+  transition: filter .15s;
+}
+.vg-joke-body:hover { filter: brightness(1.18) saturate(1.2); }
+
+.vg-joke-top {
+  font-family: var(--font-pixel); font-size: 6px; letter-spacing: 1px;
+  color: rgba(0,0,0,.75);
+}
+.vg-joke-line {
+  font-family: var(--font-pixel); font-size: 11px; line-height: 1.35;
+  color: #000; text-shadow: 0 1px 0 rgba(255,255,255,.35);
+}
+.vg-joke-sub {
+  font-family: var(--font-retro); font-size: 15px; line-height: 1.2;
+  color: rgba(0,0,0,.8);
+}
+.vg-joke-cta {
+  margin-top: 5px; padding: 3px 12px;
+  font-family: var(--font-pixel); font-size: 7px;
+  background: #000; color: #fff; border: 1px solid rgba(255,255,255,.35);
+}
+
+.vg-joke-gold   { background: linear-gradient(160deg, #ffd700, #ff9900 60%, #b47800); }
+.vg-joke-lime   { background: linear-gradient(160deg, #b6ff5c, #4bd11a 60%, #2a8a0d); }
+.vg-joke-pink   { background: linear-gradient(160deg, #ff9ecb, #ff4fa3 60%, #c1176e); }
+.vg-joke-cyan   { background: linear-gradient(160deg, #a8f0ff, #24c8f0 60%, #0b7f9c); }
+.vg-joke-violet { background: linear-gradient(160deg, #d7b6ff, #9a5cff 60%, #5c1fb0); }
+
+.vg-joke-line.blink { animation: vgBlink 1.15s steps(2, start) infinite; }
+@keyframes vgBlink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { .vg-joke-line.blink { animation: none; } }

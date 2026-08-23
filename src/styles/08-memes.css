@@ -1,0 +1,376 @@
+/* ============================================================
+   Memes and the lightbox
+   ------------------------------------------------------------
+   Split out of index.css. The ORDER of these files is the order
+   the rules used to be in, and changing it changes which rule
+   wins — so index.css imports them by number, and a new file
+   goes at the end unless it genuinely belongs earlier.
+   ============================================================ */
+
+/* ==========================================================
+   MEMES
+   The lightest thing on the site, so the styling stays out of
+   the way: image first, everything else small and quiet.
+   ========================================================== */
+
+/* --- NSFW cover ------------------------------------------ */
+/* The image is really in the DOM, just filtered. This is a
+   courtesy screen so nobody gets ambushed — not a security
+   control, since the source is readable either way. */
+.vg-nsfw-wrap { position: relative; display: block; }
+
+.vg-nsfw-blurred {
+  filter: blur(26px) saturate(.5) brightness(.7);
+  transform: scale(1.06); /* hides the soft edges the blur leaves */
+}
+
+.vg-nsfw-veil {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  background: rgba(10, 10, 18, .55);
+  border: 0; cursor: pointer; width: 100%;
+  font-family: var(--font-retro); color: #fff;
+}
+.vg-nsfw-veil:hover { background: rgba(10, 10, 18, .38); }
+
+.vg-nsfw-badge {
+  font-size: 15px; font-weight: bold; letter-spacing: 1px;
+  background: var(--red); color: #fff;
+  padding: 3px 10px; border-radius: 3px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.5);
+}
+.vg-nsfw-hint { font-size: 12px; color: #ddd; }
+
+.vg-nsfw-hide {
+  position: absolute; top: 6px; right: 6px;
+  font-family: var(--font-retro); font-size: 11px;
+  background: rgba(10,10,18,.8); color: #ddd;
+  border: 1px solid var(--border-dark); border-radius: 3px;
+  padding: 2px 7px; cursor: pointer;
+}
+.vg-nsfw-hide:hover { color: #fff; border-color: var(--orange); }
+
+/* --- Meme board ------------------------------------------ */
+.vg-memes-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap; margin-bottom: 14px;
+}
+.vg-memes-title { font-family: var(--font-retro); font-size: 26px; color: var(--orange); margin: 0; }
+.vg-memes-blurb { font-family: var(--font-retro); font-size: 14px; color: var(--text-secondary); margin: 4px 0 0; }
+.vg-memes-cta { flex-shrink: 0; }
+
+.vg-memes-tabs { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+.vg-memes-tab {
+  font-family: var(--font-retro); font-size: 14px;
+  background: var(--bg-panel); color: var(--text-secondary);
+  border: 1px solid var(--border-dark); border-radius: 3px;
+  padding: 6px 14px; cursor: pointer;
+}
+.vg-memes-tab:hover { color: var(--text-primary); border-color: var(--orange-dim); }
+.vg-memes-tab.is-on {
+  background: var(--orange); color: #14141e;
+  border-color: var(--orange-bright); font-weight: bold;
+}
+
+/* Bigger tiles. The image is what people are here for, so it gets the
+   room; the text underneath is a label, not a card. */
+.vg-meme-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+/* The tile is a <button> so the whole thing is one keyboard-reachable
+   target — hence the reset. */
+.vg-meme-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  border-radius: 5px; overflow: hidden;
+  display: flex; flex-direction: column;
+  padding: 0; margin: 0; text-align: left; font: inherit; color: inherit;
+  cursor: zoom-in; width: 100%;
+  transition: border-color .12s, transform .12s;
+}
+.vg-meme-card:hover { border-color: var(--orange); transform: translateY(-2px); }
+.vg-meme-card:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+
+.vg-meme-shot {
+  display: block; position: relative;
+  background: var(--bg-darkest);
+  /* Memes are wildly different shapes, so the box is fixed and the
+     image is contained rather than cropped — cropping a meme
+     usually cuts off the punchline. */
+  height: 300px; overflow: hidden;
+}
+.vg-meme-img,
+.vg-meme-shot img { width: 100%; height: 300px; object-fit: contain; display: block; }
+
+/* One line of title, one line of credit and score. Nothing else. */
+.vg-meme-body {
+  padding: 8px 10px 9px;
+  display: flex; flex-direction: column; gap: 2px;
+  border-top: 1px solid var(--border-dark);
+}
+.vg-meme-name {
+  font-family: var(--font-retro); font-size: 15px; color: var(--text-bright);
+  line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  display: block;
+}
+.vg-meme-card:hover .vg-meme-name { color: var(--orange); }
+
+.vg-meme-line {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 8px; min-width: 0;
+}
+.vg-meme-by {
+  font-family: var(--font-retro); font-size: 13px; color: var(--text-dim);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
+}
+.vg-meme-score {
+  font-family: var(--font-retro); font-size: 13px; font-weight: bold;
+  flex-shrink: 0;
+}
+
+/* ==========================================================
+   MEME LIGHTBOX
+   Opens over the board so you can flick through the whole set
+   without a page load between each one.
+   ========================================================== */
+.vg-lightbox {
+  position: fixed; inset: 0; z-index: 999;
+  background: rgba(6, 6, 12, .93);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+
+.vg-lb-panel {
+  display: flex; flex-direction: column;
+  max-width: min(1100px, 92vw); width: 100%;
+  /* A *definite* height, not just a max. Percentage heights inside only
+     resolve against a parent with a definite height — with max-height alone
+     the browser treats the child's max-height:100% as `none`, which is
+     exactly why tall memes were spilling out of the box. */
+  height: 92vh;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-panel); border-radius: 6px;
+  overflow: hidden;
+}
+
+.vg-lb-stage {
+  /* A floor, not just min-height:0. A flex child with no intrinsic content
+     size collapses to nothing, and a collapsed box means the image inside
+     it can never become visible — belt and braces alongside eager loading. */
+  flex: 1 1 auto; min-height: 0;
+  background: #06060c;
+  overflow: hidden;
+  /* Containing block for the absolutely positioned image below. */
+  position: relative;
+}
+.vg-lb-stage .vg-nsfw-wrap { position: absolute; inset: 0; }
+
+/* Fill the stage and letterbox. `object-fit: contain` guarantees the whole
+   meme is visible and never distorted, whatever its aspect ratio — which
+   matters because the punchline is usually along the bottom edge. Absolute
+   positioning sidesteps the percentage-height resolution problem entirely. */
+.vg-lb-img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: contain; display: block;
+}
+
+.vg-lb-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 14px; padding: 10px 14px; flex-wrap: wrap;
+  border-top: 1px solid var(--border-dark);
+  background: var(--bg-panel);
+}
+.vg-lb-info { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.vg-lb-title {
+  font-family: var(--font-retro); font-size: 18px; color: var(--text-bright);
+  overflow-wrap: anywhere;
+}
+.vg-lb-by { font-family: var(--font-retro); font-size: 14px; color: var(--text-dim); }
+.vg-lb-by a { color: var(--blue-link); text-decoration: none; }
+.vg-lb-by a:hover { color: var(--orange); }
+
+.vg-lb-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.vg-lb-score { font-family: var(--font-retro); font-size: 15px; font-weight: bold; }
+.vg-lb-full {
+  font-family: var(--font-retro); font-size: 14px;
+  color: var(--blue-link); text-decoration: none; white-space: nowrap;
+}
+.vg-lb-full:hover { color: var(--orange); }
+
+.vg-lb-count {
+  position: absolute; top: 22px; left: 24px;
+  font-family: var(--font-retro); font-size: 14px; color: #888;
+}
+
+.vg-lb-close {
+  position: absolute; top: 14px; right: 20px;
+  background: none; border: 0; color: #aaa;
+  font-size: 34px; line-height: 1; cursor: pointer; padding: 4px 10px;
+}
+.vg-lb-close:hover { color: #fff; }
+
+.vg-lb-arrow {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  background: rgba(20, 20, 30, .8);
+  border: 1px solid var(--border-dark); color: #ddd;
+  font-size: 40px; line-height: 1;
+  width: 52px; height: 76px; border-radius: 5px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.vg-lb-arrow:hover { background: var(--orange); color: #000; border-color: var(--orange); }
+.vg-lb-prev { left: 14px; }
+.vg-lb-next { right: 14px; }
+
+@media (max-width: 720px) {
+  .vg-lb-arrow { width: 40px; height: 60px; font-size: 30px; }
+  .vg-lb-prev { left: 4px; }
+  .vg-lb-next { right: 4px; }
+  .vg-lb-count { top: 16px; left: 12px; font-size: 12px; }
+  .vg-lightbox { padding: 8px; }
+}
+
+.vg-memes-empty {
+  text-align: center; padding: 46px 20px;
+  font-family: var(--font-retro); color: var(--text-secondary);
+  background: var(--bg-panel); border: 1px solid var(--border-panel); border-radius: 4px;
+}
+.vg-memes-empty-icon { font-size: 42px; margin-bottom: 10px; }
+.vg-memes-empty h3 { color: var(--text-primary); margin: 0 0 6px; font-size: 19px; }
+.vg-memes-empty p { margin: 0 0 16px; font-size: 14px; }
+
+/* --- Front page rail ------------------------------------- */
+.vg-meme-rail-wrap {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  border-radius: 4px; padding: 10px 10px 12px; margin-bottom: 14px;
+}
+.vg-meme-rail-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; margin-bottom: 9px;
+}
+.vg-meme-rail-title { font-family: var(--font-retro); font-size: 16px; color: var(--orange); margin: 0; }
+.vg-meme-rail-tools { display: flex; align-items: center; gap: 6px; }
+.vg-meme-rail-all {
+  font-family: var(--font-retro); font-size: 12px;
+  color: var(--blue-link); text-decoration: none;
+}
+.vg-meme-rail-all:hover { color: var(--orange); }
+
+.vg-rail-btn {
+  font-family: var(--font-retro); font-size: 15px; line-height: 1;
+  background: var(--bg-panel-header); color: var(--text-secondary);
+  border: 1px solid var(--border-dark); border-radius: 3px;
+  width: 22px; height: 22px; cursor: pointer; padding: 0;
+}
+.vg-rail-btn:hover { color: var(--orange); border-color: var(--orange-dim); }
+
+.vg-meme-rail {
+  display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+}
+.vg-meme-rail::-webkit-scrollbar { height: 7px; }
+.vg-meme-rail::-webkit-scrollbar-thumb { background: var(--border-dark); border-radius: 4px; }
+
+.vg-meme-rail-card {
+  flex: 0 0 158px; scroll-snap-align: start;
+  display: flex; flex-direction: column; gap: 4px;
+  text-decoration: none; color: inherit;
+}
+.vg-meme-rail-shot {
+  display: block; height: 112px; overflow: hidden;
+  background: var(--bg-darkest);
+  border: 1px solid var(--border-dark); border-radius: 3px;
+}
+.vg-meme-rail-shot img { width: 100%; height: 112px; object-fit: cover; display: block; }
+.vg-meme-rail-card:hover .vg-meme-rail-shot { border-color: var(--orange); }
+
+.vg-meme-rail-name {
+  font-family: var(--font-retro); font-size: 12px; color: var(--text-primary);
+  line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.vg-meme-rail-card:hover .vg-meme-rail-name { color: var(--orange); }
+.vg-meme-rail-score { font-family: var(--font-retro); font-size: 11px; color: var(--text-dim); }
+
+.vg-meme-rail-more {
+  align-items: center; justify-content: center;
+  border: 1px dashed var(--border-dark); border-radius: 3px;
+  font-family: var(--font-retro); font-size: 12px; color: var(--text-secondary);
+  text-align: center; padding: 10px; gap: 6px;
+}
+.vg-meme-rail-more:hover { border-color: var(--orange); color: var(--orange); }
+.vg-meme-rail-more-icon { font-size: 21px; }
+
+/* --- Upload screen --------------------------------------- */
+.vg-meme-intro {
+  font-family: var(--font-retro); font-size: 14px;
+  color: var(--text-secondary); margin: 0 0 14px;
+}
+
+.vg-dropzone {
+  border: 2px dashed var(--border-dark); border-radius: 5px;
+  background: var(--bg-input);
+  padding: 30px 18px; margin-bottom: 18px;
+  display: flex; flex-direction: column; align-items: center; gap: 7px;
+  text-align: center; cursor: pointer;
+  font-family: var(--font-retro); color: var(--text-secondary);
+  transition: border-color .15s, background .15s;
+}
+.vg-dropzone:hover,
+.vg-dropzone.is-over { border-color: var(--orange); background: rgba(232, 163, 23, .06); }
+.vg-dropzone.has-image { padding: 12px; }
+.vg-dropzone-icon { font-size: 34px; }
+.vg-dropzone strong { color: var(--text-primary); font-size: 16px; }
+.vg-dropzone-sub { font-size: 12px; color: var(--text-dim); }
+.vg-dropzone-preview { max-width: 100%; max-height: 320px; border-radius: 3px; display: block; }
+.vg-dropzone-swap { font-size: 12px; color: var(--text-dim); margin-top: 8px; }
+
+.vg-nsfw-check {
+  display: flex; align-items: flex-start; gap: 9px;
+  font-family: var(--font-retro); font-size: 14px;
+  color: var(--text-primary); cursor: pointer; margin-bottom: 18px;
+}
+.vg-nsfw-check input { width: auto; margin-top: 3px; flex-shrink: 0; }
+.vg-nsfw-check span { display: flex; flex-direction: column; gap: 2px; }
+.vg-nsfw-check em { font-style: normal; font-size: 12px; color: var(--text-dim); }
+
+.vg-meme-post { width: 100%; }
+
+.vg-gate-body {
+  font-family: var(--font-retro); font-size: 17px;
+  color: var(--text-secondary); text-align: center;
+  padding: 30px; line-height: 1.5;
+  display: flex; flex-direction: column; align-items: center;
+}
+
+.vg-done { text-align: center; padding: 26px 20px 30px; font-family: var(--font-retro); }
+.vg-done-tick { font-size: 46px; margin-bottom: 8px; }
+.vg-done h3 { color: var(--text-bright); font-size: 21px; margin: 0 0 5px; }
+.vg-done-sub { color: var(--text-secondary); font-size: 14px; margin: 0 0 16px; }
+.vg-done-shot {
+  max-width: 100%; max-height: 260px; border-radius: 4px;
+  border: 1px solid var(--border-dark); margin: 0 auto 18px; display: block;
+}
+.vg-done-actions {
+  display: flex; gap: 10px; justify-content: center;
+  flex-wrap: wrap; margin-top: 16px;
+}
+.vg-done-alt {
+  font-family: var(--font-retro); font-size: 14px;
+  background: var(--bg-panel-header); color: var(--text-secondary);
+  border: 1px solid var(--border-dark); border-radius: 3px;
+  padding: 9px 16px; cursor: pointer; text-decoration: none;
+}
+.vg-done-alt:hover { color: var(--orange); border-color: var(--orange-dim); }
+
+@media (max-width: 640px) {
+  /* One big column on a phone rather than two cramped ones — a meme you
+     have to squint at is not a meme. */
+  .vg-meme-grid { grid-template-columns: 1fr; gap: 12px; }
+  .vg-meme-shot, .vg-meme-img, .vg-meme-shot img { height: 260px; }
+  .vg-memes-cta { width: 100%; }
+}

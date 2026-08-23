@@ -1,0 +1,242 @@
+/* ============================================================
+   Where it works, feedback, the email panel
+   ------------------------------------------------------------
+   Split out of index.css. The ORDER of these files is the order
+   the rules used to be in, and changing it changes which rule
+   wins — so index.css imports them by number, and a new file
+   goes at the end unless it genuinely belongs earlier.
+   ============================================================ */
+
+/* ============================================================
+   WHERE DOES IT WORK
+   ============================================================
+   Asked at upload, shown on the creation, filtered on the Portal. Three
+   places, one vocabulary — the words and icons live in WorksOn.jsx so they
+   cannot drift apart. */
+
+.vg-works {
+  margin: 14px 0;
+  padding: 10px 12px;
+  background: var(--bg-dark);
+  border: 1px solid var(--border-dark);
+}
+.vg-works-q {
+  display: block; margin-bottom: 7px;
+  font-family: var(--font-pixel); font-size: 9px; color: var(--orange);
+}
+.vg-works-opts { display: flex; gap: 6px; flex-wrap: wrap; }
+
+/* The radio itself is hidden rather than removed: it still gets focus, still
+   works from a keyboard, still groups by name. Only its default appearance
+   goes, replaced by the state of the label around it. */
+.vg-works-opt {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 12px; cursor: pointer;
+  border: 1px solid var(--border-dark); background: transparent;
+  font-family: var(--font-retro); font-size: 17px; color: var(--text-secondary);
+  transition: border-color .12s, color .12s, background .12s;
+}
+.vg-works-opt input { position: absolute; opacity: 0; width: 0; height: 0; }
+.vg-works-opt:hover { border-color: var(--orange-dim); color: var(--text-primary); }
+.vg-works-opt.is-on {
+  border-color: var(--orange); background: rgba(232,163,23,.12); color: var(--orange);
+}
+.vg-works-opt:focus-within { outline: 2px solid var(--orange-bright); outline-offset: 2px; }
+
+.vg-works-note {
+  display: block; margin-top: 7px;
+  font-family: var(--font-retro); font-size: 15px; color: var(--text-dim);
+}
+
+/* The badge on a creation. Never rendered for 'unknown' — see WorksOn.jsx. */
+.vg-works-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 1px 7px;
+  border: 1px solid var(--border-dark); background: var(--bg-dark);
+  font-family: var(--font-retro); font-size: 15px; color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+/* The Portal filter. Its own row under the categories, because it answers a
+   different question and tacking it onto the end of the category list would
+   read as two odd categories. */
+.vg-devicebar {
+  display: flex; align-items: center; gap: 10px;
+  flex-wrap: wrap; margin: 6px 0 2px;
+}
+.vg-devicebar-q {
+  font-family: var(--font-pixel); font-size: 8px; color: var(--text-dim);
+  letter-spacing: .06em;
+}
+.vg-devicebar-tabs { flex: 1 1 auto; }
+
+/* ============================================================
+   FEEDBACK
+   ============================================================ */
+
+.vg-fb-kinds {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 8px; margin-bottom: 16px;
+}
+.vg-fb-kind {
+  display: flex; align-items: center; gap: 9px;
+  padding: 10px 12px; cursor: pointer;
+  border: 1px solid var(--border-dark); background: var(--bg-dark);
+  font-family: var(--font-retro); font-size: 17px; color: var(--text-secondary);
+  transition: border-color .12s, background .12s, color .12s;
+}
+.vg-fb-kind input { position: absolute; opacity: 0; width: 0; height: 0; }
+.vg-fb-kind:hover { border-color: var(--orange-dim); color: var(--text-primary); }
+.vg-fb-kind.is-on {
+  border-color: var(--orange); background: rgba(232,163,23,.12); color: var(--orange);
+}
+.vg-fb-kind:focus-within { outline: 2px solid var(--orange-bright); outline-offset: 2px; }
+.vg-fb-kind-icon { font-size: 20px; line-height: 1; }
+
+.vg-fb-count {
+  margin-top: 4px;
+  font-family: var(--font-retro); font-size: 15px; color: var(--text-dim);
+}
+
+/* What gets sent along, said out loud. Quiet styling on purpose — it is
+   there to be honest, not to be the loudest thing on the form. */
+.vg-fb-auto {
+  margin: 14px 0; padding: 10px 12px;
+  border: 1px dashed var(--border-dark); background: var(--bg-dark);
+  font-family: var(--font-body); font-size: 14.5px; color: var(--text-dim);
+  line-height: 1.55;
+}
+.vg-fb-auto b { color: var(--text-secondary); }
+.vg-fb-auto ul { margin: 6px 0 0; padding-left: 18px; }
+.vg-fb-auto code {
+  font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12.5px;
+  color: var(--text-secondary); overflow-wrap: anywhere;
+}
+
+.vg-footer-report {
+  display: inline-block; margin-bottom: 6px;
+  font-family: var(--font-retro); font-size: 17px;
+  color: var(--orange) !important; font-weight: bold; text-decoration: none;
+}
+.vg-footer-report:hover { color: var(--orange-bright) !important; text-decoration: underline; }
+
+/* ---- the inbox ---- */
+
+.vg-fb-filters {
+  display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
+  padding: 8px; background: var(--bg-panel-header);
+}
+.vg-fb-tally {
+  margin-left: auto; font-family: var(--font-retro); font-size: 15px; color: var(--text-dim);
+}
+
+.vg-fb-item {
+  padding: 12px; border-bottom: 1px solid var(--border-dark);
+  border-left: 3px solid var(--border-dark);
+}
+.vg-fb-item.is-new { border-left-color: var(--orange); }
+.vg-fb-item.is-reading { border-left-color: var(--yellow); }
+.vg-fb-item.is-done { border-left-color: var(--green); opacity: .72; }
+.vg-fb-item.is-wontfix { opacity: .55; }
+
+.vg-fb-item-head {
+  display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+.vg-fb-item-kind {
+  font-family: var(--font-pixel); font-size: 8px; color: var(--orange);
+}
+.vg-fb-item-who { font-family: var(--font-retro); font-size: 15px; color: var(--text-dim); }
+.vg-fb-item-status {
+  margin-left: auto; font-family: var(--font-retro); font-size: 14px;
+  padding: 1px 8px; border: 1px solid var(--border-dark); color: var(--text-dim);
+}
+.vg-fb-item-status.is-new { color: var(--orange); border-color: var(--orange-dim); }
+.vg-fb-item-status.is-done { color: var(--green); }
+
+.vg-fb-item-body { margin: 4px 0 8px; }
+
+.vg-fb-item-facts {
+  display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 8px;
+  font-family: var(--font-retro); font-size: 14px; color: var(--text-dim);
+}
+.vg-fb-item-facts a { color: var(--blue-link); }
+
+.vg-fb-item-note {
+  margin-bottom: 8px; padding: 5px 8px; background: var(--bg-dark);
+  font-family: var(--font-retro); font-size: 15px; color: var(--text-secondary);
+}
+
+.vg-fb-item-actions { display: flex; gap: 5px; flex-wrap: wrap; }
+.vg-fb-item-actions button {
+  font-family: var(--font-retro); font-size: 15px;
+  background: transparent; border: 1px solid var(--border-dark);
+  color: var(--text-secondary); padding: 2px 10px; cursor: pointer;
+}
+.vg-fb-item-actions button:hover { border-color: var(--orange-dim); color: var(--orange); }
+.vg-fb-item-actions button:first-child { border-color: var(--orange-dim); color: var(--orange); }
+.vg-fb-item-actions button:first-child:hover { background: var(--orange); color: #241500; }
+
+/* ============================================================
+   THE EMAIL PANEL
+   ============================================================
+   The one screen on the site where a wrong press cannot be undone, so it
+   says out loud which state it is in before it offers any buttons. */
+
+.vg-email-panel { padding: 14px; }
+
+.vg-email-state {
+  display: flex; align-items: flex-start; gap: 18px; flex-wrap: wrap;
+  padding: 12px 14px; margin-bottom: 12px;
+  background: var(--bg-dark); border: 1px solid var(--border-dark);
+}
+.vg-email-num {
+  display: block; font-family: var(--font-pixel); font-size: 26px; color: var(--orange);
+}
+.vg-email-cap {
+  display: block; max-width: 42ch; margin-top: 6px;
+  font-family: var(--font-body); font-size: 14.5px; line-height: 1.5; color: var(--text-dim);
+}
+.vg-email-mode {
+  margin-left: auto; align-self: center;
+  font-family: var(--font-pixel); font-size: 9px; padding: 7px 10px;
+  border: 2px solid var(--border-dark); color: var(--text-dim);
+}
+.vg-email-mode.is-off  { border-color: var(--border-dark); }
+.vg-email-mode.is-dry  { border-color: var(--yellow); color: var(--yellow); }
+.vg-email-mode.is-live { border-color: var(--red); color: #ff8888; background: #2a0d0d; }
+
+.vg-email-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.vg-email-actions button {
+  font-family: var(--font-retro); font-size: 16px;
+  background: transparent; border: 1px solid var(--border-dark);
+  color: var(--text-secondary); padding: 4px 12px; cursor: pointer;
+}
+.vg-email-actions button:hover:not(:disabled) { border-color: var(--orange-dim); color: var(--orange); }
+.vg-email-actions button:disabled { opacity: .4; cursor: default; }
+/* Red, and last. It is the only button here that reaches other people. */
+.vg-email-golive { border-color: var(--red) !important; color: #ff8888 !important; }
+.vg-email-golive:hover:not(:disabled) { background: var(--red) !important; color: #fff !important; }
+
+.vg-email-note {
+  margin-bottom: 14px; max-width: 72ch;
+  font-family: var(--font-body); font-size: 14.5px; line-height: 1.6; color: var(--text-dim);
+}
+
+.vg-email-log b {
+  display: block; margin-bottom: 6px;
+  font-family: var(--font-pixel); font-size: 8px; color: var(--text-dim);
+}
+.vg-email-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 4px 0; border-bottom: 1px solid var(--border-dark);
+  font-family: var(--font-retro); font-size: 15px; color: var(--text-secondary);
+}
+.vg-email-tag {
+  flex-shrink: 0; min-width: 52px; text-align: center;
+  font-family: var(--font-pixel); font-size: 7px; padding: 3px 4px;
+  border: 1px solid var(--border-dark); color: var(--text-dim);
+}
+.vg-email-tag.is-live { border-color: var(--red); color: #ff8888; }
+.vg-email-to { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.vg-email-when { flex-shrink: 0; color: var(--text-dim); }

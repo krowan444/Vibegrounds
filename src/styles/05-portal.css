@@ -1,0 +1,574 @@
+/* ============================================================
+   The Portal, layout primitives, sidebar rail
+   ------------------------------------------------------------
+   Split out of index.css. The ORDER of these files is the order
+   the rules used to be in, and changing it changes which rule
+   wins — so index.css imports them by number, and a new file
+   goes at the end unless it genuinely belongs earlier.
+   ============================================================ */
+
+/* ==========================================
+   PORTAL PAGE — Ranked Items & Top 100
+   ========================================== */
+
+/* ── Top Creations Ranked List ── */
+.portal-ranked-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.portal-ranked-item {
+  display: flex;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-dark);
+  align-items: flex-start;
+  transition: background 0.15s;
+}
+
+.portal-ranked-item:hover {
+  background: rgba(232,163,23,0.05);
+}
+
+.portal-ranked-number {
+  font-family: var(--font-pixel);
+  font-size: 12px;
+  color: var(--orange);
+  flex-shrink: 0;
+  width: 30px;
+  text-align: center;
+  padding-top: 4px;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+
+.portal-ranked-thumb {
+  width: 64px;
+  height: 64px;
+  border: 2px solid var(--border-dark);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  border-radius: 2px;
+  background: var(--bg-dark);
+  overflow: hidden;
+}
+
+.portal-ranked-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.portal-ranked-title {
+  font-family: var(--font-pixel);
+  font-size: 9px;
+  color: var(--orange);
+  text-transform: uppercase;
+  text-decoration: none;
+  line-height: 1.4;
+  display: block;
+  margin-bottom: 3px;
+}
+
+.portal-ranked-title:hover {
+  color: var(--yellow);
+}
+
+.portal-ranked-desc {
+  font-family: var(--font-retro);
+  font-size: 16px;
+  color: var(--text-secondary);
+  line-height: 1.3;
+  margin-bottom: 4px;
+}
+
+.portal-ranked-meta {
+  display: flex;
+  gap: 12px;
+  font-family: var(--font-retro);
+  font-size: 14px;
+  color: var(--text-dim);
+  flex-wrap: wrap;
+}
+
+.portal-ranked-meta a {
+  color: var(--orange);
+}
+
+/* ── Top 100 Table ── */
+.portal-top100 {
+  display: flex;
+  flex-direction: column;
+}
+
+.portal-top100-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border-dark);
+  font-family: var(--font-retro);
+  font-size: 16px;
+  transition: background 0.15s;
+}
+
+.portal-top100-row:hover {
+  background: rgba(232,163,23,0.05);
+}
+
+.portal-top100-row:nth-child(even) {
+  background: rgba(255,255,255,0.02);
+}
+
+.portal-top100-row:nth-child(even):hover {
+  background: rgba(232,163,23,0.05);
+}
+
+.portal-top100-rank {
+  font-family: var(--font-pixel);
+  font-size: 8px;
+  color: var(--orange);
+  width: 32px;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.portal-top100-title {
+  flex: 1;
+  color: var(--blue-link);
+  font-weight: bold;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.portal-top100-title:hover {
+  color: var(--yellow);
+}
+
+.portal-top100-category {
+  color: var(--text-dim);
+  flex-shrink: 0;
+  font-size: 14px;
+}
+
+.portal-top100-creator {
+  color: var(--text-dim);
+  flex-shrink: 0;
+  font-size: 14px;
+}
+
+.portal-top100-creator a {
+  color: var(--orange);
+}
+
+.portal-top100-visit {
+  color: var(--green);
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   VG STAGE 2 — modern layout primitives, retro skin intact
+   Grid, cards, voting, badges, levels. Everything below uses
+   the existing palette variables so nothing looks bolted on.
+   ============================================================ */
+
+/* ── page shell ── */
+.vg-page { padding: 12px; max-width: 1180px; margin: 0 auto; }
+
+.vg-strip {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap; margin-bottom: 14px; padding: 10px 14px;
+  background: var(--bg-panel-alt); border: 2px solid var(--border-panel);
+}
+
+.vg-section { margin-bottom: 20px; }
+
+.vg-section-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 10px; flex-wrap: wrap; margin-bottom: 8px;
+  border-bottom: 2px solid var(--border-panel); padding-bottom: 6px;
+}
+.vg-section-head h2 {
+  font-family: var(--font-pixel); font-size: 12px; color: var(--orange);
+  letter-spacing: 0.5px;
+}
+.vg-section-head .vg-sub {
+  font-family: var(--font-retro); font-size: 16px; color: var(--text-dim);
+}
+.vg-section-head a {
+  font-family: var(--font-retro); font-size: 17px; color: var(--blue-link);
+}
+
+/* ── grid of submissions ── */
+.vg-grid {
+  display: grid; gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+}
+.vg-grid.vg-grid-tight {
+  grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
+}
+
+.vg-card {
+  display: flex; flex-direction: column; text-decoration: none;
+  background: var(--bg-panel); border: 2px solid var(--border-panel);
+  transition: border-color .15s, transform .15s;
+  overflow: hidden;
+}
+.vg-card:hover {
+  border-color: var(--orange); transform: translateY(-2px);
+}
+
+.vg-card-thumb {
+  position: relative; aspect-ratio: 16 / 10; background: var(--bg-dark);
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+}
+.vg-card-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.vg-thumb-fallback { font-size: 40px; opacity: .55; }
+
+.vg-card-cat, .vg-card-featured, .vg-card-nsfw {
+  position: absolute; font-family: var(--font-pixel); font-size: 7px;
+  padding: 3px 5px; background: rgba(10,10,18,.85); color: var(--text-primary);
+  border: 1px solid var(--border-dark);
+}
+.vg-card-cat { left: 5px; bottom: 5px; }
+.vg-card-featured { right: 5px; top: 5px; color: #000; background: var(--yellow); border-color: var(--orange-dim); }
+.vg-card-nsfw { left: 5px; top: 5px; color: #fff; background: var(--red); border-color: #881111; }
+
+.vg-card-body { padding: 8px 9px 4px; flex: 1; }
+.vg-card-title {
+  font-family: var(--font-retro); font-size: 19px; line-height: 1.15;
+  color: var(--text-bright); font-weight: bold;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.vg-card-author { font-family: var(--font-retro); font-size: 15px; color: var(--text-dim); margin-top: 2px; }
+
+.vg-card-foot {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  padding: 6px 9px 8px; font-family: var(--font-retro); font-size: 14px;
+  color: var(--text-dim); border-top: 1px solid var(--border-dark);
+}
+.vg-card-score { font-weight: bold; font-size: 16px; }
+.vg-card-age { margin-left: auto; }
+
+/* ── list rows (charts) ── */
+.vg-row {
+  display: flex; align-items: center; gap: 10px; padding: 8px 10px;
+  text-decoration: none; border-bottom: 1px solid var(--border-dark);
+  transition: background .12s;
+}
+.vg-row:hover { background: rgba(232,163,23,.07); }
+.vg-row-top { background: rgba(232,163,23,.05); }
+
+.vg-rank {
+  width: 34px; flex-shrink: 0; text-align: center;
+  font-family: var(--font-pixel); font-size: 11px; color: var(--text-dim);
+}
+.vg-rank-medal { font-size: 17px; }
+
+.vg-row-thumb {
+  width: 56px; height: 42px; flex-shrink: 0; background: var(--bg-dark);
+  border: 1px solid var(--border-dark); overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+.vg-row-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.vg-row-thumb .vg-thumb-fallback { font-size: 20px; }
+
+.vg-row-body { flex: 1; min-width: 0; }
+.vg-row-title {
+  font-family: var(--font-retro); font-size: 18px; color: var(--blue-link);
+  font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.vg-row-meta { font-family: var(--font-retro); font-size: 14px; color: var(--text-dim); }
+
+.vg-row-score { text-align: right; flex-shrink: 0; font-family: var(--font-pixel); font-size: 12px; }
+.vg-row-score span { display: block; font-family: var(--font-retro); font-size: 13px; color: var(--text-dim); }
+
+/* ── voting ── */
+.vote-widget {
+  background: var(--bg-panel-alt); border: 2px solid var(--orange);
+  padding: 14px; text-align: center;
+}
+.vote-score { font-family: var(--font-pixel); font-size: 30px; line-height: 1; }
+.vote-score-meta { font-family: var(--font-retro); font-size: 16px; color: var(--text-dim); margin: 6px 0 10px; }
+
+.vote-stars { display: flex; justify-content: center; gap: 3px; }
+.vote-star {
+  background: none; border: none; cursor: pointer; padding: 2px 3px;
+  font-size: 26px; line-height: 1; color: #3a3a4a; transition: color .1s, transform .1s;
+}
+.vote-star:hover { transform: scale(1.15); }
+.vote-star.on { color: var(--yellow); }
+.vote-star.zero { font-size: 20px; color: #4a3a3a; }
+.vote-star.zero.on { color: var(--red); }
+.vote-star:disabled { cursor: wait; opacity: .5; }
+
+.vote-label { font-family: var(--font-retro); font-size: 17px; color: var(--text-secondary); margin-top: 6px; min-height: 20px; }
+.vote-note  { font-family: var(--font-retro); font-size: 17px; color: var(--text-dim); }
+.vote-flash { font-family: var(--font-retro); font-size: 16px; color: var(--green); margin-top: 6px; }
+.vote-error { font-family: var(--font-retro); font-size: 16px; color: #ff8888; margin-top: 6px; }
+
+/* ── badges ── */
+.vg-badges { display: flex; flex-wrap: wrap; gap: 8px; }
+.vg-badges-empty { font-family: var(--font-retro); font-size: 17px; color: var(--text-dim); padding: 12px 0; }
+
+.vg-badge {
+  position: relative; display: flex; flex-direction: column; align-items: center;
+  width: 108px; padding: 9px 6px; cursor: pointer; text-align: center;
+  background: var(--bg-panel-alt); border: 2px solid var(--border-panel);
+  transition: transform .12s;
+}
+.vg-badge:hover { transform: translateY(-2px); }
+.vg-badge-icon { font-size: 26px; }
+.vg-badge-name { font-family: var(--font-retro); font-size: 15px; color: var(--text-primary); line-height: 1.1; margin-top: 4px; }
+.vg-badge-rarity { font-family: var(--font-pixel); font-size: 6px; margin-top: 5px; }
+
+/* Hidden by default, revealed on hover, keyboard focus or click. Uses
+   visibility rather than display:none so it can fade, and so it stays
+   reachable by assistive tech. */
+.vg-badge-pop {
+  position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+  z-index: 40; width: 220px; margin-top: 6px; padding: 9px;
+  background: var(--bg-panel); border: 2px solid var(--orange);
+  box-shadow: 4px 4px 0 rgba(0,0,0,.5); text-align: left;
+  display: flex; flex-direction: column; gap: 5px;
+  opacity: 0; visibility: hidden; pointer-events: none;
+  transition: opacity .12s ease-out;
+}
+.vg-badge:hover .vg-badge-pop,
+.vg-badge:focus-visible .vg-badge-pop,
+.vg-badge.is-open .vg-badge-pop {
+  opacity: 1; visibility: visible;
+}
+/* A badge with its panel open has to sit above its neighbours, or the next
+   badge in the grid draws over the top of the popup. */
+.vg-badge:hover, .vg-badge.is-open { z-index: 41; }
+
+@media (prefers-reduced-motion: reduce) {
+  .vg-badge-pop { transition: none; }
+}
+.vg-badge-desc    { font-family: var(--font-retro); font-size: 16px; color: var(--text-primary); }
+.vg-badge-stats   { font-family: var(--font-retro); font-size: 14px; color: var(--text-dim); }
+.vg-badge-earned  { font-family: var(--font-retro); font-size: 14px; color: var(--text-dim); }
+.vg-badge-retired { font-family: var(--font-retro); font-size: 14px; color: var(--yellow); }
+
+/* ── level / xp ── */
+.vg-level { min-width: 220px; }
+.vg-level-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.vg-level-num  { font-family: var(--font-pixel); font-size: 10px; }
+.vg-level-rank { font-family: var(--font-retro); font-size: 18px; font-weight: bold; }
+
+.vg-level-track {
+  height: 10px; margin: 5px 0 4px; background: var(--bg-input);
+  border: 1px solid var(--border-dark); overflow: hidden;
+}
+.vg-level-fill { height: 100%; transition: width .4s ease; }
+
+.vg-level-foot {
+  display: flex; justify-content: space-between; gap: 8px;
+  font-family: var(--font-retro); font-size: 14px; color: var(--text-dim);
+}
+
+.vg-level-chip {
+  display: inline-block; padding: 0 5px; border: 1px solid;
+  font-family: var(--font-pixel); font-size: 7px; vertical-align: middle;
+}
+
+/* ── stat blocks ── */
+.vg-stats { display: flex; gap: 8px; flex-wrap: wrap; }
+.vg-stat {
+  flex: 1 1 100px; padding: 9px; text-align: center;
+  background: var(--bg-panel-alt); border: 2px solid var(--border-panel);
+}
+.vg-stat-value { font-family: var(--font-pixel); font-size: 14px; color: var(--text-bright); }
+.vg-stat-label { font-family: var(--font-retro); font-size: 14px; color: var(--text-dim); margin-top: 4px; }
+
+/* ── tabs ── */
+.vg-tabs { display: flex; gap: 3px; flex-wrap: wrap; margin-bottom: 12px; }
+.vg-tab {
+  background: transparent; color: var(--text-secondary);
+  border: 2px solid var(--border-dark); cursor: pointer;
+  font-family: var(--font-pixel); font-size: 9px; padding: 7px 12px;
+  transition: background .12s, color .12s;
+}
+.vg-tab:hover { color: var(--orange); border-color: var(--orange-dim); }
+.vg-tab.is-active { background: var(--orange); color: #000; border-color: var(--orange-dim); }
+
+/* ── category rail ── */
+.vg-cats { display: flex; gap: 8px; flex-wrap: wrap; }
+.vg-cat {
+  flex: 1 1 120px; padding: 12px 10px; text-decoration: none; text-align: center;
+  background: var(--bg-panel); border: 2px solid var(--border-panel);
+  transition: border-color .15s, transform .15s;
+}
+.vg-cat:hover { transform: translateY(-2px); }
+.vg-cat-icon  { font-size: 24px; }
+.vg-cat-name  { font-family: var(--font-pixel); font-size: 9px; color: var(--text-bright); margin-top: 6px; }
+.vg-cat-count { font-family: var(--font-retro); font-size: 15px; color: var(--text-dim); margin-top: 3px; }
+
+/* ── empty & loading ── */
+.vg-empty, .vg-loading {
+  padding: 34px 18px; text-align: center;
+  font-family: var(--font-retro); font-size: 19px; line-height: 1.5;
+}
+.vg-loading { color: var(--orange); }
+.vg-empty   { color: var(--text-dim); }
+
+/* ── daily check-in ── */
+.vg-daily {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; flex-wrap: wrap; padding: 10px 14px;
+  background: linear-gradient(90deg, rgba(232,163,23,.14), transparent);
+  border: 2px solid var(--orange); margin-bottom: 14px;
+}
+.vg-daily-text { font-family: var(--font-retro); font-size: 18px; color: var(--text-primary); }
+.vg-daily-btn {
+  background: var(--orange); color: #000; border: 2px solid var(--orange-dim);
+  font-family: var(--font-pixel); font-size: 9px; padding: 8px 14px; cursor: pointer;
+}
+.vg-daily-btn:disabled { opacity: .5; cursor: default; }
+
+@media (max-width: 640px) {
+  .vg-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+  .vg-badge { width: 92px; }
+}
+
+/* creation page: collapse the sidebar under the main column on narrow screens */
+@media (max-width: 820px) {
+  /* minmax(0, ...) rather than a bare 1fr, for the same reason as .vg-3col.
+     `1fr` means `minmax(auto, 1fr)`, and that `auto` floor is the column's
+     min-content — so one unbreakable child drags the whole column wider than
+     the screen. Here it was a chart row in the sidebar: .vg-row-title is
+     white-space:nowrap so it reports its full untruncated width, and a title
+     long enough (80-odd characters) pushed the column to 724px on a ~370px
+     phone. Everything on the page then rendered 724px wide and got clipped by
+     .vg-app's overflow-x:hidden, with no way to scroll to the missing half.
+     The nowrap title is fine and intended — it clips with overflow:hidden once
+     the column is allowed to shrink, which is what this now permits. */
+  .vg-creation-layout { grid-template-columns: minmax(0, 1fr) !important; }
+}
+
+/* ============================================================
+   SIDEBAR RAIL — the old Portal furniture: charts + house ads
+   Dense, ranked, always-visible. Seeing your own submission at
+   #3 on the front page is the entire reward loop.
+   ============================================================ */
+
+.vg-layout {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  align-items: start;
+}
+
+.vg-rail { display: flex; flex-direction: column; gap: 12px; }
+
+.vg-rail-box {
+  background: var(--bg-panel);
+  border: 2px solid var(--border-panel);
+}
+
+.vg-rail-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 6px;
+  padding: 7px 9px;
+  background: var(--bg-panel-header);
+  border-bottom: 2px solid var(--orange-dim);
+  font-family: var(--font-pixel); font-size: 8px; color: var(--orange);
+  letter-spacing: 0.5px;
+}
+.vg-rail-head a {
+  font-family: var(--font-retro); font-size: 14px;
+  color: var(--blue-link); text-transform: none; letter-spacing: 0;
+}
+
+.vg-rail-row {
+  display: flex; align-items: center; gap: 7px;
+  padding: 5px 8px; text-decoration: none;
+  border-bottom: 1px solid var(--border-dark);
+  transition: background .12s;
+}
+.vg-rail-row:last-child { border-bottom: none; }
+.vg-rail-row:hover { background: rgba(232,163,23,.09); }
+
+.vg-rail-rank {
+  width: 18px; flex-shrink: 0; text-align: center;
+  font-family: var(--font-pixel); font-size: 9px; color: var(--text-dim);
+}
+.vg-rail-rank.medal { font-size: 14px; }
+
+.vg-rail-thumb {
+  width: 30px; height: 24px; flex-shrink: 0; overflow: hidden;
+  background: var(--bg-dark); border: 1px solid var(--border-dark);
+  display: flex; align-items: center; justify-content: center; font-size: 13px;
+}
+.vg-rail-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+.vg-rail-body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.vg-rail-title {
+  font-family: var(--font-retro); font-size: 16px; color: var(--blue-link);
+  line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.vg-rail-by {
+  font-family: var(--font-retro); font-size: 13px; color: var(--text-dim);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.vg-rail-score {
+  flex-shrink: 0; font-family: var(--font-pixel); font-size: 9px;
+}
+.vg-rail-empty {
+  padding: 14px 10px; text-align: center;
+  font-family: var(--font-retro); font-size: 15px; color: var(--text-dim);
+}
+
+/* ── house ads ── */
+.vg-ad {
+  background: var(--bg-panel);
+  border: 2px solid var(--border-panel);
+  text-align: center;
+}
+.vg-ad-sticky { position: sticky; top: 10px; }
+.vg-ad-label {
+  font-family: var(--font-pixel); font-size: 6px; color: var(--text-dim);
+  letter-spacing: 1px; padding: 4px; border-bottom: 1px solid var(--border-dark);
+}
+.vg-ad-body { display: block; line-height: 0; }
+.vg-ad-body img { width: 100%; height: auto; display: block; }
+/* Caption is a link now rather than a plain div, so it needs the anchor
+   defaults stripped back off — otherwise it renders as browser-blue and
+   underlined, which looks broken against the rest of the panel. */
+.vg-ad-caption {
+  display: block;
+  font-family: var(--font-retro); font-size: 14px; color: var(--text-dim);
+  padding: 5px 6px; border-top: 1px solid var(--border-dark);
+  text-decoration: none;
+}
+.vg-ad-caption:hover { color: var(--text-secondary); text-decoration: none; }
+
+/* Matches .vg-joke-foot, so both ad types carry the same "advertise here"
+   strip and read as one consistent piece of furniture. */
+.vg-ad-foot {
+  display: block; text-align: center;
+  font-family: var(--font-retro); font-size: 14px;
+  color: var(--text-dim); text-decoration: none;
+  padding: 6px 8px; border-top: 1px solid var(--border-dark);
+  background: var(--bg-panel);
+}
+.vg-ad-foot strong { color: var(--orange); }
+.vg-ad-foot:hover { color: var(--text-secondary); text-decoration: none; }
+
+/* ── "your rank" callout ── */
+.vg-yours {
+  padding: 9px 10px; margin-bottom: 12px;
+  background: linear-gradient(90deg, rgba(255,215,0,.16), transparent);
+  border: 2px solid var(--yellow);
+  font-family: var(--font-retro); font-size: 17px; color: var(--text-primary);
+}
+
+@media (max-width: 900px) {
+  .vg-layout { grid-template-columns: 1fr; }
+  .vg-rail { flex-direction: row; flex-wrap: wrap; }
+  .vg-rail > * { flex: 1 1 280px; }
+}

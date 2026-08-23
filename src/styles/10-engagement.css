@@ -1,0 +1,421 @@
+/* ============================================================
+   Ideas, progress drawer, sponsor slot
+   ------------------------------------------------------------
+   Split out of index.css. The ORDER of these files is the order
+   the rules used to be in, and changing it changes which rule
+   wins — so index.css imports them by number, and a new file
+   goes at the end unless it genuinely belongs earlier.
+   ============================================================ */
+
+/* ============================================================
+   IDEAS — what a submission could become next.
+   Visually distinct from reviews on purpose: reviews are a verdict,
+   these are a to-do list, and they sit on the same page.
+   ============================================================ */
+.vg-ideas { margin-top: 14px; }
+.vg-ideas-count {
+  font-family: var(--font-retro); font-size: 15px; color: var(--text-dim);
+  margin-left: auto;
+}
+.vg-ideas-intro {
+  font-family: var(--font-retro); font-size: 17px; line-height: 1.45;
+  color: var(--text-secondary); margin-bottom: 10px;
+}
+.vg-ideas-closed,
+.vg-ideas-empty {
+  font-family: var(--font-retro); font-size: 17px; color: var(--text-dim);
+  background: var(--bg-panel-alt); border: 1px dashed var(--border-dark);
+  border-radius: 4px; padding: 12px 14px; margin: 10px 0;
+}
+.vg-ideas-closed a { color: var(--orange); }
+
+/* ── the form ── */
+.vg-idea-form { margin-bottom: 16px; }
+.vg-idea-input {
+  width: 100%; background: var(--bg-input);
+  border: 2px solid var(--border-dark); color: var(--text-primary);
+  font-family: var(--font-retro); font-size: 18px; padding: 8px 10px;
+  outline: none; resize: vertical;
+}
+.vg-idea-input:focus { border-color: var(--orange); }
+.vg-idea-prompt-input {
+  margin-top: 6px; font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 13px; line-height: 1.5;
+}
+.vg-idea-addprompt {
+  display: inline-block; margin-top: 6px; padding: 0;
+  background: none; border: none; cursor: pointer;
+  font-family: var(--font-retro); font-size: 15px;
+  color: var(--blue-link);
+}
+.vg-idea-addprompt:hover { color: var(--orange); text-decoration: underline; }
+.vg-idea-form-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; margin-top: 8px; flex-wrap: wrap;
+}
+.vg-idea-chars { font-family: var(--font-retro); font-size: 14px; color: var(--text-dim); }
+
+/* ── the list ── */
+.vg-idea-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.vg-idea {
+  display: flex; gap: 10px; align-items: flex-start;
+  background: var(--bg-panel-alt);
+  border: 1px solid var(--border-dark);
+  border-left: 3px solid var(--border-panel);
+  border-radius: 4px; padding: 10px 12px;
+}
+/* The left edge carries the status, so you can scan the column and see
+   what is being worked on without reading a word. */
+.vg-idea.is-planned { border-left-color: var(--yellow); }
+.vg-idea.is-built   { border-left-color: var(--green); }
+.vg-idea.is-declined { opacity: .62; }
+
+.vg-idea-vote {
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
+  min-width: 44px; padding: 5px 4px; cursor: pointer;
+  background: var(--bg-input); color: var(--text-secondary);
+  border: 1px solid var(--border-dark); border-radius: 4px;
+  font-family: var(--font-retro); line-height: 1;
+}
+.vg-idea-vote:hover:not(:disabled) { border-color: var(--orange); color: var(--orange-bright); }
+.vg-idea-vote:disabled { cursor: default; opacity: .55; }
+.vg-idea-vote.is-on {
+  background: var(--orange-dim); border-color: var(--orange-bright); color: #000;
+}
+.vg-idea-arrow { font-size: 11px; }
+.vg-idea-votes { font-size: 17px; font-weight: bold; }
+
+.vg-idea-main { flex: 1; min-width: 0; }
+.vg-idea-head {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  font-family: var(--font-retro); font-size: 15px; margin-bottom: 3px;
+}
+.vg-idea-author { color: var(--orange); text-decoration: none; font-weight: bold; }
+.vg-idea-author:hover { text-decoration: underline; }
+.vg-idea-age { color: var(--text-dim); }
+.vg-idea-status {
+  font-family: var(--font-pixel); font-size: 7px; letter-spacing: .5px;
+  padding: 3px 6px; border-radius: 3px; border: 1px solid var(--border-dark);
+  background: var(--bg-input); color: var(--text-secondary);
+}
+.vg-idea-status.is-planned { background: #3a2f0d; color: var(--yellow); border-color: var(--orange-dim); }
+.vg-idea-status.is-built   { background: #10330f; color: var(--green); border-color: #2f7d32; }
+
+.vg-idea-body {
+  font-family: var(--font-retro); font-size: 18px; line-height: 1.4;
+  color: var(--text-primary); overflow-wrap: anywhere;
+}
+
+/* The prompt is code, so it is set as code — monospace, boxed, copyable.
+   That framing is what tells someone it is meant to be run, not read. */
+.vg-idea-prompt {
+  margin-top: 7px; border: 1px solid var(--border-dark);
+  border-radius: 4px; background: var(--bg-input); overflow: hidden;
+}
+.vg-idea-prompt-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 4px 8px; background: var(--bg-panel-header);
+  font-family: var(--font-pixel); font-size: 7px;
+  letter-spacing: 1px; color: var(--text-dim);
+}
+.vg-idea-prompt-head button {
+  background: none; border: none; cursor: pointer;
+  font-family: var(--font-pixel); font-size: 7px; color: var(--orange);
+}
+.vg-idea-prompt-head button:hover { color: var(--orange-bright); }
+.vg-idea-prompt pre {
+  margin: 0; padding: 8px 10px; white-space: pre-wrap; overflow-wrap: anywhere;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  font-size: 13px; line-height: 1.5; color: var(--text-primary);
+}
+
+.vg-idea-actions { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 8px; }
+.vg-idea-set {
+  font-family: var(--font-retro); font-size: 14px; line-height: 1;
+  padding: 5px 8px; cursor: pointer; border-radius: 3px;
+  background: var(--bg-input); color: var(--text-secondary);
+  border: 1px solid var(--border-dark);
+}
+.vg-idea-set:hover { border-color: var(--orange); color: var(--orange-bright); }
+.vg-idea-set.is-on { background: var(--orange-dim); border-color: var(--orange-bright); color: #000; font-weight: bold; }
+
+.vg-idea-del {
+  margin-top: 6px; padding: 0; background: none; border: none; cursor: pointer;
+  font-family: var(--font-retro); font-size: 14px; color: var(--text-dim);
+}
+.vg-idea-del:hover { color: var(--red); text-decoration: underline; }
+
+@media (max-width: 560px) {
+  .vg-idea { padding: 9px 10px; gap: 8px; }
+  .vg-idea-vote { min-width: 38px; }
+}
+
+
+/* ============================================================
+   PROGRESS DRAWER — daily bonus, quest, level and balance,
+   tucked off the right edge instead of stacked on the home page.
+   ============================================================ */
+.vg-drawer-tab {
+  position: fixed; right: 0; top: 40%;
+  z-index: 60; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 7px;
+  padding: 14px 7px;
+  background: linear-gradient(180deg, var(--bg-panel-header), var(--bg-panel));
+  border: 2px solid var(--orange-dim); border-right: none;
+  border-radius: 6px 0 0 6px;
+  color: var(--orange);
+  font-family: var(--font-pixel); font-size: 8px; letter-spacing: 1px;
+  transition: right .28s cubic-bezier(.22,.61,.36,1), background .15s, color .15s;
+}
+.vg-drawer-tab:hover { background: var(--bg-panel-header); color: var(--orange-bright); }
+.vg-drawer-tab.is-open { right: min(360px, 88vw); }
+.vg-drawer-tab-label { writing-mode: vertical-rl; text-orientation: mixed; }
+
+/* The light. Pearlescent green: three greens on a moving gradient rather
+   than one flat fill, which is what stops it reading as a plain dot. The
+   sheen sweeps across on a separate layer so the colour underneath keeps
+   shifting independently — that mismatch is what makes it look like pearl. */
+.vg-drawer-pip {
+  position: relative; width: 13px; height: 13px; border-radius: 50%;
+  background: linear-gradient(135deg, #7CFFB2 0%, #22D67F 40%, #A8FFD4 65%, #17B86A 100%);
+  background-size: 220% 220%;
+  box-shadow: 0 0 7px rgba(52, 230, 140, .85), 0 0 16px rgba(52, 230, 140, .45),
+              inset 0 1px 2px rgba(255, 255, 255, .65);
+  animation: vgPipSheen 3.6s ease-in-out infinite;
+  overflow: hidden;
+}
+.vg-drawer-pip::after {
+  content: '';
+  position: absolute; inset: -40%;
+  background: linear-gradient(115deg, transparent 40%, rgba(255,255,255,.9) 50%, transparent 60%);
+  animation: vgPipGlint 3.6s ease-in-out infinite;
+}
+@keyframes vgPipSheen {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+@keyframes vgPipGlint {
+  0%   { transform: translateX(-120%); }
+  55%  { transform: translateX(120%); }
+  100% { transform: translateX(120%); }
+}
+
+.vg-drawer-scrim {
+  position: fixed; inset: 0; z-index: 55;
+  background: rgba(5, 5, 12, .55);
+  border: none; padding: 0; cursor: pointer;
+  animation: vgScrimIn .2s ease-out;
+}
+@keyframes vgScrimIn { from { opacity: 0; } to { opacity: 1; } }
+
+.vg-drawer {
+  position: fixed; top: 0; right: 0; z-index: 58;
+  width: min(360px, 88vw); height: 100vh;
+  display: flex; flex-direction: column;
+  background: var(--bg-panel);
+  border-left: 2px solid var(--orange);
+  transform: translateX(100%);
+  transition: transform .28s cubic-bezier(.22,.61,.36,1);
+  overflow: hidden;
+}
+.vg-drawer.is-open { transform: translateX(0); }
+
+.vg-drawer-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 14px; background: var(--bg-panel-header);
+  border-bottom: 2px solid var(--orange-dim); flex-shrink: 0;
+}
+.vg-drawer-head h2 {
+  font-family: var(--font-pixel); font-size: 10px;
+  color: var(--orange); margin: 0; letter-spacing: 1px;
+}
+.vg-drawer-close {
+  background: none; border: none; cursor: pointer;
+  color: var(--text-dim); font-size: 16px; line-height: 1; padding: 4px;
+}
+.vg-drawer-close:hover { color: var(--orange); }
+
+.vg-drawer-body { padding: 14px; overflow-y: auto; flex: 1; }
+
+.vg-drawer-coins {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 12px 14px; margin-bottom: 12px; text-decoration: none;
+  background: var(--bg-panel-alt);
+  border: 2px solid var(--orange-dim); border-radius: 4px;
+}
+.vg-drawer-coins:hover { border-color: var(--orange); }
+.vg-drawer-coins-n {
+  font-family: var(--font-retro); font-size: 30px; line-height: 1;
+  color: var(--yellow); font-weight: bold;
+}
+.vg-drawer-coins-label {
+  font-family: var(--font-retro); font-size: 14px; color: var(--text-dim);
+}
+
+.vg-drawer-sep {
+  font-family: var(--font-pixel); font-size: 7px; letter-spacing: 1px;
+  color: var(--text-dim); margin: 16px 0 8px;
+  padding-top: 10px; border-top: 1px solid var(--border-dark);
+}
+
+/* The two widgets were built as full-width page strips. Inside a 360px
+   column they need to stack instead of sitting side by side. */
+.vg-drawer-body .vg-daily,
+.vg-drawer-body .vg-quest {
+  flex-direction: column; align-items: stretch; gap: 8px; margin: 0 0 10px;
+}
+.vg-drawer-body .vg-daily-btn,
+.vg-drawer-body .vg-quest-btn { width: 100%; text-align: center; }
+
+.vg-drawer-foot {
+  margin-top: 14px; padding-top: 12px;
+  border-top: 1px solid var(--border-dark);
+  font-family: var(--font-retro); font-size: 16px;
+}
+.vg-drawer-foot a { color: var(--blue-link); text-decoration: none; }
+.vg-drawer-foot a:hover { color: var(--orange); text-decoration: underline; }
+
+@media (max-width: 560px) {
+  .vg-drawer-tab { top: auto; bottom: 84px; padding: 10px 6px; }
+  .vg-drawer-tab-label { font-size: 7px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vg-drawer, .vg-drawer-tab { transition: none; }
+  .vg-drawer-pip, .vg-drawer-pip::after { animation: none; }
+}
+
+/* Staff pick arrows. The dots stay — they show how many there are and where
+   you are; the arrows are for moving quickly without aiming at a 6px target. */
+.vg-featured-nav { display: flex; align-items: center; gap: 10px; margin-top: 7px; }
+.vg-featured-nav .vg-featured-dots { margin-top: 0; }
+.vg-featured-arrow {
+  display: flex; align-items: center; justify-content: center;
+  width: 26px; height: 22px; flex-shrink: 0; cursor: pointer;
+  background: var(--bg-input); color: var(--text-secondary);
+  border: 1px solid var(--border-dark); border-radius: 3px;
+  font-size: 10px; line-height: 1;
+  transition: background .12s, color .12s, border-color .12s;
+}
+.vg-featured-arrow:hover {
+  background: var(--orange-dim); border-color: var(--orange-bright); color: #000;
+}
+
+/* "Add tags from your description". Green rather than orange: this is a
+   helpful offer, not the primary action, and orange is already spoken for
+   by every other button on the form. */
+.vg-tagpicker-suggest {
+  display: block; width: 100%; text-align: left; cursor: pointer;
+  margin-bottom: 9px; padding: 8px 10px;
+  background: rgba(52, 230, 140, .10);
+  border: 1px solid #2f7d32; border-radius: 4px;
+  font-family: var(--font-retro); font-size: 16px; color: #8de8b4;
+}
+.vg-tagpicker-suggest:hover { background: rgba(52, 230, 140, .18); border-color: var(--green); }
+.vg-tagpicker-suggest:disabled { opacity: .5; cursor: not-allowed; }
+.vg-tagpicker-suggest-list {
+  display: block; margin-top: 2px;
+  font-size: 14px; color: var(--text-dim); overflow-wrap: anywhere;
+}
+
+
+/* ── BADGE SHELF ─────────────────────────────────────────────
+   Your three best badges in the header. A display case, not a list:
+   the recessed inner shadow and the lip along the bottom are what make
+   it read as a shelf rather than three loose icons. */
+.vg-shelf {
+  display: flex; align-items: center; gap: 4px;
+  padding: 3px 6px 5px; text-decoration: none;
+  background: var(--bg-input);
+  border: 1px solid var(--border-dark);
+  border-bottom: 3px solid var(--orange-dim);
+  border-radius: 4px;
+  box-shadow: inset 0 2px 5px rgba(0,0,0,.55);
+}
+.vg-shelf:hover { border-bottom-color: var(--orange); }
+
+.vg-shelf-badge {
+  display: flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; font-size: 13px; line-height: 1;
+  background: var(--bg-panel-alt);
+  border: 1px solid var(--border-dark);
+  border-radius: 3px;
+  transition: transform .12s;
+}
+/* Lifts off the shelf on hover — the smallest possible nod to it being
+   something you collected rather than something that was printed there. */
+.vg-shelf:hover .vg-shelf-badge { transform: translateY(-1px); }
+
+/* Hidden on phones: the header is already tight there, and three 22px
+   icons would push the coin balance onto its own line. */
+@media (max-width: 700px) {
+  .vg-shelf { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vg-shelf-badge { transition: none; }
+}
+
+/* ============================================================
+   PAID SPONSOR SLOT
+   A real advertiser, cycling several creatives in one box.
+   ============================================================ */
+
+/* A green edge, where the house ads use the plain panel border and the gags
+   use orange. Somebody actually paid for this one, so it should not look
+   identical to the joke about mining VRAM sitting two boxes below it. */
+.vg-sponsor {
+  border-color: #2f7d52;
+  box-shadow: 0 0 0 1px rgba(47,125,82,.25);
+}
+.vg-sponsor .vg-ad-label {
+  color: #8fe0b0;
+  border-bottom-color: #2f7d52;
+  background: rgba(47,125,82,.14);
+}
+
+/* The stage holds all creatives stacked on top of each other. Height comes
+   from the first one in normal flow; the rest are absolutely positioned over
+   it, so the box never changes size as they cross-fade. */
+.vg-sponsor-stage { position: relative; }
+.vg-sponsor-shot {
+  width: 100%; height: auto; display: block;
+  opacity: 0;
+  transition: opacity 600ms ease-in-out;
+}
+/* top/left/right but deliberately not bottom. Pinning all four edges on a
+   replaced element with height:auto is over-constrained, and browsers resolve
+   that by ignoring one of them — better to not create the conflict. */
+.vg-sponsor-shot:not(:first-child) {
+  position: absolute; top: 0; left: 0; right: 0;
+}
+.vg-sponsor-shot.is-on { opacity: 1; }
+
+/* Someone who has asked for reduced motion gets a hard cut rather than a
+   fade. The component already stops the timer for them — this covers the
+   manual dot clicks that still work. */
+@media (prefers-reduced-motion: reduce) {
+  .vg-sponsor-shot { transition: none; }
+}
+
+.vg-sponsor-dots {
+  display: flex; justify-content: center; gap: 6px;
+  padding: 6px 4px;
+  border-top: 1px solid var(--border-dark);
+}
+.vg-sponsor-dot {
+  width: 9px; height: 9px; padding: 0;
+  border: 1px solid #2f7d52;
+  background: transparent;
+  cursor: pointer;
+  /* Square, not round. Everything else on this site has hard pixel corners
+     and a row of circles here would read as imported from somewhere else. */
+  border-radius: 0;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+.vg-sponsor-dot:hover { border-color: #56c98a; background: rgba(86,201,138,.35); }
+.vg-sponsor-dot.is-on { background: #56c98a; border-color: #56c98a; }
+.vg-sponsor-dot:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+
+.vg-sponsor .vg-ad-caption { color: #8fe0b0; }
+.vg-sponsor .vg-ad-caption:hover { color: #b6f2d1; }

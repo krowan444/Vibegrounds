@@ -1,0 +1,545 @@
+/* ============================================================
+   Comics: shelf, grid, reader
+   ------------------------------------------------------------
+   Split out of index.css. The ORDER of these files is the order
+   the rules used to be in, and changing it changes which rule
+   wins — so index.css imports them by number, and a new file
+   goes at the end unless it genuinely belongs earlier.
+   ============================================================ */
+
+/* ==========================================================
+   COMICS
+
+   Three screens: the shelf, the poster, the reader. The reader is
+   the one that matters — a comic page is a picture somebody spent
+   hours on, so it gets the window and the furniture stays at the
+   edges.
+   ========================================================== */
+
+/* ---------- the shelf ---------- */
+
+.vg-comics-intro p { font-family: var(--font-retro); font-size: 17px; color: var(--text-secondary); margin: 0 0 8px; }
+.vg-comics-spec   { color: var(--text-dim) !important; font-size: 16px !important; }
+.vg-comics-spec strong { color: var(--orange); }
+
+.vg-comics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.vg-comic-card {
+  display: flex; flex-direction: column;
+  background: var(--bg-panel);
+  border: 2px solid var(--border-panel);
+  text-decoration: none; color: inherit;
+  transition: border-color .12s, transform .12s;
+}
+.vg-comic-card:hover { border-color: var(--orange); transform: translateY(-2px); }
+
+/* 2:3 — the recommended page shape, so a cover drawn to spec fills the
+   frame exactly and anything else letterboxes rather than being cropped. */
+.vg-comic-cover-frame {
+  position: relative;
+  aspect-ratio: 2 / 3;
+  background: var(--bg-dark);
+  overflow: hidden;
+  border-bottom: 2px solid var(--border-panel);
+}
+.vg-comic-cover-frame img { width: 100%; height: 100%; object-fit: cover; object-position: center top; display: block; }
+
+.vg-comic-nocover { display: grid; place-items: center; height: 100%; font-size: 44px; opacity: .35; }
+
+.vg-comic-pages {
+  position: absolute; right: 6px; bottom: 6px;
+  font-family: var(--font-pixel); font-size: 8px;
+  background: rgba(0,0,0,.78); color: var(--orange);
+  padding: 3px 5px; border: 1px solid var(--orange-dim);
+}
+
+.vg-comic-card-body { padding: 8px 9px 10px; display: flex; flex-direction: column; gap: 2px; }
+.vg-comic-card-title {
+  font-family: var(--font-retro); font-size: 18px; font-weight: bold;
+  color: var(--blue-link); line-height: 1.2;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.vg-comic-card-by { font-family: var(--font-retro); font-size: 14px; color: var(--text-dim); }
+
+/* ---------- posting one ---------- */
+
+.vg-comic-hint {
+  font-family: var(--font-retro); font-size: 16px;
+  color: var(--text-secondary); line-height: 1.5;
+  margin: 0 0 12px;
+}
+.vg-comic-hint code {
+  font-family: var(--font-mono, monospace); font-size: 14px;
+  background: var(--bg-input); padding: 1px 4px; color: var(--orange);
+}
+.vg-comic-hint strong { color: var(--orange); }
+
+/* Five to a row on a desktop, as asked: it reads like a contact sheet, and
+   five is enough to see a whole scene's worth of pages at once. */
+/* ---- the title page, called what it is ---- */
+.vg-comic-cover-pick {
+  display: flex; align-items: center; gap: 14px;
+  padding: 10px; margin-bottom: 12px;
+  background: rgba(232,163,23,0.06);
+  border: 1px solid var(--border-dark);
+}
+.vg-comic-cover-slot {
+  flex: 0 0 auto; width: 76px; aspect-ratio: 2 / 3;
+  border: 2px solid var(--orange-dim); background: var(--bg-dark);
+  display: grid; place-items: center; overflow: hidden;
+}
+.vg-comic-cover-slot img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.vg-comic-cover-slot.is-empty { border-style: dashed; }
+.vg-comic-cover-say { flex: 1 1 auto; min-width: 0; }
+.vg-comic-cover-say b {
+  display: block; font-family: var(--font-pixel); font-size: 10px;
+  color: var(--orange); margin-bottom: 4px;
+}
+.vg-comic-cover-say p {
+  margin: 0 0 8px; font-family: var(--font-retro); font-size: 16px;
+  color: var(--text-secondary); line-height: 1.35;
+}
+.vg-comic-cover-btn {
+  font-family: var(--font-retro); font-size: 16px;
+  background: transparent; border: 1px solid var(--orange-dim);
+  color: var(--orange); padding: 3px 12px; cursor: pointer;
+}
+.vg-comic-cover-btn:hover:not(:disabled) { background: var(--orange); color: #241500; }
+.vg-comic-cover-btn:disabled { opacity: .4; cursor: default; }
+
+/* ---- ordering controls ---- */
+.vg-comic-sortbar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; flex-wrap: wrap; margin-bottom: 6px;
+}
+.vg-comic-sortbtns { display: flex; gap: 6px; }
+.vg-comic-sortbtns button {
+  font-family: var(--font-retro); font-size: 15px;
+  background: transparent; border: 1px solid var(--border-dark);
+  color: var(--text-secondary); padding: 2px 10px; cursor: pointer;
+}
+.vg-comic-sortbtns button:hover:not(:disabled) { border-color: var(--orange-dim); color: var(--orange); }
+.vg-comic-sortbtns button:disabled { opacity: .35; cursor: default; }
+
+.vg-comic-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+  transition: background .12s, outline-color .12s;
+  outline: 2px dashed transparent; outline-offset: 4px;
+}
+/* Dragging files anywhere over the sheet lights the whole thing up, so it is
+   obvious the grid will take them and you are not aiming at one tile. */
+.vg-comic-grid.is-over {
+  outline-color: var(--orange);
+  background: rgba(232,163,23,0.06);
+}
+
+@media (max-width: 900px) { .vg-comic-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 640px) { .vg-comic-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 400px) { .vg-comic-grid { grid-template-columns: repeat(2, 1fr); } }
+
+.vg-comic-tile,
+.vg-comic-slot {
+  position: relative;
+  aspect-ratio: 2 / 3;
+  border: 2px solid var(--border-dark);
+  background: var(--bg-dark);
+  overflow: hidden;
+}
+
+.vg-comic-tile { cursor: grab; }
+.vg-comic-tile:active { cursor: grabbing; }
+.vg-comic-tile img { width: 100%; height: 100%; object-fit: contain; display: block; }
+
+/* Being dragged: faded, so the gap it leaves is obvious. */
+.vg-comic-tile.is-lifting { opacity: .35; }
+/* Being dropped onto: a bright edge, so it is unambiguous where it lands. */
+.vg-comic-tile.is-target { border-color: var(--orange); box-shadow: inset 0 0 0 2px var(--orange-bright); }
+
+/* The page number is the loudest thing on the tile on purpose. Reading
+   order is the one thing that goes wrong, and it goes wrong invisibly. */
+.vg-comic-num {
+  position: absolute; top: 0; left: 0;
+  min-width: 26px; padding: 3px 6px;
+  font-family: var(--font-pixel); font-size: 11px;
+  background: var(--orange); color: #241500;
+  text-align: center; z-index: 2;
+}
+
+.vg-comic-dims {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  font-family: var(--font-retro); font-size: 12px;
+  color: var(--text-dim); background: rgba(0,0,0,.72);
+  text-align: center; padding: 1px 0;
+}
+
+.vg-comic-bad {
+  position: absolute; top: 4px; right: 4px; z-index: 2;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--red); color: #fff;
+  font-family: var(--font-retro); font-size: 14px;
+  display: grid; place-items: center;
+}
+
+/* Tools sit hidden until hover on a mouse, but are always there on touch —
+   where there is no hover and a permanently hidden control is no control. */
+.vg-comic-tools {
+  position: absolute; left: 0; right: 0; bottom: 18px;
+  display: flex; justify-content: center; gap: 4px;
+  opacity: 0; transition: opacity .12s; z-index: 3;
+}
+.vg-comic-tile:hover .vg-comic-tools,
+.vg-comic-tile:focus-within .vg-comic-tools { opacity: 1; }
+@media (hover: none) { .vg-comic-tools { opacity: 1; } }
+
+.vg-comic-tools button {
+  width: 26px; height: 24px;
+  background: rgba(0,0,0,.82);
+  border: 1px solid var(--orange-dim);
+  color: var(--orange);
+  font-family: var(--font-retro); font-size: 17px; line-height: 1;
+  cursor: pointer;
+}
+.vg-comic-tools button:hover:not(:disabled) { background: var(--orange); color: #241500; }
+.vg-comic-tools button:disabled { opacity: .3; cursor: default; }
+.vg-comic-tools .vg-comic-del:hover { background: var(--red); border-color: var(--red); color: #fff; }
+
+/* Empty slots. Numbered, so twenty of them read as "this holds twenty
+   pages" rather than as decoration. */
+.vg-comic-slot {
+  display: grid; place-items: center;
+  border-style: dashed;
+  cursor: pointer;
+  color: var(--text-dim);
+}
+.vg-comic-slot:hover { border-color: var(--orange); color: var(--orange); background: rgba(232,163,23,.05); }
+.vg-comic-slot.is-next { border-color: var(--orange-dim); color: var(--orange); }
+
+.vg-comic-plus { font-family: var(--font-retro); font-size: 30px; line-height: 1; }
+.vg-comic-slotnum {
+  position: absolute; top: 3px; left: 5px;
+  font-family: var(--font-pixel); font-size: 8px; opacity: .45;
+}
+
+.vg-comic-count {
+  font-family: var(--font-retro); font-size: 16px;
+  color: var(--text-dim); margin-bottom: 12px;
+}
+
+.vg-comic-input {
+  width: 100%; padding: 7px 9px;
+  background: var(--bg-input); border: 2px solid var(--border-dark);
+  color: var(--text-primary); font-family: var(--font-retro); font-size: 17px;
+}
+.vg-comic-input:focus { outline: none; border-color: var(--orange-dim); }
+.vg-comic-opt { color: var(--text-dim); font-size: 14px; }
+
+.vg-comic-nsfw {
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--font-retro); font-size: 16px;
+  color: var(--text-secondary); margin: 10px 0 14px;
+  cursor: pointer;
+}
+
+.vg-comic-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.vg-comic-busy { font-family: var(--font-retro); font-size: 16px; color: var(--orange); }
+
+/* ---------- reading one ---------- */
+
+.vg-comic-head {
+  display: flex; align-items: flex-start; gap: 12px; flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.vg-comic-title {
+  font-family: var(--font-retro); font-size: 26px; font-weight: bold;
+  color: var(--orange); margin: 0; line-height: 1.15;
+}
+.vg-comic-meta { font-family: var(--font-retro); font-size: 15px; color: var(--text-dim); }
+.vg-comic-meta a { color: var(--blue-link); }
+.vg-comic-back { font-family: var(--font-retro); font-size: 16px; color: var(--blue-link); margin-left: auto; }
+
+.vg-comic-cover {
+  display: grid; place-items: center; gap: 10px;
+  padding: 48px 20px; text-align: center;
+  background: var(--bg-panel); border: 2px solid var(--red);
+  font-family: var(--font-retro); font-size: 18px; color: var(--text-secondary);
+}
+.vg-comic-cover-badge {
+  font-family: var(--font-pixel); font-size: 16px;
+  color: #fff; background: var(--red); padding: 6px 10px;
+}
+
+/* The stage. max-height keeps a tall page inside the window so the reader
+   sees a whole page at a time rather than scrolling through one. */
+.vg-comic-stage {
+  position: relative;
+  display: grid; place-items: center;
+  background: #07070d;
+  border: 2px solid var(--border-panel);
+  min-height: 40vh;
+}
+
+.vg-comic-page {
+  display: block;
+  /* The same zoom as the reel, applied to the fitted size rather than the
+     width — in this mode the limit on how big a page can be is the height
+     of the window, so that is what has to scale. */
+  max-width: calc(100% * var(--z, .9));
+  max-height: calc(82vh * var(--z, .9));
+  width: auto; height: auto;
+  object-fit: contain;
+  cursor: pointer;
+}
+
+/* ------------------------------------------------------------------
+   THE REEL — the default way to read
+
+   Every page stacked, as wide as the screen allows, falling continuously.
+   A comic page is somebody's afternoon; on a laptop the old fitted view
+   showed it about 200px tall, which is not reading it, it is glancing at
+   it. Here it gets the full width of a wide reader and the panels arrive
+   as you scroll down to them.
+   ------------------------------------------------------------------ */
+.vg-comic-reel {
+  --z: .9;
+  display: flex; flex-direction: column; align-items: center;
+  gap: 26px; padding: 20px 0;
+  background: #07070d;
+  border: 2px solid var(--border-panel);
+  /* Only ever used past 100%, where the reader has deliberately asked to
+     see a page bigger than the screen. `safe` keeps the left edge reachable
+     — plain centring pushes overflow off the start of the scroll range,
+     where no amount of scrolling gets it back. */
+  overflow-x: auto;
+  align-items: safe center;
+}
+
+.vg-comic-sheet {
+  margin: 0; position: relative;
+  max-width: 100%;
+  display: flex; flex-direction: column; align-items: center;
+  /* So a jump lands the page under the header rather than behind it. */
+  scroll-margin-top: 12px;
+}
+
+.vg-comic-sheet img {
+  display: block;
+  /* --base is set per page: as wide as there is room for, capped at the size
+     it was drawn. --z is the reader's zoom. Multiplying rather than
+     overriding means the no-upscaling rule still holds at every size below
+     100%, and above it the reader has asked, which is different. */
+  width: calc(var(--base, 100%) * var(--z));
+  height: auto;
+  border: 1px solid #000;
+  box-shadow: 0 6px 26px rgba(0,0,0,.55);
+  background: #14141c;
+}
+
+.vg-comic-sheet figcaption {
+  margin-top: 7px;
+  font-family: var(--font-pixel); font-size: 9px;
+  color: var(--text-dim); letter-spacing: .1em;
+}
+
+/* The reveal. Eight pixels and a fade — enough that a page feels like it
+   arrives, not so much that scrolling turns into a slideshow. */
+.vg-comic-sheet { opacity: 0; transform: translateY(8px); }
+.vg-comic-sheet.is-here {
+  opacity: 1; transform: none;
+  transition: opacity .45s ease, transform .45s ease;
+}
+
+.vg-comic-end {
+  display: grid; place-items: center; gap: 12px;
+  padding: 30px 20px 10px; text-align: center;
+  font-family: var(--font-retro); font-size: 18px; color: var(--text-secondary);
+}
+
+.vg-comic-bar .vg-comic-fit {
+  border-color: var(--border-dark);
+  color: var(--text-secondary);
+}
+.vg-comic-bar .vg-comic-fit:hover { background: var(--border-dark); color: var(--orange); }
+
+/* Resume note. Says what happened and undoes it in one press — a reader
+   who did not expect page 7 should not have to work out why. */
+.vg-comic-resume {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 6px 10px; margin-bottom: 6px;
+  background: rgba(232,163,23,0.10); border: 1px solid var(--orange-dim);
+  font-family: var(--font-retro); font-size: 16px; color: var(--yellow);
+}
+.vg-comic-resume button {
+  font-family: var(--font-retro); font-size: 15px;
+  background: transparent; border: 1px solid var(--orange-dim);
+  color: var(--orange); padding: 2px 10px; cursor: pointer;
+}
+.vg-comic-resume button:hover { background: var(--orange); color: #241500; }
+.vg-comic-resume-x { margin-left: auto; border-color: transparent !important; }
+
+/* Big invisible click targets down each side. A reader should be able to
+   page through with one thumb without aiming at anything. */
+.vg-comic-edge {
+  position: absolute; top: 0; bottom: 0; width: 22%;
+  border: none; background: transparent; cursor: pointer;
+  display: grid; place-items: center;
+  color: var(--orange); font-family: var(--font-retro); font-size: 40px;
+  opacity: 0; transition: opacity .15s, background .15s;
+  z-index: 2;
+}
+.vg-comic-edge-prev { left: 0; }
+.vg-comic-edge-next { right: 0; }
+.vg-comic-stage:hover .vg-comic-edge:not(:disabled) { opacity: .55; }
+.vg-comic-edge:hover:not(:disabled) { opacity: 1 !important; background: linear-gradient(90deg, rgba(0,0,0,.55), transparent); }
+.vg-comic-edge-next:hover:not(:disabled) { background: linear-gradient(270deg, rgba(0,0,0,.55), transparent); }
+.vg-comic-edge:disabled { cursor: default; }
+@media (hover: none) { .vg-comic-edge { opacity: .3; } }
+
+/* Sticks to the bottom of the window. Thirty pages into a scroll the
+   controls have long left the screen otherwise, and "where am I" becomes a
+   trip back to the top. Sitting on the bottom edge it never covers a page,
+   because the page is above it. */
+/* Sticks to the bottom of the window, and stays out of the way.
+   Everything on it is one centred group, and it is deliberately slight —
+   this is the frame, not the picture. */
+.vg-comic-bar {
+  position: sticky; bottom: 0; z-index: 5;
+  display: flex; align-items: center; justify-content: center;
+  gap: 8px; flex-wrap: wrap;
+  padding: 4px 8px; background: var(--bg-panel);
+  border: 2px solid var(--border-panel); border-top: none;
+  box-shadow: 0 -8px 18px rgba(0,0,0,.5);
+}
+.vg-comic-bar button {
+  font-family: var(--font-retro); font-size: 15px; line-height: 1.2;
+  background: transparent; border: 1px solid var(--orange-dim);
+  color: var(--orange); padding: 2px 9px; cursor: pointer;
+}
+.vg-comic-bar button:hover:not(:disabled) { background: var(--orange); color: #241500; }
+.vg-comic-bar button:disabled { opacity: .3; cursor: default; }
+.vg-comic-counter {
+  font-family: var(--font-retro); font-size: 15px; color: var(--text-secondary);
+  white-space: nowrap;
+}
+.vg-comic-counter b { color: var(--orange); font-variant-numeric: tabular-nums; }
+
+/* A hairline, so the two groups read as two without needing a gap wide
+   enough to break the centring. */
+.vg-comic-sep {
+  width: 1px; height: 16px; background: var(--border-dark);
+}
+
+/* − 90% + as one control. The number is a button too: press it to go back
+   to the size the comic started at, which is quicker than counting clicks. */
+.vg-comic-zoom { display: inline-flex; align-items: center; }
+.vg-comic-bar .vg-comic-zoom button { padding: 2px 8px; }
+.vg-comic-bar .vg-comic-zoom button:not(:first-child) { border-left: none; }
+.vg-comic-bar .vg-comic-zoom-num {
+  min-width: 52px; text-align: center;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.vg-comic-bar .vg-comic-zoom-num:hover { color: #241500; }
+
+/* Jump rail. Scrolls sideways on its own so a 60-page comic does not push
+   the page wide. */
+.vg-comic-rail {
+  display: flex; gap: 6px;
+  overflow-x: auto; padding: 8px 4px;
+  scrollbar-width: thin;
+}
+.vg-comic-thumb {
+  position: relative; flex: 0 0 auto;
+  width: 54px; height: 78px;
+  padding: 0; border: 2px solid var(--border-dark);
+  background: var(--bg-dark); cursor: pointer; overflow: hidden;
+}
+.vg-comic-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: .55; }
+.vg-comic-thumb:hover img { opacity: .85; }
+.vg-comic-thumb.is-on { border-color: var(--orange); }
+.vg-comic-thumb.is-on img { opacity: 1; }
+.vg-comic-thumb span {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  font-family: var(--font-pixel); font-size: 8px;
+  background: rgba(0,0,0,.78); color: var(--orange); padding: 2px 0;
+}
+
+.vg-comic-about { margin-top: 14px; }
+.vg-comic-desc {
+  font-family: var(--font-body); font-size: 16px;
+  color: var(--text-secondary); line-height: 1.65;
+  max-width: 72ch;
+  white-space: pre-wrap; overflow-wrap: anywhere;
+}
+
+.vg-comic-foot {
+  display: flex; align-items: center; gap: 12px;
+  margin-top: 12px; flex-wrap: wrap;
+}
+.vg-comic-staff { font-family: var(--font-retro); font-size: 14px; color: var(--text-dim); }
+
+/* The reader gets more room than the rest of the site. Everywhere else 1180
+   is a comfortable measure for text and lists; here the content is somebody's
+   artwork and the only reason to hold it back is that a page should not be
+   upscaled past what it was drawn at, which each page handles for itself. */
+.vg-comic-read { max-width: 1440px; }
+
+.vg-comic-headlinks { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.vg-comic-edit {
+  font-family: var(--font-retro); font-size: 16px;
+  border: 1px solid var(--orange-dim); color: var(--orange);
+  padding: 2px 10px; text-decoration: none; white-space: nowrap;
+}
+.vg-comic-edit:hover { background: var(--orange); color: #241500; }
+
+/* ---- editing: a tile already on the comic, and what saving will do ---- */
+.vg-comic-onthere {
+  position: absolute; top: 0; right: 0;
+  font-family: var(--font-retro); font-size: 14px; line-height: 1;
+  background: rgba(0,0,0,.8); color: var(--text-secondary);
+  padding: 4px 6px; z-index: 2;
+}
+.vg-comic-tile.is-cover { border-color: var(--orange-dim); }
+
+.vg-comic-diff {
+  margin: 12px 0; padding: 10px 12px;
+  border: 1px solid var(--border-dark); background: var(--bg-dark);
+  font-family: var(--font-retro); font-size: 16px; color: var(--text-dim);
+}
+.vg-comic-diff.is-live { border-color: var(--orange-dim); color: var(--text-secondary); }
+.vg-comic-diff b { color: var(--orange); }
+.vg-comic-diff ul { margin: 6px 0 0; padding-left: 20px; }
+.vg-comic-diff li { margin: 2px 0; }
+.vg-comic-diff-note {
+  display: block; margin-top: 8px;
+  font-size: 15px; color: var(--text-dim);
+}
+
+@media (max-width: 640px) {
+  /* On a phone the reel is already the full width of the screen, so the
+     side padding is wasted picture. */
+  .vg-comic-reel { gap: 16px; padding: 10px 0; border-left: none; border-right: none; }
+  /* Two rows on a phone whatever we do — there is not 460px of controls
+     worth of screen. So make the two rows as shallow as they can be. */
+  .vg-comic-bar { gap: 4px 6px; padding: 3px 6px; }
+  .vg-comic-bar button { font-size: 14px; padding: 2px 7px; }
+  .vg-comic-counter { font-size: 14px; }
+  .vg-comic-bar .vg-comic-zoom-num { min-width: 46px; }
+  .vg-comic-sep { display: none; }
+  .vg-comic-cover-pick { flex-direction: column; align-items: flex-start; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vg-comic-card, .vg-comic-edge, .vg-comic-tools { transition: none; }
+  .vg-comic-card:hover { transform: none; }
+  /* No fade, no rise — and critically, visible without needing the reveal
+     to fire, so a reader who has asked for stillness still gets the comic. */
+  .vg-comic-sheet { opacity: 1; transform: none; transition: none; }
+}
