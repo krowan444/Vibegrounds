@@ -11,6 +11,13 @@ import { Link } from 'react-router-dom';
 export default function SiteFooter() {
   const year = new Date().getFullYear();
 
+  // Carried into the feedback form, so a bug report arrives already knowing
+  // which page it happened on — the one detail nobody ever remembers to
+  // include and the one that makes a report fixable.
+  const here = typeof window !== 'undefined'
+    ? window.location.pathname + window.location.search
+    : '';
+
   return (
     <footer className="vg-footer">
       <div className="vg-footer-inner">
@@ -44,12 +51,19 @@ export default function SiteFooter() {
               was styled like the copy around it, so it read as a line of text
               rather than something you press — which is why it got reported
               as not clickable. */}
+          {/* The form first, the address second. Email works and always
+              will, but it asks somebody to open another app, invent a
+              subject line and describe where they were — three chances to
+              give up. The form is one box and already knows the page. */}
+          <Link className="vg-footer-report" to={`/feedback?from=${encodeURIComponent(here)}`}>
+            🐞 Something not right? Tell me
+          </Link>
           <a className="vg-footer-email" href="mailto:kierandrowan@gmail.com?subject=VibeGrounds">
             ✉ kierandrowan@gmail.com
           </a>
           <p className="vg-footer-small">
-            Bugs, ideas, complaints, or if something on here isn&#39;t right —
-            email me directly and I&#39;ll actually read it.
+            Bugs, ideas, complaints — it all comes to me, and I actually read it.
+            No account needed.
           </p>
         </div>
       </div>
