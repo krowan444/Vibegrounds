@@ -22,6 +22,7 @@ import PostMemePage from './pages/PostMemePage';
 import CoinsPage from './pages/CoinsPage';
 import RulesPage from './pages/RulesPage';
 import AdvertisePage from './pages/AdvertisePage';
+import FeedbackPage from './pages/FeedbackPage';
 import AdminPage from './pages/AdminPage';
 
 import ForumPage from './pages/ForumPage';
@@ -70,6 +71,7 @@ export default function App() {
             <Route path="/coins" element={<CoinsPage />} />
             <Route path="/rules" element={<RulesPage />} />
             <Route path="/advertise" element={<AdvertisePage />} />
+            <Route path="/feedback" element={<FeedbackPage />} />
 
             <Route path="/profile/:username" element={<ProfilePage />} />
             <Route path="/edit-profile" element={<EditProfilePage />} />
