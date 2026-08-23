@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { supabase, retryOnAbort } from '../lib/supabase';
+import { supabase, retryOnAbort, loadFailure } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import SiteHeader from '../components/SiteHeader';
 import Notice from '../components/Notice';
@@ -68,7 +68,7 @@ export default function MemesPage() {
     ])).map(settle);
 
     const firstError = [h, n, t].find((r) => r.error)?.error;
-    if (firstError) setError(`Could not load everything: ${firstError.message || firstError}`);
+    if (firstError) setError(loadFailure(firstError, 'everything'));
 
     const hotList = h.data || [];
     const hotIds = new Set(hotList.map((m) => m.id));
@@ -90,7 +90,7 @@ export default function MemesPage() {
       .order(SORTS[sort].col, { ascending: false })
       .range(from, from + PAGE - 1));
 
-    if (err) { setError(`Could not load the catalogue: ${err.message || err}`); return; }
+    if (err) { setError(loadFailure(err, 'the catalogue')); return; }
     const rows = data || [];
     setTotal(count || 0);
     setAll((prev) => (from === 0 ? rows : [...prev, ...rows]));

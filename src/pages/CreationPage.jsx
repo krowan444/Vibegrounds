@@ -1,8 +1,9 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
-import { supabase, withTimeout } from '../lib/supabase';
+import { supabase, withTimeout, looksMissing } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import SiteHeader from '../components/SiteHeader';
+import CouldNotLoad from '../components/CouldNotLoad';
 import WorksOnBadge from '../components/WorksOn';
 import VoteWidget from '../components/VoteWidget';
 import ReviewSection from '../components/ReviewSection';
@@ -92,6 +93,9 @@ export default function CreationPage() {
   const [more, setMore] = useState([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [unreachable, setUnreachable] = useState(false);
+  // Bumped by the Try again button, which is all the reload the effect needs.
+  const [attempt, setAttempt] = useState(0);
   const [error, setError] = useState('');
   const [confirmOpen, setConfirmOpen] = useState(false);
 
@@ -111,12 +115,16 @@ export default function CreationPage() {
     let alive = true;
     setLoading(true);
     setNotFound(false);
+    setUnreachable(false);
     (async () => {
       const { data, error: err } = await supabase
         .from('creations_public').select('*').eq('id', id).maybeSingle();
 
       if (!alive) return;
-      if (err || !data) { setNotFound(true); setLoading(false); return; }
+      // Not there, and could not ask, are different answers. Only one of
+      // them is safe to tell somebody about another member's work.
+      if (err && !looksMissing(err)) { setUnreachable(true); setLoading(false); return; }
+      if (!data) { setNotFound(true); setLoading(false); return; }
       setC(data);
 
       /*
@@ -161,7 +169,7 @@ export default function CreationPage() {
       setLoading(false);
     })();
     return () => { alive = false; };
-  }, [id]);
+  }, [id, attempt]);
 
   const isOwner = user && c && user.id === c.creator_id;
 
@@ -177,6 +185,17 @@ export default function CreationPage() {
         <SiteHeader compact />
         <div className="vg-page"><div className="vg-loading">⏳ Loading...</div></div>
       </>
+    );
+  }
+
+  if (unreachable) {
+    return (
+      <CouldNotLoad
+        what="This Submission"
+        onRetry={() => setAttempt((n) => n + 1)}
+        backTo="/portal"
+        backLabel="Back to the Portal"
+      />
     );
   }
 

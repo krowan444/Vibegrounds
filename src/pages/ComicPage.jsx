@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { supabase, describeError } from '../lib/supabase';
+import { supabase, describeError, looksMissing } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import SiteHeader from '../components/SiteHeader';
 import Notice from '../components/Notice';
+import CouldNotLoad from '../components/CouldNotLoad';
 import ReportButton from '../components/ReportButton';
 import { useDocumentTitle } from '../lib/pageMeta';
 import { timeAgo, compactNumber } from '../lib/format';
@@ -43,6 +44,9 @@ export default function ComicPage() {
   const [i, setI] = useState(0);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [unreachable, setUnreachable] = useState(false);
+  // Bumped by the Try again button, which is all the reload the effect needs.
+  const [attempt, setAttempt] = useState(0);
   const [error, setError] = useState('');
   const [revealed, setRevealed] = useState(false);
   const [resumed, setResumed] = useState(0);
@@ -94,6 +98,7 @@ export default function ComicPage() {
     let alive = true;
     setLoading(true);
     setNotFound(false);
+    setUnreachable(false);
     setI(0);
     setResumed(0);
     sheetRefs.current = [];
@@ -105,7 +110,11 @@ export default function ComicPage() {
       ]);
 
       if (!alive) return;
-      if (c.error || !c.data) { setNotFound(true); setLoading(false); return; }
+      // A comic that is not there and a comic we could not ask about are
+      // different things. Blaming a moderator for a dropped connection
+      // accuses somebody of removing work that is still sitting there.
+      if (c.error && !looksMissing(c.error)) { setUnreachable(true); setLoading(false); return; }
+      if (!c.data) { setNotFound(true); setLoading(false); return; }
       if (p.error) setError(describeError(p.error));
 
       setComic(c.data);
@@ -127,7 +136,7 @@ export default function ComicPage() {
     })();
 
     return () => { alive = false; };
-  }, [id]);
+  }, [id, attempt]);
 
   const total = pages.length;
 
@@ -259,6 +268,17 @@ export default function ComicPage() {
         <SiteHeader compact />
         <div className="vg-page"><div className="vg-loading">⏳ Loading...</div></div>
       </>
+    );
+  }
+
+  if (unreachable) {
+    return (
+      <CouldNotLoad
+        what="This Comic"
+        onRetry={() => setAttempt((n) => n + 1)}
+        backTo="/comics"
+        backLabel="Back to the comics"
+      />
     );
   }
 

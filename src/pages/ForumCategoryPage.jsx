@@ -1,9 +1,10 @@
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase, looksMissing } from '../lib/supabase';
 import { useDocumentTitle } from '../lib/pageMeta';
 import { useAuth } from '../contexts/AuthContext';
 import SiteHeader from '../components/SiteHeader';
+import CouldNotLoad from '../components/CouldNotLoad';
 import { useThreadUnread, ThreadPip } from '../components/ForumUnread';
 
 export default function ForumCategoryPage() {
@@ -13,6 +14,9 @@ export default function ForumCategoryPage() {
   const [category, setCategory] = useState(null);
   const [threads, setThreads] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [unreachable, setUnreachable] = useState(false);
+  // Bumped by the Try again button, which is all the reload the effect needs.
+  const [attempt, setAttempt] = useState(0);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ title: '', body: '' });
 
@@ -31,14 +35,19 @@ export default function ForumCategoryPage() {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
+      setUnreachable(false);
 
       // Get category
-      const { data: cat } = await supabase
+      const { data: cat, error: catErr } = await supabase
         .from('forum_categories')
         .select('*')
         .eq('slug', slug)
         .single();
 
+      // "No such board" and "could not ask" are different answers. Sending
+      // someone away convinced the board is gone, when it is sitting there
+      // and their connection blinked, loses the conversation for good.
+      if (catErr && !looksMissing(catErr)) { setUnreachable(true); setLoading(false); return; }
       if (!cat) { setLoading(false); return; }
       setCategory(cat);
 
@@ -61,7 +70,7 @@ export default function ForumCategoryPage() {
       setLoading(false);
     };
     fetchData();
-  }, [slug]);
+  }, [slug, attempt]);
 
   const handleCreateThread = async (e) => {
     e.preventDefault();
@@ -102,6 +111,18 @@ export default function ForumCategoryPage() {
     }
   };
 
+  if (unreachable) {
+    return (
+      <CouldNotLoad
+        what="This Board"
+        onRetry={() => setAttempt((n) => n + 1)}
+        backTo="/community"
+        backLabel="Back to the community"
+        compact={false}
+      />
+    );
+  }
+
   if (!loading && !category) {
     return (
       <>
@@ -125,13 +146,13 @@ export default function ForumCategoryPage() {
         }}>
           <Link to="/community" style={{ color: 'var(--orange)' }}>Community</Link>
           {' → '}
-          <span style={{ color: 'var(--text-secondary)' }}>{category?.name || 'Loading...'}</span>
+          <span style={{ color: 'var(--text-secondary)' }}>{category?.name || (loading ? 'Loading...' : 'Board')}</span>
         </div>
 
         {/* Category Header */}
         <div className="retro-panel" style={{ marginBottom: '8px' }}>
           <div className="section-header">
-            <h2>{category?.name || 'Loading...'}</h2>
+            <h2>{category?.name || (loading ? 'Loading...' : 'Board')}</h2>
           </div>
           <div style={{
             display: 'flex', justifyContent: 'space-between', alignItems: 'center',

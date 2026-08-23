@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { supabase, retryOnAbort, describeError } from '../lib/supabase';
+import { supabase, retryOnAbort, describeError, loadFailure } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import SiteHeader from '../components/SiteHeader';
 import CreationCard from '../components/CreationCard';
@@ -98,7 +98,7 @@ export default function HomePage() {
         console.warn('[VibeGrounds] home page partial load failure:', failed);
         setError(
           failed.length === R.length
-            ? `Nothing loaded: ${describeError(failed[0].error)}`
+            ? loadFailure(failed[0].error, 'anything')
             : `Could not load ${listOf(failed.map((f) => f.part))}. The rest of the page is fine — refresh to try again.`,
         );
       }

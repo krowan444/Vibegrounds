@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { supabase, retryOnAbort, describeError } from '../lib/supabase';
+import { supabase, retryOnAbort, describeError, loadFailure } from '../lib/supabase';
 import SiteHeader from '../components/SiteHeader';
 import AdSlot from '../components/AdSlot';
 import Notice from '../components/Notice';
@@ -130,7 +130,7 @@ export default function PortalPage() {
     // "[object Object]", which told nobody anything. Same fix as the home page.
     const firstError = [n, w, m, a].find((r) => r.error)?.error;
     if (firstError) console.warn('[VibeGrounds] portal load failure:', [n, w, m, a].filter((r) => r.error));
-    setError(firstError ? `Could not load everything: ${describeError(firstError)}` : '');
+    setError(firstError ? loadFailure(firstError, 'everything') : '');
 
     setNewest(n.data || []);
     setWeekly(w.data || []);

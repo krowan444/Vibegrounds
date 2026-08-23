@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import CouldNotLoad from '../components/CouldNotLoad';
 import SiteHeader from '../components/SiteHeader';
 
 const CATEGORY_ICONS = {
@@ -14,14 +15,24 @@ const CATEGORY_ICONS = {
 export default function ForumPage() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [unreachable, setUnreachable] = useState(false);
+  // Bumped by the Try again button, which is all the reload the effect needs.
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     const fetchCategories = async () => {
       // Get categories
-      const { data: cats } = await supabase
+      setUnreachable(false);
+      const { data: cats, error: catsErr } = await supabase
         .from('forum_categories')
         .select('*')
         .order('sort_order', { ascending: true });
+
+      // The boards are fixed rows that always exist, so an empty result here
+      // never means "there are no boards" — it means the request did not get
+      // through. This page used to sit on "Boards are loading..." forever and
+      // tell the visitor to run a SQL script.
+      if (catsErr) { setUnreachable(true); setLoading(false); return; }
 
       if (cats) {
         // Get thread counts and latest activity per category
@@ -59,7 +70,19 @@ export default function ForumPage() {
       setLoading(false);
     };
     fetchCategories();
-  }, []);
+  }, [attempt]);
+
+  if (unreachable) {
+    return (
+      <CouldNotLoad
+        what="The Community"
+        onRetry={() => setAttempt((n) => n + 1)}
+        backTo="/"
+        backLabel="Back to the home page"
+        compact={false}
+      />
+    );
+  }
 
   return (
     <>
@@ -173,7 +196,7 @@ export default function ForumPage() {
               fontFamily: 'var(--font-retro)', fontSize: '18px', color: 'var(--text-dim)',
               textAlign: 'center', padding: '30px'
             }}>
-              Boards are loading... Make sure to run the forum.sql script!
+              No boards yet.
             </div>
           )}
         </div>

@@ -1,8 +1,9 @@
 import { useParams, Link } from 'react-router-dom';
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase, looksMissing } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import SiteHeader from '../components/SiteHeader';
+import CouldNotLoad from '../components/CouldNotLoad';
 import CreationCard from '../components/CreationCard';
 import BadgeGrid from '../components/BadgeGrid';
 import LevelBar from '../components/LevelBar';
@@ -28,6 +29,7 @@ export default function ProfilePage() {
   const [tab, setTab] = useState('creations');
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [unreachable, setUnreachable] = useState(false);
   const [error] = useState('');
 
   useDocumentTitle(
@@ -43,10 +45,18 @@ export default function ProfilePage() {
   const load = useCallback(async () => {
     setLoading(true);
     setNotFound(false);
+    setUnreachable(false);
 
-    const { data: p } = await supabase
+    const { data: p, error: perr } = await supabase
       .from('profiles_public').select('*').ilike('username', username).maybeSingle();
 
+    // "Nobody is called that" and "we could not ask" are different answers,
+    // and only one of them is safe to tell somebody. Inviting a visitor to
+    // claim a name that is in fact taken, because their connection blinked,
+    // would be the site lying about another member.
+    if (perr && !looksMissing(perr)) {
+      setUnreachable(true); setProfile(null); setLoading(false); return;
+    }
     if (!p) { setNotFound(true); setProfile(null); setLoading(false); return; }
     setProfile(p);
 
@@ -72,6 +82,17 @@ export default function ProfilePage() {
         <SiteHeader compact />
         <div className="vg-page"><div className="vg-loading">⏳ Loading profile...</div></div>
       </>
+    );
+  }
+
+  if (unreachable) {
+    return (
+      <CouldNotLoad
+        what="This Profile"
+        onRetry={load}
+        backTo="/portal"
+        backLabel="Back to the Portal"
+      />
     );
   }
 

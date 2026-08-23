@@ -1,8 +1,9 @@
 import { Link, useParams } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase, looksMissing } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import SiteHeader from '../components/SiteHeader';
+import CouldNotLoad from '../components/CouldNotLoad';
 import { renderPostBody } from '../lib/postText';
 import { useDocumentTitle } from '../lib/pageMeta';
 
@@ -10,6 +11,9 @@ export default function ForumThreadPage() {
   const { id } = useParams();
   const { user, profile } = useAuth();
   const [thread, setThread] = useState(null);
+  const [unreachable, setUnreachable] = useState(false);
+  // Bumped by the Try again button, which is all the reload the effect needs.
+  const [attempt, setAttempt] = useState(0);
   const [posts, setPosts] = useState([]);
   const [category, setCategory] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -38,8 +42,9 @@ export default function ForumThreadPage() {
   useEffect(() => {
     const fetchThread = async () => {
       setLoading(true);
+      setUnreachable(false);
 
-      const { data: threadData } = await supabase
+      const { data: threadData, error: threadErr } = await supabase
         .from('forum_threads')
         // Foreign key named explicitly - see the note in ForumCategoryPage.
         // Without it PostgREST can find two routes to profiles and returns
@@ -49,6 +54,9 @@ export default function ForumThreadPage() {
         .eq('id', id)
         .single();
 
+      // A deleted thread and an unreachable one look identical from here
+      // unless the error is read. Only one of them should be announced.
+      if (threadErr && !looksMissing(threadErr)) { setUnreachable(true); setLoading(false); return; }
       if (!threadData) { setLoading(false); return; }
       setThread(threadData);
 
@@ -69,7 +77,7 @@ export default function ForumThreadPage() {
       setLoading(false);
     };
     fetchThread();
-  }, [id]);
+  }, [id, attempt]);
 
   /*
    * Mark it read.
@@ -188,6 +196,18 @@ export default function ForumThreadPage() {
 
   // Owner checks
   const isThreadOwner = user && thread?.author_id === user.id;
+
+  if (unreachable) {
+    return (
+      <CouldNotLoad
+        what="This Thread"
+        onRetry={() => setAttempt((n) => n + 1)}
+        backTo="/community"
+        backLabel="Back to the community"
+        compact={false}
+      />
+    );
+  }
 
   if (!loading && !thread) {
     return (
