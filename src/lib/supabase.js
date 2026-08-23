@@ -99,6 +99,34 @@ const TRANSIENT = /abort|lock broken|issued at future|jwtissuedatfuture|not yet 
 const CLOCK_SKEW = /future|not yet valid/i;
 
 /**
+ * Did we fail to reach the server at all?
+ *
+ * When a connection drops, the browser throws "TypeError: Failed to fetch".
+ * That is accurate and useless: it names a JavaScript type at somebody who
+ * only wanted to read a comic on a train.
+ */
+const CANNOT_REACH = /failed to fetch|fetch failed|network ?error|network request failed|load failed|err_internet|err_network|err_connection|timed out|timeout/i;
+
+export function cannotReach(e) {
+  if (!e) return false;
+  if (e.timedOut) return true;
+  return CANNOT_REACH.test(`${e.message || ''} ${e.name || ''}`);
+}
+
+/**
+ * Is this genuinely "there is no such thing", or did we just not get an answer?
+ *
+ * PostgREST says "no rows" with the code PGRST116; maybeSingle() says it by
+ * returning no error and no row. Everything else — a dropped connection, a
+ * paused project, a 500 — means we do not know, and must never be shown to a
+ * person as "this does not exist". Telling somebody a username is free
+ * because their train went into a tunnel is a lie with consequences.
+ */
+export function looksMissing(error) {
+  return !error || error.code === 'PGRST116';
+}
+
+/**
  * Turn whatever a failure hands us into a sentence.
  *
  * Written because the home page did this:
@@ -118,6 +146,9 @@ const CLOCK_SKEW = /future|not yet valid/i;
 export function describeError(e) {
   if (!e) return 'Unknown error';
   if (typeof e === 'string') return e;
+  if (cannotReach(e)) {
+    return 'Could not reach VibeGrounds — that is almost always the connection rather than anything you did.';
+  }
 
   const parts = [e.message, e.details, e.hint].filter(
     (s) => typeof s === 'string' && s.trim(),
@@ -132,6 +163,20 @@ export function describeError(e) {
   } catch { /* circular reference — fall through */ }
 
   return e.name || 'Unknown error';
+}
+
+/**
+ * What to put on screen when part of a page did not load.
+ *
+ * A connection failure already explains itself in full, so prefixing it with
+ * which part of the page it was doubles the sentence: "Could not load the
+ * catalogue: Could not reach VibeGrounds...". A real database error is the
+ * other way round — it says nothing a visitor can place, so it needs the
+ * part naming.
+ */
+export function loadFailure(error, what) {
+  if (cannotReach(error)) return describeError(error);
+  return `Could not load ${what}: ${describeError(error)}`;
 }
 
 export async function retryOnAbort(run, attempts = 2, timeoutMs = 22000) {
