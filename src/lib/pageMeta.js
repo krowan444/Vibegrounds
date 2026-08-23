@@ -65,6 +65,7 @@ const ROUTES = {
   '/coins': ['Vibe Coins', 'What Vibe Coins are, how you earn them, and what they are for.'],
   '/rules': ['Rules', 'The rules of VibeGrounds. Short, human, and mostly about not being unpleasant to beginners.'],
   '/advertise': ['Advertise', 'Advertising on VibeGrounds.'],
+  '/feedback': ['Something Not Right?', 'Report a bug, say what confused you, or suggest something. No account needed.'],
 
   '/auth': ['Sign In', 'Sign in to VibeGrounds, or join and get 50 free Vibe Coins.'],
   '/forgot-password': ['Reset Your Password', 'Reset your VibeGrounds password.'],
