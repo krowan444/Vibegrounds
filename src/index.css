@@ -1977,6 +1977,42 @@ body { background: var(--bg-darkest); overflow-y: auto; }
   color: #000; background: var(--green); padding: 3px 5px;
 }
 
+/* The promo strip. Same shape and height as the ticker it replaces, so the
+   page does not jump when it is switched on or off — but the whole bar is
+   one link, and it is warm rather than grey, because it is asking for a
+   click rather than reporting a number. */
+.vg-promo {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 10px; margin-bottom: 12px;
+  background: linear-gradient(90deg, rgba(232,163,23,.16), rgba(232,163,23,.05) 60%, transparent);
+  border: 2px solid var(--orange-dim);
+  font-family: var(--font-retro); font-size: 17px; color: var(--text-primary);
+  text-decoration: none;
+  transition: border-color .15s, background .15s;
+}
+.vg-promo:hover {
+  border-color: var(--orange);
+  background: linear-gradient(90deg, rgba(232,163,23,.26), rgba(232,163,23,.08) 60%, transparent);
+}
+.vg-promo-badge {
+  flex-shrink: 0; font-family: var(--font-pixel); font-size: 7px;
+  color: #241500; background: var(--orange); padding: 3px 5px;
+}
+.vg-promo-text {
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.vg-promo-cta {
+  margin-left: auto; flex-shrink: 0;
+  color: var(--orange); font-weight: bold; white-space: nowrap;
+}
+.vg-promo:hover .vg-promo-cta { color: var(--orange-bright); }
+
+@media (max-width: 520px) {
+  /* On a phone the whole bar is the tap target anyway, so the words that
+     repeat what tapping does can go and give the message the room. */
+  .vg-promo-cta { display: none; }
+}
+
 @media (max-width: 1100px) {
   .vg-3col { grid-template-columns: minmax(0, 1fr) 290px; }
   .vg-col-left { grid-column: 1 / -1; flex-direction: row; flex-wrap: wrap; }
@@ -4863,8 +4899,11 @@ body { background: var(--bg-darkest); overflow-y: auto; }
 
 .vg-comic-page {
   display: block;
-  max-width: 100%;
-  max-height: 82vh;
+  /* The same zoom as the reel, applied to the fitted size rather than the
+     width — in this mode the limit on how big a page can be is the height
+     of the window, so that is what has to scale. */
+  max-width: calc(100% * var(--z, .9));
+  max-height: calc(82vh * var(--z, .9));
   width: auto; height: auto;
   object-fit: contain;
   cursor: pointer;
@@ -4880,15 +4919,22 @@ body { background: var(--bg-darkest); overflow-y: auto; }
    as you scroll down to them.
    ------------------------------------------------------------------ */
 .vg-comic-reel {
+  --z: .9;
   display: flex; flex-direction: column; align-items: center;
   gap: 26px; padding: 20px 0;
   background: #07070d;
   border: 2px solid var(--border-panel);
+  /* Only ever used past 100%, where the reader has deliberately asked to
+     see a page bigger than the screen. `safe` keeps the left edge reachable
+     — plain centring pushes overflow off the start of the scroll range,
+     where no amount of scrolling gets it back. */
+  overflow-x: auto;
+  align-items: safe center;
 }
 
 .vg-comic-sheet {
   margin: 0; position: relative;
-  width: 100%; max-width: 100%;
+  max-width: 100%;
   display: flex; flex-direction: column; align-items: center;
   /* So a jump lands the page under the header rather than behind it. */
   scroll-margin-top: 12px;
@@ -4896,9 +4942,12 @@ body { background: var(--bg-darkest); overflow-y: auto; }
 
 .vg-comic-sheet img {
   display: block;
-  width: 100%; height: auto;
-  /* An inline max-width caps each page at the size it was drawn, so nothing
-     is ever upscaled into mush. */
+  /* --base is set per page: as wide as there is room for, capped at the size
+     it was drawn. --z is the reader's zoom. Multiplying rather than
+     overriding means the no-upscaling rule still holds at every size below
+     100%, and above it the reader has asked, which is different. */
+  width: calc(var(--base, 100%) * var(--z));
+  height: auto;
   border: 1px solid #000;
   box-shadow: 0 6px 26px rgba(0,0,0,.55);
   background: #14141c;
@@ -4924,11 +4973,9 @@ body { background: var(--bg-darkest); overflow-y: auto; }
   font-family: var(--font-retro); font-size: 18px; color: var(--text-secondary);
 }
 
-.vg-comic-fit {
-  margin-left: 6px;
-  font-family: var(--font-retro); font-size: 15px;
-  background: transparent; border: 1px solid var(--border-dark);
-  color: var(--text-secondary); padding: 4px 10px; cursor: pointer;
+.vg-comic-bar .vg-comic-fit {
+  border-color: var(--border-dark);
+  color: var(--text-secondary);
 }
 .vg-comic-bar .vg-comic-fit:hover { background: var(--border-dark); color: var(--orange); }
 
@@ -4970,22 +5017,48 @@ body { background: var(--bg-darkest); overflow-y: auto; }
    controls have long left the screen otherwise, and "where am I" becomes a
    trip back to the top. Sitting on the bottom edge it never covers a page,
    because the page is above it. */
+/* Sticks to the bottom of the window, and stays out of the way.
+   Everything on it is one centred group, and it is deliberately slight —
+   this is the frame, not the picture. */
 .vg-comic-bar {
   position: sticky; bottom: 0; z-index: 5;
-  display: flex; align-items: center; justify-content: center; gap: 14px;
-  padding: 8px; background: var(--bg-panel);
+  display: flex; align-items: center; justify-content: center;
+  gap: 8px; flex-wrap: wrap;
+  padding: 4px 8px; background: var(--bg-panel);
   border: 2px solid var(--border-panel); border-top: none;
   box-shadow: 0 -8px 18px rgba(0,0,0,.5);
 }
 .vg-comic-bar button {
-  font-family: var(--font-retro); font-size: 17px;
+  font-family: var(--font-retro); font-size: 15px; line-height: 1.2;
   background: transparent; border: 1px solid var(--orange-dim);
-  color: var(--orange); padding: 4px 12px; cursor: pointer;
+  color: var(--orange); padding: 2px 9px; cursor: pointer;
 }
 .vg-comic-bar button:hover:not(:disabled) { background: var(--orange); color: #241500; }
 .vg-comic-bar button:disabled { opacity: .3; cursor: default; }
-.vg-comic-counter { font-family: var(--font-retro); font-size: 17px; color: var(--text-secondary); }
+.vg-comic-counter {
+  font-family: var(--font-retro); font-size: 15px; color: var(--text-secondary);
+  white-space: nowrap;
+}
 .vg-comic-counter b { color: var(--orange); font-variant-numeric: tabular-nums; }
+
+/* A hairline, so the two groups read as two without needing a gap wide
+   enough to break the centring. */
+.vg-comic-sep {
+  width: 1px; height: 16px; background: var(--border-dark);
+}
+
+/* − 90% + as one control. The number is a button too: press it to go back
+   to the size the comic started at, which is quicker than counting clicks. */
+.vg-comic-zoom { display: inline-flex; align-items: center; }
+.vg-comic-bar .vg-comic-zoom button { padding: 2px 8px; }
+.vg-comic-bar .vg-comic-zoom button:not(:first-child) { border-left: none; }
+.vg-comic-bar .vg-comic-zoom-num {
+  min-width: 52px; text-align: center;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.vg-comic-bar .vg-comic-zoom-num:hover { color: #241500; }
 
 /* Jump rail. Scrolls sideways on its own so a 60-page comic does not push
    the page wide. */
@@ -5064,7 +5137,13 @@ body { background: var(--bg-darkest); overflow-y: auto; }
   /* On a phone the reel is already the full width of the screen, so the
      side padding is wasted picture. */
   .vg-comic-reel { gap: 16px; padding: 10px 0; border-left: none; border-right: none; }
-  .vg-comic-bar { gap: 8px; flex-wrap: wrap; }
+  /* Two rows on a phone whatever we do — there is not 460px of controls
+     worth of screen. So make the two rows as shallow as they can be. */
+  .vg-comic-bar { gap: 4px 6px; padding: 3px 6px; }
+  .vg-comic-bar button { font-size: 14px; padding: 2px 7px; }
+  .vg-comic-counter { font-size: 14px; }
+  .vg-comic-bar .vg-comic-zoom-num { min-width: 46px; }
+  .vg-comic-sep { display: none; }
   .vg-comic-cover-pick { flex-direction: column; align-items: flex-start; }
 }
 
