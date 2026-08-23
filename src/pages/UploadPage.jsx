@@ -42,7 +42,7 @@ function translate(message = '') {
 
 const BLANK = {
   title: '', description: '', category: 'games',
-  project_url: '', thumbnail_url: '', tags: '', is_nsfw: false,
+  project_url: '', thumbnail_url: '', tags: '', is_nsfw: false, works_on: 'both',
 };
 
 // Mirrors the thumbnails bucket. The bucket is what actually enforces this;
@@ -298,6 +298,7 @@ export default function UploadPage() {
           p_thumbnail: normalizeUrl(form.thumbnail_url),
           p_tags: tags,
           p_is_nsfw: form.is_nsfw,
+          p_works_on: form.works_on,
         })),
         25000,
       );
@@ -492,6 +493,38 @@ export default function UploadPage() {
                 disabled={loading}
                 sourceText={`${form.title} ${form.description}`}
               />
+            </div>
+
+            {/* Where it works. Asked here because the creator is the only
+                person who knows, and because somebody who opens a
+                keyboard-only thing on a phone does not leave a review saying
+                so — they just leave, and the creator never finds out why
+                nobody scored it. */}
+            <div className="vg-works">
+              <span className="vg-works-q">Where does it work?</span>
+              <div className="vg-works-opts">
+                {[
+                  ['both', '💻 📱 Both', 'Works on a computer and on a phone'],
+                  ['desktop', '💻 Computer', 'Needs a keyboard, a mouse, or a big screen'],
+                  ['mobile', '📱 Phone', 'Built for a phone or a tablet'],
+                ].map(([value, label, hint]) => (
+                  <label
+                    key={value}
+                    title={hint}
+                    className={`vg-works-opt ${form.works_on === value ? 'is-on' : ''}`}
+                  >
+                    <input
+                      type="radio" name="works_on" value={value}
+                      checked={form.works_on === value}
+                      onChange={set('works_on')} disabled={loading}
+                    />
+                    <span>{label}</span>
+                  </label>
+                ))}
+              </div>
+              <span className="vg-works-note">
+                People filter by this, so it is worth getting right. Not sure? Leave it on Both.
+              </span>
             </div>
 
             <label style={{

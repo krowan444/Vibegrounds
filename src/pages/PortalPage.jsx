@@ -70,6 +70,7 @@ export default function PortalPage() {
   const [params, setParams] = useSearchParams();
   const category = params.get('cat') || '';
   const query = params.get('q') || '';
+  const device = params.get('on') || '';   // '' | 'mobile' | 'desktop'
 
   const [categories, setCategories] = useState([]);
   const [newest, setNewest] = useState([]);
@@ -99,6 +100,11 @@ export default function PortalPage() {
       if (category !== 'memes') out = out.neq('category', 'memes');
       if (category) out = out.eq('category', category);
       if (query) out = out.or(`title.ilike.%${query}%,description.ilike.%${query}%`);
+      // 'both' answers either question, so it is always included. Anything
+      // still marked 'unknown' drops out — which is the honest result: the
+      // creator has not said it works there, so we are not going to say it
+      // for them.
+      if (device) out = out.in('works_on', [device, 'both']);
       return out;
     };
 
@@ -132,7 +138,7 @@ export default function PortalPage() {
     setAlltime(a.data || []);
     setTotal(c.count || 0);
     setLoading(false);
-  }, [category, query]);
+  }, [category, query, device]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -207,6 +213,39 @@ export default function PortalPage() {
               {c.icon} {c.name.toUpperCase()}
             </button>
           ))}
+        </div>
+
+        {/* Where it works. A separate row from the categories on purpose:
+            it is a different question, and putting it in the same row would
+            read as one long list of categories with two odd ones at the
+            end. */}
+        <div className="vg-devicebar">
+          <span className="vg-devicebar-q">Works on</span>
+          <div className="vg-tabs vg-devicebar-tabs">
+            <button
+              type="button"
+              className={`vg-tab ${!device ? 'is-active' : ''}`}
+              onClick={() => setParam('on', '')}
+            >
+              ANYTHING
+            </button>
+            <button
+              type="button"
+              className={`vg-tab ${device === 'mobile' ? 'is-active' : ''}`}
+              onClick={() => setParam('on', 'mobile')}
+              title="Things the creator says work on a phone"
+            >
+              \ud83d\udcf1 PHONE
+            </button>
+            <button
+              type="button"
+              className={`vg-tab ${device === 'desktop' ? 'is-active' : ''}`}
+              onClick={() => setParam('on', 'desktop')}
+              title="Things that need a keyboard or a big screen"
+            >
+              \ud83d\udcbb COMPUTER
+            </button>
+          </div>
         </div>
 
         <SubmitCta />

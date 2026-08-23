@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase, withTimeout } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import SiteHeader from '../components/SiteHeader';
+import WorksOnBadge from '../components/WorksOn';
 import VoteWidget from '../components/VoteWidget';
 import ReviewSection from '../components/ReviewSection';
 import IdeasSection from '../components/IdeasSection';
@@ -317,6 +318,9 @@ export default function CreationPage() {
                 <Link to={`/category/${c.category}`} style={{ color: 'var(--blue-link)' }}>
                   {c.category_icon} {c.category_name}
                 </Link>
+                {/* Renders nothing when the creator has not said, which is
+                    every creation posted before the question existed. */}
+                <WorksOnBadge value={c.works_on} />
 
                 <span style={{ marginLeft: 'auto', display: 'flex', gap: '6px', alignItems: 'center' }}>
                   {isOwner && (

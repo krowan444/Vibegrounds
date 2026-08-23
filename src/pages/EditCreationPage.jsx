@@ -67,6 +67,10 @@ export default function EditCreationPage() {
         thumbnail_url: row.thumbnail_url || '',
         tags: (row.tags || []).join(', '),
         is_nsfw: !!row.is_nsfw,
+        // 'unknown' is a real answer here, not a missing one: it means
+        // nobody has said yet, which is true of everything posted before
+        // the column existed. The form shows it as nothing selected.
+        works_on: row.works_on || 'unknown',
         // Older rows pre-date the column, so treat a missing value as open.
         accepts_ideas: row.accepts_ideas !== false,
       });
@@ -202,6 +206,10 @@ export default function EditCreationPage() {
           // approval that landed in between.
           tags,
           is_nsfw: form.is_nsfw,
+          // Same guard as accepts_ideas below: only written if the column
+          // was actually on the row we loaded, so editing still works if
+          // this deploys before its migration has run.
+          ...(original && 'works_on' in original ? { works_on: form.works_on } : {}),
           // Only sent if the column actually exists on the row we loaded.
           // Writing a column that has not been migrated yet fails the whole
           // update, which would break editing entirely for anyone who
@@ -358,6 +366,35 @@ export default function EditCreationPage() {
                 disabled={loading}
                 sourceText={`${form.title} ${form.description}`}
               />
+            </div>
+
+            {/* Every creation posted before this existed says 'unknown',
+                because inventing an answer on the creator's behalf would
+                have filled the filter with claims nobody made. This is
+                where the real answer gets added. */}
+            <div className="vg-works">
+              <span className="vg-works-q">Where does it work?</span>
+              <div className="vg-works-opts">
+                {[
+                  ['both', '\ud83d\udcbb \ud83d\udcf1 Both'],
+                  ['desktop', '\ud83d\udcbb Computer'],
+                  ['mobile', '\ud83d\udcf1 Phone'],
+                ].map(([value, label]) => (
+                  <label key={value} className={`vg-works-opt ${form.works_on === value ? 'is-on' : ''}`}>
+                    <input
+                      type="radio" name="works_on" value={value}
+                      checked={form.works_on === value}
+                      onChange={set('works_on')} disabled={loading}
+                    />
+                    <span>{label}</span>
+                  </label>
+                ))}
+              </div>
+              <span className="vg-works-note">
+                {form.works_on === 'unknown'
+                  ? 'Not set yet — people filtering for phone or computer will not see this.'
+                  : 'People filter by this.'}
+              </span>
             </div>
 
             <div className="retro-form-group">
