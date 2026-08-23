@@ -240,3 +240,30 @@
 .vg-email-tag.is-live { border-color: var(--red); color: #ff8888; }
 .vg-email-to { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
 .vg-email-when { flex-shrink: 0; color: var(--text-dim); }
+
+/* ============================================================
+   COULD NOT LOAD
+   The panel shown when the site could not reach its own data.
+   It has to read as calm rather than as a fault, so it uses the
+   ordinary empty-state spacing rather than the red error tone.
+   ============================================================ */
+.vg-cnl-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.vg-cnl-actions .retro-cta {
+  width: auto;
+  padding: 9px 18px;
+  font-size: 9px;
+}
+
+.vg-cnl-aside {
+  margin-top: 14px;
+  font-size: 15px;
+  color: var(--text-dim);
+}
