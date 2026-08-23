@@ -8,11 +8,13 @@ import { REPORT_REASONS } from '../components/ReportButton';
 import { timeAgo } from '../lib/format';
 import { LOGO_FALLBACK, onThumbError } from '../lib/thumbnail';
 import FeedbackInbox from '../components/FeedbackInbox';
+import EmailPanel from '../components/EmailPanel';
 
 const TABS = [
   { id: 'overview', label: 'Overview', icon: '📊' },
   { id: 'reports',  label: 'Reports',  icon: '🚩' },
   { id: 'feedback', label: 'Feedback', icon: '🐞' },
+  { id: 'email',    label: 'Email',    icon: '✉️' },
   { id: 'users',    label: 'Users',    icon: '👥' },
   { id: 'content',  label: 'Content',  icon: '🎨' },
   { id: 'shots',    label: 'Screenshots', icon: '🖼️' },
@@ -134,6 +136,7 @@ export default function AdminPage() {
             {tab === 'overview' && <Overview onError={oops} />}
             {tab === 'reports'  && <Reports say={say} onError={oops} />}
             {tab === 'feedback' && <FeedbackInbox say={say} onError={oops} />}
+            {tab === 'email'    && <EmailPanel say={say} onError={oops} />}
             {tab === 'users'    && <Users say={say} onError={oops} isAdmin={isAdmin} />}
             {tab === 'content'  && <Content say={say} onError={oops} />}
             {tab === 'shots'    && <Screenshots say={say} onError={oops} />}
