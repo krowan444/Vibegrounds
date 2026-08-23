@@ -5206,3 +5206,66 @@ body { background: var(--bg-darkest); overflow-y: auto; }
      to fire, so a reader who has asked for stillness still gets the comic. */
   .vg-comic-sheet { opacity: 1; transform: none; transition: none; }
 }
+
+/* ============================================================
+   WHERE DOES IT WORK
+   ============================================================
+   Asked at upload, shown on the creation, filtered on the Portal. Three
+   places, one vocabulary — the words and icons live in WorksOn.jsx so they
+   cannot drift apart. */
+
+.vg-works {
+  margin: 14px 0;
+  padding: 10px 12px;
+  background: var(--bg-dark);
+  border: 1px solid var(--border-dark);
+}
+.vg-works-q {
+  display: block; margin-bottom: 7px;
+  font-family: var(--font-pixel); font-size: 9px; color: var(--orange);
+}
+.vg-works-opts { display: flex; gap: 6px; flex-wrap: wrap; }
+
+/* The radio itself is hidden rather than removed: it still gets focus, still
+   works from a keyboard, still groups by name. Only its default appearance
+   goes, replaced by the state of the label around it. */
+.vg-works-opt {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 12px; cursor: pointer;
+  border: 1px solid var(--border-dark); background: transparent;
+  font-family: var(--font-retro); font-size: 17px; color: var(--text-secondary);
+  transition: border-color .12s, color .12s, background .12s;
+}
+.vg-works-opt input { position: absolute; opacity: 0; width: 0; height: 0; }
+.vg-works-opt:hover { border-color: var(--orange-dim); color: var(--text-primary); }
+.vg-works-opt.is-on {
+  border-color: var(--orange); background: rgba(232,163,23,.12); color: var(--orange);
+}
+.vg-works-opt:focus-within { outline: 2px solid var(--orange-bright); outline-offset: 2px; }
+
+.vg-works-note {
+  display: block; margin-top: 7px;
+  font-family: var(--font-retro); font-size: 15px; color: var(--text-dim);
+}
+
+/* The badge on a creation. Never rendered for 'unknown' — see WorksOn.jsx. */
+.vg-works-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 1px 7px;
+  border: 1px solid var(--border-dark); background: var(--bg-dark);
+  font-family: var(--font-retro); font-size: 15px; color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+/* The Portal filter. Its own row under the categories, because it answers a
+   different question and tacking it onto the end of the category list would
+   read as two odd categories. */
+.vg-devicebar {
+  display: flex; align-items: center; gap: 10px;
+  flex-wrap: wrap; margin: 6px 0 2px;
+}
+.vg-devicebar-q {
+  font-family: var(--font-pixel); font-size: 8px; color: var(--text-dim);
+  letter-spacing: .06em;
+}
+.vg-devicebar-tabs { flex: 1 1 auto; }
