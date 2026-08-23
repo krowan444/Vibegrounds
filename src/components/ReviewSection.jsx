@@ -14,8 +14,28 @@ const REACTIONS = [
   { type: 'cursed', emoji: '💀', label: 'Cursed' },
 ];
 
-export default function ReviewSection({ creationId }) {
+/**
+ * One comment section, two kinds of page.
+ *
+ * Comics needed comments. The honest options were to copy this file or to
+ * teach it about a second kind of target, and copying it would have meant a
+ * second set of moderation, reporting, threading and rate-limiting rules to
+ * keep in step with these ones — with the moderation half being the one
+ * everybody forgets to update.
+ *
+ * So: pass creationId or comicId, never both. The only real difference is
+ * that reactions belong to submissions and are left off comics, and the
+ * wording changes, because "review" is the right word for something you are
+ * scoring out of five and the wrong word for somebody's comic.
+ */
+export default function ReviewSection({ creationId, comicId }) {
   const { user, profile, canPost, isStaff } = useAuth();
+
+  const onComic = !!comicId;
+  // The column this page's comments live in, and the value to match.
+  const targetColumn = onComic ? 'comic_id' : 'creation_id';
+  const targetId = onComic ? comicId : creationId;
+  const noun = onComic ? 'comment' : 'review';
 
   const [reviews, setReviews] = useState([]);
   const [reactions, setReactions] = useState({});
@@ -34,9 +54,13 @@ export default function ReviewSection({ creationId }) {
     // review button stuck on "POSTING..." after the review had already saved.
     const [r, re] = await Promise.all([
       retryOnAbort(() => supabase.from('reviews_public').select('*')
-        .eq('creation_id', creationId).order('created_at', { ascending: false })),
-      retryOnAbort(() => supabase.from('reactions').select('reaction_type, user_id')
-        .eq('creation_id', creationId)),
+        .eq(targetColumn, targetId).order('created_at', { ascending: false })),
+      // Reactions are a submissions feature and have no comic column, so a
+      // comic simply does not ask for them.
+      onComic
+        ? Promise.resolve({ data: [] })
+        : retryOnAbort(() => supabase.from('reactions').select('reaction_type, user_id')
+            .eq('creation_id', creationId)),
     ]);
 
     setReviews(r.data || []);
@@ -49,7 +73,7 @@ export default function ReviewSection({ creationId }) {
     });
     setReactions(tally);
     setMine(own);
-  }, [creationId, user]);
+  }, [targetColumn, targetId, onComic, creationId, user]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -98,7 +122,7 @@ export default function ReviewSection({ creationId }) {
     setError('');
     try {
       const { error: err } = await retryOnAbort(() => supabase.from('reviews').insert({
-        creation_id: creationId,
+        [targetColumn]: targetId,
         author_id: user.id,
         body: body.trim(),
       }));
@@ -120,7 +144,7 @@ export default function ReviewSection({ creationId }) {
     setError('');
     try {
       const { error: err } = await retryOnAbort(() => supabase.from('reviews').insert({
-        creation_id: creationId,
+        [targetColumn]: targetId,
         author_id: user.id,
         parent_id: parentId,
         body: replyBody.trim(),
@@ -164,7 +188,8 @@ export default function ReviewSection({ creationId }) {
 
   return (
     <>
-      {/* Reactions */}
+      {/* Reactions — submissions only */}
+      {!onComic && (
       <div className="retro-panel" style={{ marginBottom: '14px' }}>
         <div className="section-header"><h2>⚡ Quick Reactions</h2></div>
         <div className="retro-panel-body" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -194,11 +219,12 @@ export default function ReviewSection({ creationId }) {
           })}
         </div>
       </div>
+      )}
 
       {/* Comments */}
       <div className="retro-panel vg-reviews-panel">
         <div className="section-header">
-          <h2>💬 Reviews ({reviews.length})</h2>
+          <h2>💬 {onComic ? 'Comments' : 'Reviews'} ({reviews.length})</h2>
         </div>
 
         <div className="retro-panel-body">
@@ -206,11 +232,11 @@ export default function ReviewSection({ creationId }) {
 
           {!user ? (
             <div style={{ fontFamily: 'var(--font-retro)', fontSize: '18px', color: 'var(--text-dim)' }}>
-              <Link to="/auth" style={{ color: 'var(--orange)' }}>Sign in</Link> to leave a review.
+              <Link to="/auth" style={{ color: 'var(--orange)' }}>Sign in</Link> to leave a {noun}.
             </div>
           ) : !canPost ? (
             <div style={{ fontFamily: 'var(--font-retro)', fontSize: '18px', color: 'var(--text-dim)' }}>
-              Confirm your email address to leave reviews.
+              Confirm your email address to leave {noun}s.
             </div>
           ) : (
             <form onSubmit={post}>
@@ -218,7 +244,9 @@ export default function ReviewSection({ creationId }) {
                 id="vg-review-input"
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
-                placeholder="What did you think? Be honest, be useful, don't be a dick."
+                placeholder={onComic
+                  ? "What did you think of it? Be honest, be useful, don't be a dick."
+                  : "What did you think? Be honest, be useful, don't be a dick."}
                 maxLength={1000}
                 disabled={busy}
                 style={{
@@ -239,7 +267,7 @@ export default function ReviewSection({ creationId }) {
                     cursor: busy ? 'wait' : 'pointer', opacity: body.trim() ? 1 : 0.5,
                   }}
                 >
-                  {busy ? 'POSTING...' : 'POST REVIEW'}
+                  {busy ? 'POSTING...' : (onComic ? 'POST COMMENT' : 'POST REVIEW')}
                 </button>
                 <span style={{ fontFamily: 'var(--font-retro)', fontSize: '14px', color: 'var(--text-dim)' }}>
                   {body.length}/1000
@@ -264,7 +292,9 @@ export default function ReviewSection({ creationId }) {
 
         {reviews.length === 0 ? (
           <div className="vg-empty" style={{ padding: '22px', fontSize: '17px' }}>
-            No reviews yet. Be the first to say something.
+            {onComic
+              ? 'No comments yet. Be the first to say something.'
+              : 'No reviews yet. Be the first to say something.'}
           </div>
         ) : (
           /*
