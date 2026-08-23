@@ -370,11 +370,7 @@ export default function ReviewSection({ creationId }) {
                     </div>
                   </div>
                 ) : (
-                  <div className="vg-review-body" style={{
-                    fontFamily: 'var(--font-retro)', fontSize: '18px',
-                    color: 'var(--text-primary)', marginTop: '4px',
-                    whiteSpace: 'pre-wrap', lineHeight: 1.35,
-                  }}>
+                  <div className="vg-review-body vg-prose" style={{ marginTop: '4px' }}>
                     {r.body}
                   </div>
                 )}
