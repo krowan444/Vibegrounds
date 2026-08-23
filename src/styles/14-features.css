@@ -267,3 +267,38 @@
   font-size: 15px;
   color: var(--text-dim);
 }
+
+/* ============================================================
+   BACK TO TOP
+   In the flow at the bottom of a long page, not floating over
+   the artwork. Wide enough to hit with a thumb.
+   ============================================================ */
+.vg-backtotop {
+  display: flex;
+  justify-content: center;
+  padding: 22px 8px 34px;
+}
+
+.vg-backtotop button {
+  background: var(--bg-input);
+  border: 2px solid var(--border-dark);
+  border-top-color: var(--border-light, var(--border-dark));
+  color: var(--text-secondary);
+  font-family: var(--font-pixel);
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 12px 20px;
+  cursor: pointer;
+  transition: color .15s, border-color .15s;
+}
+
+.vg-backtotop button:hover {
+  color: var(--orange);
+  border-color: var(--orange);
+}
+
+/* Comments under a comic: a little air between the artwork and the talk. */
+.vg-comic-talk {
+  margin-top: 18px;
+}
