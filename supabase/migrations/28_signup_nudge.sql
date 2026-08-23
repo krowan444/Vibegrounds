@@ -335,21 +335,30 @@ grant execute on function public.set_nudge_mode(boolean, boolean) to authenticat
 -- 10am UTC. The function itself no-ops while nudge_enabled is false, so
 -- scheduling it now is safe and means there is nothing left to remember
 -- when the switch is flipped.
+-- No `with schema extensions` here, and that is not a style choice: pg_cron
+-- insists on its own `cron` schema and refuses to be installed anywhere
+-- else. The first version of this migration asked for the extensions schema,
+-- failed, and — because the failure was swallowed by the exception handler
+-- below — reported success while quietly scheduling nothing at all. The
+-- feature would have sat there looking finished and never once run.
+create extension if not exists pg_cron;
+
 do $$
 begin
-  create extension if not exists pg_cron with schema extensions;
-
   perform cron.unschedule('vg-signup-nudge');
 exception
-  when others then null;   -- not scheduled yet, or pg_cron unavailable
+  when others then null;   -- simply not scheduled yet
 end
 $$;
 
 do $$
 begin
   perform cron.schedule('vg-signup-nudge', '0 10 * * *', 'select public.send_signup_nudges();');
+  raise notice 'Scheduled vg-signup-nudge daily at 10:00 UTC.';
 exception
   when others then
-    raise notice 'pg_cron not available — run send_signup_nudges() from the dashboard instead.';
+    -- Still tolerated, because a stack without pg_cron should not fail the
+    -- whole migration — but it says so loudly rather than passing silently.
+    raise warning 'COULD NOT SCHEDULE the nudge (%). It will never run on its own — run send_signup_nudges() by hand or fix pg_cron.', sqlerrm;
 end
 $$;
