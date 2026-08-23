@@ -6,6 +6,8 @@ import SiteHeader from '../components/SiteHeader';
 import Notice from '../components/Notice';
 import CouldNotLoad from '../components/CouldNotLoad';
 import ReportButton from '../components/ReportButton';
+import ReviewSection from '../components/ReviewSection';
+import BackToTop from '../components/BackToTop';
 import { useDocumentTitle } from '../lib/pageMeta';
 import { timeAgo, compactNumber } from '../lib/format';
 
@@ -485,6 +487,24 @@ export default function ComicPage() {
           {user && !mine && <ReportButton targetType="comic" targetId={comic.id} />}
           {isStaff && <span className="vg-comic-staff">Staff: moderate from the control room.</span>}
         </div>
+
+        {/*
+          * Comments sit under everything, which is where they belong on a
+          * comic: you read the thing first, then you talk about it. This is
+          * the same component the submissions use, so a comment here is
+          * reported, edited, moderated and rate limited by exactly the same
+          * rules — there is no second set to keep in step.
+          */}
+        <div className="vg-comic-talk">
+          <ReviewSection comicId={comic.id} />
+        </div>
+
+        {/*
+          * A comic can be a very long page. Having read to the bottom, the
+          * only way back was a long scroll or the browser's own shortcut,
+          * which nobody on a phone has.
+          */}
+        <BackToTop label="Back to the top of the comic" />
       </div>
     </>
   );
