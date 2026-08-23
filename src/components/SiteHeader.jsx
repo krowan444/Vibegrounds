@@ -30,6 +30,10 @@ const NAV = [
   { to: '/category/audio',     label: 'Audio', wide: true },
   { to: '/memes',              label: 'Memes' },
   { to: '/comics',             label: 'Comics' },
+  // Deliberately not marked `wide`, so it survives the compact header. A
+  // brand new section that disappears on the pages where the nav shrinks is
+  // a section nobody finds.
+  { to: '/arcade',             label: 'Arcade' },
 ];
 
 export default function SiteHeader({ compact = false }) {

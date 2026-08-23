@@ -17,9 +17,9 @@ export const PROMO = {
   // Said as a thing a person might want, not as an announcement. "Comics
   // are now live" tells you what happened to the site; this tells you what
   // you can do.
-  text: 'Comics — read one, or post your own',
-  to: '/comics',
-  cta: 'Have a look',
+  text: 'The Arcade is open — first go free every day',
+  to: '/arcade',
+  cta: 'Have a go',
 };
 
 export default function PromoBar({ promo = PROMO }) {
