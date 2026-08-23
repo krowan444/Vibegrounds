@@ -235,7 +235,7 @@ export default function PortalPage() {
               onClick={() => setParam('on', 'mobile')}
               title="Things the creator says work on a phone"
             >
-              \ud83d\udcf1 PHONE
+              📱 PHONE
             </button>
             <button
               type="button"
@@ -243,7 +243,7 @@ export default function PortalPage() {
               onClick={() => setParam('on', 'desktop')}
               title="Things that need a keyboard or a big screen"
             >
-              \ud83d\udcbb COMPUTER
+              💻 COMPUTER
             </button>
           </div>
         </div>

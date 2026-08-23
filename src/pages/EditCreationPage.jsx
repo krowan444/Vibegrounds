@@ -376,9 +376,9 @@ export default function EditCreationPage() {
               <span className="vg-works-q">Where does it work?</span>
               <div className="vg-works-opts">
                 {[
-                  ['both', '\ud83d\udcbb \ud83d\udcf1 Both'],
-                  ['desktop', '\ud83d\udcbb Computer'],
-                  ['mobile', '\ud83d\udcf1 Phone'],
+                  ['both', '💻 📱 Both'],
+                  ['desktop', '💻 Computer'],
+                  ['mobile', '📱 Phone'],
                 ].map(([value, label]) => (
                   <label key={value} className={`vg-works-opt ${form.works_on === value ? 'is-on' : ''}`}>
                     <input
