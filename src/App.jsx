@@ -15,6 +15,7 @@ import SiteFooter from './components/SiteFooter';
 import EditCreationPage from './pages/EditCreationPage';
 import MemesPage from './pages/MemesPage';
 import ComicsPage from './pages/ComicsPage';
+import ArcadePage from './pages/ArcadePage';
 import ComicPage from './pages/ComicPage';
 import PostComicPage from './pages/PostComicPage';
 import EditComicPage from './pages/EditComicPage';
@@ -64,6 +65,7 @@ export default function App() {
 
             {/* /comics/post before /comics/:id, or "post" is read as an id. */}
             <Route path="/comics" element={<ComicsPage />} />
+            <Route path="/arcade" element={<ArcadePage />} />
             <Route path="/comics/post" element={<PostComicPage />} />
             <Route path="/comics/:id" element={<ComicPage />} />
             <Route path="/comics/:id/edit" element={<EditComicPage />} />
