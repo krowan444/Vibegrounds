@@ -18,16 +18,31 @@ export default function EmailPanel({ say, onError }) {
   const [settings, setSettings] = useState({});
   const [busy, setBusy] = useState(false);
 
+  /**
+   * One call, not three.
+   *
+   * This used to read the nudge_due view directly to get its count. That
+   * view joins auth.users for the email address, and nobody — admin
+   * included — may read auth.users, so every load failed with an empty
+   * message that reached the screen as {"message":""}.
+   *
+   * nudge_status() is the fix and the better shape anyway: it is staff
+   * gated, it returns the number and the settings, and it never returns an
+   * address. The panel needs to know how many people, not who they are.
+   */
   const load = useCallback(async () => {
-    const [d, l, s] = await Promise.all([
-      supabase.from('nudge_due').select('id', { count: 'exact', head: true }),
+    const [st, l] = await Promise.all([
+      supabase.rpc('nudge_status'),
       supabase.from('email_log').select('*').order('created_at', { ascending: false }).limit(30),
-      supabase.from('site_settings').select('key,value').like('key', 'nudge%'),
     ]);
-    if (d.error) onError?.(describeError(d.error));
-    setDue(d.count ?? null);
+
+    if (st.error) onError?.(describeError(st.error));
+    const s = Array.isArray(st.data) ? st.data[0] : st.data;
+    setDue(s?.due ?? null);
+    setSettings(s ? { nudge_enabled: s.enabled, nudge_dry_run: s.dry_run } : {});
+
+    if (l.error) onError?.(describeError(l.error));
     setLog(l.data || []);
-    setSettings(Object.fromEntries((s.data || []).map((r) => [r.key, r.value])));
   }, [onError]);
 
   useEffect(() => { load(); }, [load]);
