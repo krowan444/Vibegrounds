@@ -5376,3 +5376,67 @@ body { background: var(--bg-darkest); overflow-y: auto; }
 .vg-fb-item-actions button:hover { border-color: var(--orange-dim); color: var(--orange); }
 .vg-fb-item-actions button:first-child { border-color: var(--orange-dim); color: var(--orange); }
 .vg-fb-item-actions button:first-child:hover { background: var(--orange); color: #241500; }
+
+/* ============================================================
+   THE EMAIL PANEL
+   ============================================================
+   The one screen on the site where a wrong press cannot be undone, so it
+   says out loud which state it is in before it offers any buttons. */
+
+.vg-email-panel { padding: 14px; }
+
+.vg-email-state {
+  display: flex; align-items: flex-start; gap: 18px; flex-wrap: wrap;
+  padding: 12px 14px; margin-bottom: 12px;
+  background: var(--bg-dark); border: 1px solid var(--border-dark);
+}
+.vg-email-num {
+  display: block; font-family: var(--font-pixel); font-size: 26px; color: var(--orange);
+}
+.vg-email-cap {
+  display: block; max-width: 42ch; margin-top: 6px;
+  font-family: var(--font-body); font-size: 14.5px; line-height: 1.5; color: var(--text-dim);
+}
+.vg-email-mode {
+  margin-left: auto; align-self: center;
+  font-family: var(--font-pixel); font-size: 9px; padding: 7px 10px;
+  border: 2px solid var(--border-dark); color: var(--text-dim);
+}
+.vg-email-mode.is-off  { border-color: var(--border-dark); }
+.vg-email-mode.is-dry  { border-color: var(--yellow); color: var(--yellow); }
+.vg-email-mode.is-live { border-color: var(--red); color: #ff8888; background: #2a0d0d; }
+
+.vg-email-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.vg-email-actions button {
+  font-family: var(--font-retro); font-size: 16px;
+  background: transparent; border: 1px solid var(--border-dark);
+  color: var(--text-secondary); padding: 4px 12px; cursor: pointer;
+}
+.vg-email-actions button:hover:not(:disabled) { border-color: var(--orange-dim); color: var(--orange); }
+.vg-email-actions button:disabled { opacity: .4; cursor: default; }
+/* Red, and last. It is the only button here that reaches other people. */
+.vg-email-golive { border-color: var(--red) !important; color: #ff8888 !important; }
+.vg-email-golive:hover:not(:disabled) { background: var(--red) !important; color: #fff !important; }
+
+.vg-email-note {
+  margin-bottom: 14px; max-width: 72ch;
+  font-family: var(--font-body); font-size: 14.5px; line-height: 1.6; color: var(--text-dim);
+}
+
+.vg-email-log b {
+  display: block; margin-bottom: 6px;
+  font-family: var(--font-pixel); font-size: 8px; color: var(--text-dim);
+}
+.vg-email-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 4px 0; border-bottom: 1px solid var(--border-dark);
+  font-family: var(--font-retro); font-size: 15px; color: var(--text-secondary);
+}
+.vg-email-tag {
+  flex-shrink: 0; min-width: 52px; text-align: center;
+  font-family: var(--font-pixel); font-size: 7px; padding: 3px 4px;
+  border: 1px solid var(--border-dark); color: var(--text-dim);
+}
+.vg-email-tag.is-live { border-color: var(--red); color: #ff8888; }
+.vg-email-to { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.vg-email-when { flex-shrink: 0; color: var(--text-dim); }
