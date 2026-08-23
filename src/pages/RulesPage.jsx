@@ -4,10 +4,10 @@ import SiteHeader from '../components/SiteHeader';
 const Section = ({ title, children }) => (
   <div className="retro-panel" style={{ marginTop: '16px' }}>
     <div className="section-header"><h2>{title}</h2></div>
-    <div className="retro-panel-body" style={{
-      fontFamily: 'var(--font-retro)', fontSize: '18px',
-      color: 'var(--text-secondary)', lineHeight: 1.55,
-    }}>
+    {/* The Rules are several screens of solid paragraphs — the single
+        longest read on the site, and the one page where somebody is trying
+        to understand rather than browse. */}
+    <div className="retro-panel-body vg-prose vg-prose-soft">
       {children}
     </div>
   </div>
@@ -21,11 +21,10 @@ export default function RulesPage() {
 
         <div className="retro-panel">
           <div className="section-header"><h2>📜 The House Rules</h2></div>
-          <div className="retro-panel-body" style={{
-            fontFamily: 'var(--font-retro)', fontSize: '19px',
-            color: 'var(--text-primary)', lineHeight: 1.55,
-          }}>
-            <p style={{ color: 'var(--orange)', fontSize: '22px' }}>
+          <div className="retro-panel-body vg-prose">
+            <p style={{
+              color: 'var(--orange)', fontFamily: 'var(--font-retro)', fontSize: '24px',
+            }}>
               Be weird. Be experimental. Be unfinished.
             </p>
             <p style={{ marginTop: '8px' }}>

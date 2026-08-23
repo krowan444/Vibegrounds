@@ -279,10 +279,8 @@ export default function CreationPage() {
               <CreatorStrip author={author} />
 
               {/* Description */}
-              <div className="vg-desc-body" style={{
+              <div className="vg-desc-body vg-prose" style={{
                 padding: '12px', borderTop: '1px solid var(--border-dark)',
-                fontFamily: 'var(--font-retro)', fontSize: '18px',
-                color: 'var(--text-primary)', lineHeight: 1.4, whiteSpace: 'pre-wrap',
               }}>
                 {c.description || <span style={{ color: 'var(--text-dim)' }}>No description given.</span>}
               </div>

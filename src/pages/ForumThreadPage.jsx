@@ -473,10 +473,9 @@ function ForumPost({ username, avatarUrl, body, createdAt, isOP, canEdit, onEdit
       </div>
 
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{
-          fontFamily: 'var(--font-retro)', fontSize: '17px', color: 'var(--text-primary)',
-          lineHeight: '1.4', whiteSpace: 'pre-wrap', wordBreak: 'break-word'
-        }}>
+        {/* A forum post is the longest thing anybody reads on this site and
+            it was set in a terminal font at 1.4 leading. vg-prose. */}
+        <div className="vg-prose">
           {renderPostBody(body)}
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
