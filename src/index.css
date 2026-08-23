@@ -3,7 +3,43 @@
    Inspired by Newgrounds 2001-2007
    ============================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap');
+
+/* ============================================================
+   PROSE — anything somebody wrote in sentences
+   ============================================================
+   One class, used for forum posts, reviews, replies, descriptions,
+   devlog updates and bios. Changing the typeface alone would only have
+   fixed part of the problem, so this also sets the three things that
+   actually decide whether a paragraph is comfortable:
+
+     size        16px, not 17-18px of a font with a tiny x-height
+     leading     1.65, so lines do not crowd each other
+     measure     72 characters, because past about 75 the eye starts
+                 losing its place on the trip back to the left margin
+
+   Everything else on the site keeps the retro type. This is only for the
+   places where somebody is reading rather than scanning. */
+.vg-prose {
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--text-primary);
+  max-width: 72ch;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Slightly quieter, for supporting text rather than the main body. */
+.vg-prose-soft { color: var(--text-secondary); }
+
+/* A whole page of prose — the Rules, mostly — where the measure matters
+   even more and the headings still want to be loud. */
+.vg-prose p { margin-bottom: .85em; }
+.vg-prose p:last-child { margin-bottom: 0; }
+.vg-prose a { color: var(--blue-link); }
+.vg-prose strong, .vg-prose b { color: var(--text-primary); font-weight: 700; }
 
 /* ── RESET ── */
 *, *::before, *::after {
@@ -56,6 +92,18 @@
   /* Fonts */
   --font-pixel: 'Press Start 2P', monospace;
   --font-retro: 'VT323', monospace;
+
+  /* For anything longer than a line.
+     VT323 is a terminal face: every character the same width, shapes kept
+     deliberately coarse. Wonderful on a score, a button, a nav item — and
+     genuinely tiring by the third sentence, because there is nothing for
+     the eye to catch hold of.
+     Atkinson Hyperlegible was drawn by the Braille Institute for readers
+     with low vision. Every letter that usually gets confused with another —
+     I l 1, O 0, b d — is drawn to be unmistakable. It has enough character
+     not to read as a corporate default, and it sits happily next to pixel
+     type without either one fighting the other. */
+  --font-body: 'Atkinson Hyperlegible', ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-system: 'Trebuchet MS', 'Tahoma', Arial, sans-serif;
 }
 
@@ -1181,8 +1229,10 @@ a:hover {
 }
 
 .profile-bio {
-  font-family: var(--font-retro);
-  font-size: 18px;
+  font-family: var(--font-body);
+  font-size: 15.5px;
+  line-height: 1.6;
+  max-width: 68ch;
   color: var(--text-secondary);
   margin-bottom: 8px;
 }
@@ -4597,10 +4647,11 @@ body { background: var(--bg-darkest); overflow-y: auto; }
 /* pre-wrap keeps the line breaks the creator typed without pulling in a
    markdown parser for what is usually two sentences. */
 .vg-update-body {
-  font-family: var(--font-retro);
-  font-size: 17px;
+  font-family: var(--font-body);
+  font-size: 15.5px;
   color: var(--text-secondary);
-  line-height: 1.5;
+  line-height: 1.6;
+  max-width: 72ch;
   margin-top: 3px;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
@@ -5085,8 +5136,9 @@ body { background: var(--bg-darkest); overflow-y: auto; }
 
 .vg-comic-about { margin-top: 14px; }
 .vg-comic-desc {
-  font-family: var(--font-retro); font-size: 17px;
-  color: var(--text-secondary); line-height: 1.5;
+  font-family: var(--font-body); font-size: 16px;
+  color: var(--text-secondary); line-height: 1.65;
+  max-width: 72ch;
   white-space: pre-wrap; overflow-wrap: anywhere;
 }
 
