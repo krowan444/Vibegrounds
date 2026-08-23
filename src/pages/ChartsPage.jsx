@@ -7,12 +7,28 @@ import SubmitCta from '../components/SubmitCta';
 import { thumbFor, onThumbError, LOGO_FALLBACK } from '../lib/thumbnail';
 import { scoreLabel, scoreLabelColor, isUnrated } from '../lib/format';
 
+/**
+ * `sort` is spelled out only where the list is not a chart.
+ *
+ * Every ranked view carries a `rank` column the database works out. Newest
+ * is not ranked by anything — it is everything, most recent first — so it
+ * sorts on the date and gets numbered as it comes. It is here because the
+ * Portal's "Newest 50" had a "full" link and nowhere honest to send it: it
+ * pointed at the daily chart, which is a different list of different things
+ * in a different order.
+ */
 const CHARTS = [
   { id: 'daily',   view: 'chart_daily',   label: 'Top Daily',    icon: '☀️', blurb: 'Best of the last 24 hours.' },
   { id: 'weekly',  view: 'chart_weekly',  label: 'Top Weekly',   icon: '📅', blurb: 'Best of the last 7 days.' },
   { id: 'monthly', view: 'chart_monthly', label: 'Top Monthly',  icon: '🗓️', blurb: 'Best of the last 30 days.' },
   { id: 'alltime', view: 'chart_alltime', label: 'All-Time 100', icon: '👑', blurb: 'The hall of fame. Earn your place.' },
   { id: 'hot',     view: 'chart_hot',     label: 'Hot Now',      icon: '🔥', blurb: 'Whatever everyone is voting on right now.' },
+  // Last on purpose. CHARTS[0] is what /charts shows with no chart chosen,
+  // and the nav calls that link "Top 100" — so the first entry has to stay a
+  // top chart. Newest is not a chart, it is the pile in the order it landed.
+  { id: 'newest',  view: 'creations_public', label: 'Newest', icon: '🆕',
+    blurb: 'Everything, most recent first.',
+    sort: { col: 'created_at', asc: false }, unranked: true },
 ];
 
 /** Colour a score the way an arcade cabinet would. */
@@ -110,14 +126,25 @@ export default function ChartsPage() {
       // Filtering by category means the view's own rank column no longer
       // applies, so re-rank client-side below.
       if (category) q = q.eq('category', category);
+      // Memes are excluded from Newest for the same reason the Portal
+      // excludes them: they are far cheaper to make and would bury
+      // everything else by sheer volume. Browsing the memes category
+      // directly still works.
+      if (active.unranked && category !== 'memes') q = q.neq('category', 'memes');
+
+      const sort = active.sort || { col: 'rank', asc: true };
       const { data, error: err } = await q
-        .order('rank', { ascending: true })
+        .order(sort.col, { ascending: sort.asc })
         .limit(100);
       if (!alive) return;
       if (err) setError(err.message);
       else {
         setError('');
-        setRows((data || []).map((r, i) => (category ? { ...r, rank: i + 1 } : r)));
+        // An unranked list has no rank of its own, so it is numbered in the
+        // order it arrives — same as when a category filter invalidates a
+        // chart's ranking.
+        const renumber = category || active.unranked;
+        setRows((data || []).map((r, i) => (renumber ? { ...r, rank: i + 1 } : r)));
       }
       setLoading(false);
     })();

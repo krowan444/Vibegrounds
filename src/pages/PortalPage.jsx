@@ -244,7 +244,7 @@ export default function PortalPage() {
                   <ChartColumn
                     title="Newest 50" icon="🆕" rows={newest} showAge
                     ranked={false}
-                    to="/charts?chart=daily"
+                    to="/charts?chart=newest"
                     empty="Nothing posted yet. Be the first."
                   />
                   <ChartColumn

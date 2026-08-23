@@ -29,6 +29,11 @@ import { timeAgo, compactNumber } from '../lib/format';
  * screen. Landing halfway down a page you have not read yet is disorienting
  * in a way that is hard to name and easy to feel.
  */
+const ZOOM_MIN = 50;
+const ZOOM_MAX = 200;
+const ZOOM_STEP = 10;
+const ZOOM_DEFAULT = 90;
+
 export default function ComicPage() {
   const { id } = useParams();
   const { user, isStaff } = useAuth();
@@ -58,6 +63,30 @@ export default function ComicPage() {
   useEffect(() => {
     try { localStorage.setItem('vg-comic-mode', mode); } catch { /* private mode */ }
   }, [mode]);
+
+  /**
+   * How big the pages are.
+   *
+   * 90 rather than 100 by default: full width was a shade much to sit and
+   * read at, and the ten per cent back gives the page air on either side
+   * without making it small again.
+   *
+   * Above 100 is worth having even though it means showing a picture larger
+   * than it was drawn. On a phone, a 1400px page is already squeezed into a
+   * 360px screen — about a quarter of its real size — so zooming in there
+   * reveals detail that genuinely is in the file, and the reel scrolls
+   * sideways to let you go and look at it.
+   */
+  const [zoom, setZoom] = useState(() => {
+    try {
+      const n = parseInt(localStorage.getItem('vg-comic-zoom') || '', 10);
+      return Number.isFinite(n) && n >= ZOOM_MIN && n <= ZOOM_MAX ? n : ZOOM_DEFAULT;
+    } catch { return ZOOM_DEFAULT; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem('vg-comic-zoom', String(zoom)); } catch { /* private mode */ }
+  }, [zoom]);
+  const nudgeZoom = (by) => setZoom((z) => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, z + by)));
 
   useDocumentTitle(comic?.title, comic?.description || undefined);
 
@@ -305,7 +334,7 @@ export default function ComicPage() {
 
             {mode === 'scroll' ? (
               /* ---- the whole comic, falling ---- */
-              <div className="vg-comic-reel" ref={stageRef}>
+              <div className="vg-comic-reel" ref={stageRef} style={{ '--z': zoom / 100 }}>
                 {pages.map((p, n) => (
                   <figure
                     key={p.id}
@@ -318,10 +347,11 @@ export default function ComicPage() {
                       alt={`${comic.title}, page ${n + 1}`}
                       width={p.width || undefined}
                       height={p.height || undefined}
-                      // Never blown up past the size it was drawn at — a
-                      // 900px page stretched over a 1600px screen is just a
-                      // blurrier version of the same picture.
-                      style={p.width ? { maxWidth: `${p.width}px` } : undefined}
+                      // The width the page wants at 100%: as wide as there is
+                      // room for, but never past the size it was drawn at, so
+                      // nothing is upscaled unless the reader asks for it.
+                      // The zoom multiplies this.
+                      style={{ '--base': p.width ? `min(100%, ${p.width}px)` : '100%' }}
                       loading={n < 2 ? 'eager' : 'lazy'}
                       decoding="async"
                     />
@@ -338,6 +368,7 @@ export default function ComicPage() {
               <div
                 className="vg-comic-stage"
                 ref={stageRef}
+                style={{ '--z': zoom / 100 }}
                 onTouchStart={onTouchStart}
                 onTouchEnd={onTouchEnd}
               >
@@ -369,6 +400,29 @@ export default function ComicPage() {
               <button type="button" onClick={() => go(i - 1)} disabled={i === 0}>‹ Prev</button>
               <span className="vg-comic-counter">Page <b>{i + 1}</b> of {total}</span>
               <button type="button" onClick={() => go(i + 1)} disabled={i === total - 1}>Next ›</button>
+
+              <span className="vg-comic-sep" aria-hidden="true" />
+
+              {/* Size. Grouped so the two buttons read as one control with
+                  the number between them, rather than three loose things. */}
+              <span className="vg-comic-zoom">
+                <button
+                  type="button" aria-label="Smaller"
+                  onClick={() => nudgeZoom(-ZOOM_STEP)} disabled={zoom <= ZOOM_MIN}
+                >−</button>
+                <button
+                  type="button"
+                  className="vg-comic-zoom-num"
+                  onClick={() => setZoom(ZOOM_DEFAULT)}
+                  title="Back to the normal size"
+                  aria-label={`Page size ${zoom} per cent — press to reset`}
+                >{zoom}%</button>
+                <button
+                  type="button" aria-label="Bigger"
+                  onClick={() => nudgeZoom(ZOOM_STEP)} disabled={zoom >= ZOOM_MAX}
+                >+</button>
+              </span>
+
               <button
                 type="button"
                 className="vg-comic-fit"

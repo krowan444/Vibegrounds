@@ -11,6 +11,7 @@ import SponsorSlot from '../components/SponsorSlot';
 import HeroAd from '../components/HeroAd';
 import MemeRail from '../components/MemeRail';
 import Notice from '../components/Notice';
+import PromoBar, { PROMO } from '../components/PromoBar';
 import { compactNumber, timeAgo, scoreLabel, scoreLabelColor } from '../lib/format';
 import { thumbFor, onThumbError, LOGO_FALLBACK } from '../lib/thumbnail';
 
@@ -160,8 +161,11 @@ export default function HomePage() {
       <div className="vg-page">
         <Notice tone="error">{error}</Notice>
 
-        {/* live activity strip */}
-        {newest && (
+        {/* The strip under the banner. One line, and only ever one message
+            on it — whichever part of the site we are pointing people at, or
+            the live ticker when nothing is being promoted. PROMO in
+            PromoBar.jsx is the switch. */}
+        {PROMO.on ? <PromoBar /> : newest && (
           <div className="vg-ticker">
             <span className="vg-ticker-label">LIVE</span>
             <span>
