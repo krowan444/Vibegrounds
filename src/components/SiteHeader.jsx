@@ -10,6 +10,13 @@ import { useForumUnreadCount } from './ForumUnread';
  * eight categories. It is a destination, not a category — burying it at the end of
  * the row was why nobody found it. Everything from Games onwards is a
  * category, so the row now reads: places to go, then things to browse.
+ *
+ * Top 100 and Hall of Fame used to sit on the end. They are gone from here
+ * on purpose: the row was long enough to wrap, and a nav that wraps stops
+ * being scannable — every item in it gets read a little less. Both are still
+ * one click away from the footer, and the Portal's charts link straight
+ * through to the full ones, which is where somebody is when they actually
+ * want them.
  */
 const NAV = [
   { to: '/',                   label: 'Home' },
@@ -23,8 +30,6 @@ const NAV = [
   { to: '/category/audio',     label: 'Audio', wide: true },
   { to: '/memes',              label: 'Memes' },
   { to: '/comics',             label: 'Comics' },
-  { to: '/charts',             label: 'Top 100' },
-  { to: '/hall-of-fame',       label: 'Hall of Fame', wide: true },
 ];
 
 export default function SiteHeader({ compact = false }) {
