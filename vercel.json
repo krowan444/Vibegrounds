@@ -1,8 +1,5 @@
 {
   "redirects": [
-    { "source": "/arcade", "destination": "/portal", "permanent": true },
-    { "source": "/arcade/:path*", "destination": "/portal", "permanent": true },
-
     { "source": "/forum", "destination": "/community", "permanent": true },
     { "source": "/forum/:path*", "destination": "/community/:path*", "permanent": true }
   ],
