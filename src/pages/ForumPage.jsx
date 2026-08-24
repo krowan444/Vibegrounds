@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import CouldNotLoad from '../components/CouldNotLoad';
+import { useBoardUnread, BoardPip } from '../components/ForumUnread';
 import SiteHeader from '../components/SiteHeader';
 
 const CATEGORY_ICONS = {
@@ -18,6 +19,8 @@ export default function ForumPage() {
   const [unreachable, setUnreachable] = useState(false);
   // Bumped by the Try again button, which is all the reload the effect needs.
   const [attempt, setAttempt] = useState(0);
+  // Which boards have moved since you last looked.
+  const boardUnread = useBoardUnread();
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -153,6 +156,9 @@ export default function ForumPage() {
                     textTransform: 'uppercase', marginBottom: '3px'
                   }}>
                     {CATEGORY_ICONS[cat.slug] || '📁'} {cat.name}
+                    {/* After the name, not before it: the name is what you
+                        scan for, the pip is what makes you stop. */}
+                    <BoardPip info={boardUnread.get(cat.id)} />
                   </div>
                   <div style={{
                     fontFamily: 'var(--font-retro)', fontSize: '15px', color: 'var(--text-dim)'
