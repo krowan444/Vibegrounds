@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { scrollToTop } from '../lib/scrollTo';
 
 /**
  * A way back up from the bottom of a long page.
@@ -40,12 +41,10 @@ export default function BackToTop({
     <div className="vg-backtotop" ref={ref}>
       <button
         type="button"
-        onClick={() => {
-          // Smooth here, unlike on navigation: the person asked for the
-          // journey, so showing it is right — and it makes clear the page
-          // moved rather than changed.
-          window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-        }}
+        // Distance decides whether this animates. From the bottom of a long
+        // comic it is thousands of pixels, and Chrome will not reliably
+        // animate that far — the old smooth scroll here simply did nothing.
+        onClick={scrollToTop}
       >
         ▲ {label}
       </button>
