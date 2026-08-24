@@ -1,6 +1,7 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import { supabase, withTimeout, looksMissing } from '../lib/supabase';
+import { scrollToElement } from '../lib/scrollTo';
 import { useAuth } from '../contexts/AuthContext';
 import SiteHeader from '../components/SiteHeader';
 import CouldNotLoad from '../components/CouldNotLoad';
@@ -36,10 +37,13 @@ function ReviewJump({ count = 0, className = '' }) {
       type="button"
       className={`vg-jump-reviews ${className}`.trim()}
       onClick={() => {
-        document.getElementById('reviews')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        // Focus after the smooth scroll has had a moment, otherwise the
-        // browser snaps straight there and the animation is lost.
-        setTimeout(() => document.getElementById('vg-review-input')?.focus(), 550);
+        // Same fix as the comic reader: a long submission page is thousands
+        // of pixels, and Chrome will not reliably animate that far, so the
+        // helper decides by distance and corrects for late-loading images.
+        scrollToElement(document.getElementById('reviews'), { offset: 12 });
+        // Focus after the jump has settled, or the browser scrolls the input
+        // into view itself and undoes the landing.
+        setTimeout(() => document.getElementById('vg-review-input')?.focus({ preventScroll: true }), 600);
       }}
     >
       <span className="vg-jump-reviews-top">

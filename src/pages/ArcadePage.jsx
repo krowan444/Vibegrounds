@@ -24,7 +24,7 @@ import { useDocumentTitle } from '../lib/pageMeta';
  * first person to notice would never pay again.
  */
 export default function ArcadePage() {
-  const { user } = useAuth();
+  const { user, refreshProfile } = useAuth();
 
   useDocumentTitle(
     'The Arcade',
@@ -75,6 +75,13 @@ export default function ArcadePage() {
 
       setLastGo(data);
       setStatus((s) => (s ? { ...s, balance: data.balance, free_left: data.free_left } : s));
+
+      // The coin count in the header comes from the profile the auth context
+      // loaded when the page opened, so paying for a go left it showing the
+      // old number until something else happened to reload it. Watching your
+      // balance not move after you have been charged reads as the charge
+      // having failed.
+      if (data.paid > 0) refreshProfile();
       setScore(0);
       setPhase('playing');
 

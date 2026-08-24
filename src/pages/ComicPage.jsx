@@ -11,6 +11,7 @@ import VoteWidget from '../components/VoteWidget';
 import BackToTop from '../components/BackToTop';
 import { useDocumentTitle } from '../lib/pageMeta';
 import { timeAgo, compactNumber } from '../lib/format';
+import { scrollToElement, scrollToTop } from '../lib/scrollTo';
 
 /**
  * Read a comic.
@@ -436,12 +437,12 @@ export default function ComicPage() {
                 <button
                   type="button"
                   title="Back to the first page"
-                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                  onClick={scrollToTop}
                 >▲ Top</button>
                 <button
                   type="button"
                   title="Skip to the rating and comments"
-                  onClick={() => talkRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                  onClick={() => scrollToElement(talkRef.current, { offset: 52 })}
                 >▼ Comments</button>
               </span>
 
