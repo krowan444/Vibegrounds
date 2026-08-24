@@ -543,3 +543,42 @@
      to fire, so a reader who has asked for stillness still gets the comic. */
   .vg-comic-sheet { opacity: 1; transform: none; transition: none; }
 }
+
+/* ============================================================
+   RATING A COMIC, AND GETTING AROUND A LONG ONE
+   ============================================================ */
+
+/* The two jumps in the reader bar. Grouped so they read as one
+   control, the same way the zoom buttons do. */
+.vg-comic-jump {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.vg-comic-jump button {
+  font-size: 11px;
+  padding: 3px 8px;
+  white-space: nowrap;
+}
+
+.vg-comic-rate { margin-bottom: 14px; }
+
+/* On the shelf: a small badge on the cover, mirroring the page count
+   on the opposite corner. */
+.vg-comic-score {
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+  background: rgba(0, 0, 0, .78);
+  border: 1px solid var(--orange);
+  color: var(--orange);
+  font-family: var(--font-retro);
+  font-size: 14px;
+  padding: 1px 6px;
+  border-radius: 2px;
+}
+
+@media (max-width: 520px) {
+  /* On a phone the bar is tight, so the labels go and the arrows carry it. */
+  .vg-comic-jump button { padding: 3px 7px; }
+}
