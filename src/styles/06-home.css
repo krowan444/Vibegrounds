@@ -111,6 +111,55 @@ body { background: var(--bg-darkest); overflow-y: auto; }
   .vg-promo-cta { display: none; }
 }
 
+/* ---- Two places in the strip ----------------------------------------
+   The bar is no longer one link, so hover lives on each item instead of
+   the whole strip, or the half you are not pointing at lights up too and
+   you cannot tell which one you are about to open. */
+.vg-promo-multi { cursor: default; }
+.vg-promo-multi:hover {
+  border-color: var(--orange-dim);
+  background: linear-gradient(90deg, rgba(232,163,23,.16), rgba(232,163,23,.05) 60%, transparent);
+}
+
+.vg-promo-places {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  min-width: 0;
+}
+
+.vg-promo-place { display: inline-flex; align-items: center; gap: 10px; }
+
+.vg-promo-place a {
+  color: var(--text-primary);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.vg-promo-place a:hover { color: var(--orange-bright); }
+.vg-promo-place a:hover .vg-promo-go { color: var(--orange-bright); }
+
+.vg-promo-icon { margin-right: 6px; }
+.vg-promo-go { color: var(--orange); font-weight: bold; }
+
+.vg-promo-div {
+  width: 1px;
+  height: 15px;
+  background: var(--orange-dim);
+  opacity: .7;
+}
+
+@media (max-width: 700px) {
+  /* Two lines rather than one truncated one: half a sentence about a place
+     you have never heard of is not an invitation. The divider goes with the
+     single row it was separating. */
+  .vg-promo-multi { align-items: flex-start; }
+  .vg-promo-places { flex-direction: column; align-items: flex-start; gap: 3px; }
+  .vg-promo-div { display: none; }
+  .vg-promo-place a { white-space: normal; }
+}
+
 @media (max-width: 1100px) {
   .vg-3col { grid-template-columns: minmax(0, 1fr) 290px; }
   .vg-col-left { grid-column: 1 / -1; flex-direction: row; flex-wrap: wrap; }
