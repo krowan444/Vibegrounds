@@ -94,6 +94,73 @@ export function ThreadPip({ info }) {
 }
 
 /**
+ * Which boards have something in them for you.
+ *
+ * One small query for the whole Community page rather than one per board.
+ * Boards with nothing new are absent from the result, so "no entry" means
+ * "nothing here" without having to read any numbers.
+ */
+export function useBoardUnread() {
+  const { user } = useAuth();
+  const [map, setMap] = useState(new Map());
+
+  useEffect(() => {
+    let alive = true;
+    if (!user) { setMap(new Map()); return undefined; }
+
+    (async () => {
+      const { data, error } = await supabase
+        .from('forum_board_unread')
+        .select('category_id, new_threads, new_posts, mine');
+
+      if (!alive) return;
+      if (error) {
+        // Same rule as the thread pips: a missing view costs a badge, never
+        // the page. This happens for a minute or two whenever the code
+        // deploys ahead of the migration.
+        if (!ABSENT.test(error.message || '')) console.warn('board unread lookup failed', error.message);
+        setMap(new Map());
+        return;
+      }
+      setMap(new Map((data || []).map((r) => [r.category_id, r])));
+    })().catch(() => {});
+
+    return () => { alive = false; };
+  }, [user]);
+
+  return map;
+}
+
+/**
+ * The marker on a board row.
+ *
+ * Says what is actually new rather than just "NEW": three replies and one
+ * new thread are different errands, and the number is what decides whether
+ * you click now or later.
+ */
+export function BoardPip({ info }) {
+  if (!info) return null;
+
+  const posts = info.new_posts || 0;
+  const threads = info.new_threads || 0;
+  if (!posts && !threads) return null;
+
+  const bits = [];
+  if (posts) bits.push(posts + ' new ' + (posts === 1 ? 'reply' : 'replies'));
+  if (threads) bits.push(threads + ' new ' + (threads === 1 ? 'thread' : 'threads'));
+
+  return (
+    <span
+      className={'vg-unread ' + (info.mine ? 'is-mine' : '')}
+      title={info.mine ? 'Includes a thread you have posted in' : bits.join(' and ')}
+    >
+      <span className="vg-unread-pip" aria-hidden="true" />
+      {bits.join(' · ')}
+    </span>
+  );
+}
+
+/**
  * How many threads have something in them for you - for the header.
  * Polls rather than subscribes: a forum this size does not justify a realtime
  * channel held open on every page, and a minute of staleness costs nothing.
