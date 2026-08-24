@@ -7,6 +7,7 @@ import Notice from '../components/Notice';
 import CouldNotLoad from '../components/CouldNotLoad';
 import ReportButton from '../components/ReportButton';
 import ReviewSection from '../components/ReviewSection';
+import VoteWidget from '../components/VoteWidget';
 import BackToTop from '../components/BackToTop';
 import { useDocumentTitle } from '../lib/pageMeta';
 import { timeAgo, compactNumber } from '../lib/format';
@@ -49,6 +50,9 @@ export default function ComicPage() {
   const [unreachable, setUnreachable] = useState(false);
   // Bumped by the Try again button, which is all the reload the effect needs.
   const [attempt, setAttempt] = useState(0);
+  // Where "skip to the bottom" lands: the rating and comments, not the very
+  // end of the document, which would put the footer on screen instead.
+  const talkRef = useRef(null);
   const [error, setError] = useState('');
   const [revealed, setRevealed] = useState(false);
   const [resumed, setResumed] = useState(0);
@@ -425,6 +429,24 @@ export default function ComicPage() {
 
               <span className="vg-comic-sep" aria-hidden="true" />
 
+              {/* Jumps. A comic can be a very long page, and the two places
+                  anybody actually wants are the first panel and the talk
+                  underneath — not some midpoint they have to hunt for. */}
+              <span className="vg-comic-jump">
+                <button
+                  type="button"
+                  title="Back to the first page"
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                >▲ Top</button>
+                <button
+                  type="button"
+                  title="Skip to the rating and comments"
+                  onClick={() => talkRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                >▼ Comments</button>
+              </span>
+
+              <span className="vg-comic-sep" aria-hidden="true" />
+
               {/* Size. Grouped so the two buttons read as one control with
                   the number between them, rather than three loose things. */}
               <span className="vg-comic-zoom">
@@ -495,7 +517,17 @@ export default function ComicPage() {
           * reported, edited, moderated and rate limited by exactly the same
           * rules — there is no second set to keep in step.
           */}
-        <div className="vg-comic-talk">
+        <div className="vg-comic-talk" ref={talkRef}>
+          {/* Rated out of 5 like everything else here, using the same
+              formula, so a comic's 3.4 means what a game's 3.4 means.
+              Deliberately no chart yet — two comics is not a leaderboard. */}
+          <div className="retro-panel vg-comic-rate">
+            <div className="section-header"><h2>⭐ Rate this comic</h2></div>
+            <div className="retro-panel-body">
+              <VoteWidget kind="comic" creation={comic} />
+            </div>
+          </div>
+
           <ReviewSection comicId={comic.id} />
         </div>
 

@@ -84,6 +84,12 @@ export default function ComicsPage() {
                     ? <NsfwImage src={c.cover_url} alt={c.title} nsfw={c.is_nsfw} />
                     : <div className="vg-comic-nocover">📖</div>}
                   <span className="vg-comic-pages">{c.page_count}p</span>
+                  {/* Only shown once somebody has actually rated it. A "0.00"
+                      on an unrated comic reads as a bad score rather than as
+                      no score, which is a rough welcome for a first post. */}
+                  {c.vote_count > 0 && (
+                    <span className="vg-comic-score">★ {Number(c.score).toFixed(2)}</span>
+                  )}
                 </div>
                 <div className="vg-comic-card-body">
                   <span className="vg-comic-card-title">{c.title}</span>
