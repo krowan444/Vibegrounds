@@ -164,6 +164,10 @@ export async function recompressExisting(pages, userId, onProgress) {
   let bytesAfter = 0;
   let changed = 0;
   let skipped = 0;
+  // The first real reason something failed. Without this a permissions error
+  // looked exactly like "nothing needed doing", which is how a staff member
+  // pressing this on somebody else's comic got silence instead of an answer.
+  let firstProblem = '';
 
   const total = pages.length;
 
@@ -235,8 +239,11 @@ export async function recompressExisting(pages, userId, onProgress) {
       heights.push(small.h || p.h || 0);
       bytesAfter += small.after;
       changed += 1;
-    } catch {
-      // Could not store the smaller one, so keep pointing at the original.
+    } catch (e) {
+      // Could not store the smaller one, so keep pointing at the original —
+      // but remember why, and say so at the end rather than reporting a
+      // silent skip.
+      if (!firstProblem) firstProblem = describeError(e);
       urls.push(p.remoteUrl); widths.push(p.w || 0); heights.push(p.h || 0);
       bytesAfter += small.before;
       skipped += 1;
@@ -248,5 +255,6 @@ export async function recompressExisting(pages, userId, onProgress) {
     saved: describeSaving(bytesBefore, bytesAfter),
     before: bytesBefore,
     after: bytesAfter,
+    problem: firstProblem,
   };
 }
