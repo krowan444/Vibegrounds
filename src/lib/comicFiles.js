@@ -6,7 +6,10 @@
  */
 
 export const MAX_PAGES = 200;
-export const MAX_BYTES = 10 * 1024 * 1024;
+// Raised from 10MB now that pages are shrunk before upload: a 16MB PNG
+// leaves here as about 200KB of WebP, so a tight cap only turns away good
+// artwork without saving anybody any bandwidth.
+export const MAX_BYTES = 30 * 1024 * 1024;
 export const OK_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
 
 let uid = 0;
@@ -83,7 +86,7 @@ export async function filesToPages(fileList, existingCount = 0) {
       continue;
     }
     if (file.size > MAX_BYTES) {
-      problems.push(`${file.name} is ${(file.size / 1048576).toFixed(1)}MB — the limit is 10MB a page`);
+      problems.push(`${file.name} is ${(file.size / 1048576).toFixed(1)}MB — the limit is 30MB a page`);
       continue;
     }
     accepted.push(file);
