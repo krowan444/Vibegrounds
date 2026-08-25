@@ -24,16 +24,21 @@ function Row({ row }) {
         {MEDAL[row.rank - 1] || String(row.rank).padStart(2, '0')}
       </span>
 
-      {/* Initials in a box when somebody has no avatar — an arcade table with
-          a gap where a face should be looks broken, and this is closer to
-          what a real machine shows anyway. */}
-      {row.avatar
-        ? <img className="vg-hs-face" src={row.avatar} alt="" loading="lazy" />
-        : <span className="vg-hs-face is-blank" aria-hidden="true">
-            {(row.username || '?').slice(0, 2).toUpperCase()}
-          </span>}
+      {/* The three letters, the way a real board shows them. Somebody who has
+          not chosen yet gets the front of their username instead — dimmed,
+          because it is a stand-in rather than something they picked, and a
+          blank space on a high score table looks like a fault. */}
+      <span className={`vg-hs-ini ${row.named ? '' : 'is-auto'}`}>
+        {row.initials || '---'}
+      </span>
 
+      {/* And the username too. On a real machine three letters is all you get
+          and half the board is a mystery; here the whole point is that these
+          are people you can go and find, so the name stays and it links. */}
       <Link className="vg-hs-name" to={`/profile/${row.username}`}>
+        {row.avatar
+          ? <img className="vg-hs-face" src={row.avatar} alt="" loading="lazy" />
+          : null}
         {row.username}
       </Link>
 

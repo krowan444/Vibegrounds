@@ -119,7 +119,7 @@ export default function ArcadeMenu({
                 <span className="vg-menu-arrow" aria-hidden="true">{on ? '▶' : ''}</span>
                 <span className="vg-menu-name">{g.meta.name}</span>
                 <span className="vg-menu-best">
-                  {best ? `${best.username} ${best.score}` : '— — —'}
+                  {best ? `${best.initials || best.username} ${best.score}` : '— — —'}
                 </span>
               </button>
             </li>
