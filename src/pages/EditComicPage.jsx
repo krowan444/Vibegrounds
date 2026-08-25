@@ -36,6 +36,11 @@ export default function EditComicPage() {
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
   const [shrinkResult, setShrinkResult] = useState('');
+  // Its own progress, shown in its own panel. Sharing `busy` with the form put
+  // the only sign of life next to the Save button at the bottom of the page,
+  // while the button that started it is at the top — so a job that takes
+  // minutes looked like a button that did nothing.
+  const [shrinking, setShrinking] = useState(null);   // { done, total, label }
 
   useDocumentTitle(comic ? `Editing ${comic.title}` : undefined);
 
@@ -48,6 +53,16 @@ export default function EditComicPage() {
     let alive = true;
 
     (async () => {
+      // Cleared on every run. Staff status arrives a moment after the user
+      // does, so the first pass through here can decide "that belongs to
+      // somebody else" and — without this — leave that verdict on screen even
+      // after the second pass works out you are staff and may edit it.
+      setDenied('');
+      // And back to loading with it: the first pass already set loading to
+      // false, so without this the second pass renders the form while the
+      // comic is still null.
+      setLoading(true);
+
       const [c, p] = await Promise.all([
         supabase.from('comics').select('*').eq('id', id).maybeSingle(),
         supabase.from('comic_pages').select('*').eq('comic_id', id).order('position'),
@@ -112,6 +127,16 @@ export default function EditComicPage() {
 
   const canSave = pages.length > 0 && title.trim().length >= 2 && !busy && changes.any;
 
+  // Closing the tab half way through leaves the comic pointing at a mixture
+  // of old and new pages. It still works, but it is not what anybody asked
+  // for, so the browser asks first.
+  useEffect(() => {
+    if (!shrinking) return undefined;
+    const warn = (e) => { e.preventDefault(); e.returnValue = ''; };
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [shrinking]);
+
   useEffect(() => {
     if (!changes.any || busy) return undefined;
     const warn = (e) => { e.preventDefault(); e.returnValue = ''; };
@@ -129,19 +154,35 @@ export default function EditComicPage() {
   const shrinkExisting = async () => {
     const already = pages.filter((p) => p.remoteUrl).length;
     if (!already) return;
+
+    // Roughly a second and a half a page on a normal machine. Saying so up
+    // front is the difference between waiting and giving up.
+    const mins = Math.max(1, Math.round((already * 1.5) / 60));
     if (!window.confirm(
       `Make the ${already} page${already === 1 ? '' : 's'} already on this comic smaller?\n\n`
       + 'The pictures stay the same — they are just stored in a more efficient format, '
       + 'so the comic loads faster and costs readers far less data. '
-      + 'Your original files are kept.',
+      + 'Your original files are kept.\n\n'
+      + `This takes about ${mins} minute${mins === 1 ? '' : 's'} for ${already} pages. `
+      + 'Leave this tab open until it finishes.',
     )) return;
 
     setError('');
     setShrinkResult('');
+    setShrinking({ done: 0, total: already, label: 'Starting...' });
     try {
-      const r = await recompressExisting(pages, comic.creator_id, setBusy);
+      const r = await recompressExisting(pages, user.id, (label) => {
+        // The helper reports "Shrinking page 7 of 80..." — pull the number out
+        // so the bar can move rather than only the words changing.
+        const m = /page (\d+) of (\d+)/i.exec(label || '');
+        setShrinking({
+          done: m ? Number(m[1]) : 0,
+          total: m ? Number(m[2]) : already,
+          label: label || 'Working...',
+        });
+      });
 
-      setBusy('Saving...');
+      setShrinking({ done: already, total: already, label: 'Saving the comic...' });
       const { error: rpcErr } = await withTimeout(
         retryOnAbort(() => supabase.rpc('update_comic', {
           p_comic: id,
@@ -158,15 +199,22 @@ export default function EditComicPage() {
 
       // Deliberately does NOT delete the originals. If this made a mess, the
       // old pages are still there to point back at.
-      setBusy('');
-      setShrinkResult(
-        r.changed
-          ? `Done — ${r.changed} page${r.changed === 1 ? '' : 's'} shrunk${r.saved ? `: ${r.saved}` : ''}`
-            + (r.skipped ? `. ${r.skipped} left as they were.` : '.')
-          : 'Nothing to do — these pages are already as small as they are going to get.',
-      );
+      setShrinking(null);
+      if (!r.changed && r.problem) {
+        // Say what actually went wrong. "Nothing to do" was a lie when the
+        // real answer was "every single upload was refused".
+        setError(`None of the pages could be stored: ${r.problem}`);
+        setShrinkResult('');
+      } else {
+        setShrinkResult(
+          r.changed
+            ? `Done — ${r.changed} page${r.changed === 1 ? '' : 's'} shrunk${r.saved ? `: ${r.saved}` : ''}`
+              + (r.skipped ? `. ${r.skipped} left as they were${r.problem ? ` (${r.problem})` : ''}.` : '.')
+            : 'Nothing to do — these pages are already as small as they are going to get.',
+        );
+      }
     } catch (e2) {
-      setBusy('');
+      setShrinking(null);
       setError(describeError(e2));
     }
   };
@@ -279,9 +327,22 @@ export default function EditComicPage() {
                     big help to anybody on a phone.
                   </p>
                   {shrinkResult && <p className="vg-comic-shrink-done">{shrinkResult}</p>}
+
+                  {shrinking && (
+                    <div className="vg-shrink-progress" role="status" aria-live="polite">
+                      <div className="vg-shrink-bar">
+                        <span style={{ width: `${Math.round((shrinking.done / Math.max(1, shrinking.total)) * 100)}%` }} />
+                      </div>
+                      <span className="vg-shrink-words">
+                        {shrinking.label}
+                        {shrinking.total > 1 && ` — ${shrinking.done} of ${shrinking.total}`}
+                      </span>
+                      <span className="vg-shrink-warn">Keep this tab open.</span>
+                    </div>
+                  )}
                 </div>
-                <button type="button" onClick={shrinkExisting} disabled={!!busy}>
-                  ↓ Shrink the pages
+                <button type="button" onClick={shrinkExisting} disabled={!!busy || !!shrinking}>
+                  {shrinking ? 'SHRINKING…' : '↓ Shrink the pages'}
                 </button>
               </div>
             )}
