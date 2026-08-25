@@ -139,3 +139,114 @@ export async function forgetRemovedPages(removedUrls, userId) {
     console.warn('old comic pages left in storage:', e);
   }
 }
+
+/**
+ * Squash the pages of a comic that is already posted.
+ *
+ * Comics posted before pages were shrunk on the way in are still whole PNGs —
+ * one measured at 2.8MB a page, which made an eighty page comic 220MB to
+ * read once. This fetches each page back, runs it through the same shrinker
+ * new uploads use, and puts the smaller version alongside.
+ *
+ * The originals are NOT overwritten. New files go to new addresses and the
+ * comic is pointed at them, so if anything looks wrong the old pages are
+ * still sitting in storage exactly where they were.
+ *
+ * Anything that will not fetch or will not shrink is passed through
+ * unchanged. A comic that ends up half-shrunk is fine; a comic that loses a
+ * page is not.
+ */
+export async function recompressExisting(pages, userId, onProgress) {
+  const urls = [];
+  const widths = [];
+  const heights = [];
+  let bytesBefore = 0;
+  let bytesAfter = 0;
+  let changed = 0;
+  let skipped = 0;
+
+  const total = pages.length;
+
+  for (let i = 0; i < pages.length; i += 1) {
+    const p = pages[i];
+    onProgress?.(`Shrinking page ${i + 1} of ${total}...`);
+
+    // A page staged in this edit but not yet uploaded is left for the normal
+    // upload path, which shrinks it anyway.
+    if (!p.remoteUrl) {
+      urls.push(p.remoteUrl);
+      widths.push(p.w || 0);
+      heights.push(p.h || 0);
+      skipped += 1;
+      continue;
+    }
+
+    let blob = null;
+    try {
+      const res = await withTimeout(fetch(p.remoteUrl, { cache: 'no-store' }), 45000, `page ${i + 1}`);
+      if (res.ok) blob = await res.blob();
+    } catch { /* leave it as it is */ }
+
+    if (!blob) {
+      urls.push(p.remoteUrl); widths.push(p.w || 0); heights.push(p.h || 0); skipped += 1;
+      continue;
+    }
+
+    const name = (p.remoteUrl.split('/').pop() || 'page.png').split('?')[0];
+    const small = await shrinkPage(new File([blob], name, { type: blob.type || 'image/png' }));
+    bytesBefore += small.before;
+
+    if (!small.changed || small.file.size > STORAGE_LIMIT) {
+      bytesAfter += small.before;
+      urls.push(p.remoteUrl); widths.push(p.w || 0); heights.push(p.h || 0); skipped += 1;
+      continue;
+    }
+
+    const ext = (small.file.name.split('.').pop() || 'webp').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const stem = `${userId}/${Date.now()}-r${i}-${Math.random().toString(36).slice(2, 8)}`;
+
+    try {
+      const { error: upErr } = await withTimeout(
+        supabase.storage.from('comics').upload(`${stem}.${ext}`, small.file, {
+          cacheControl: '31536000', contentType: small.file.type, upsert: false,
+        }),
+        60000,
+        `page ${i + 1}`,
+      );
+      if (upErr) throw new Error(describeError(upErr));
+
+      if (small.thumb) {
+        try {
+          await withTimeout(
+            supabase.storage.from('comics').upload(`${stem}.thumb.${ext}`, small.thumb, {
+              cacheControl: '31536000', contentType: 'image/webp', upsert: false,
+            }),
+            30000,
+            `thumbnail ${i + 1}`,
+          );
+        } catch { /* a missing thumbnail falls back to the page */ }
+      }
+
+      const { data: pub } = supabase.storage.from('comics').getPublicUrl(`${stem}.${ext}`);
+      if (!pub?.publicUrl) throw new Error('no address for the new page');
+
+      urls.push(pub.publicUrl);
+      widths.push(small.w || p.w || 0);
+      heights.push(small.h || p.h || 0);
+      bytesAfter += small.after;
+      changed += 1;
+    } catch {
+      // Could not store the smaller one, so keep pointing at the original.
+      urls.push(p.remoteUrl); widths.push(p.w || 0); heights.push(p.h || 0);
+      bytesAfter += small.before;
+      skipped += 1;
+    }
+  }
+
+  return {
+    urls, widths, heights, changed, skipped,
+    saved: describeSaving(bytesBefore, bytesAfter),
+    before: bytesBefore,
+    after: bytesAfter,
+  };
+}
