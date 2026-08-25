@@ -1,16 +1,30 @@
 /* ============================================================
    VIBEGROUNDS — 15: THE ARCADE
    ============================================================
-   The cabinet is CSS rather than an image: a picture would be a
-   big download for something that is only a frame, and it could
-   not carry working buttons — which are the whole story on a
-   phone, where there is no keyboard.
+   The cabinet is CSS rather than an image. A photograph would be
+   a few hundred KB of somebody's phone data for something that is
+   only a frame, and — the part that actually decides it — a
+   picture cannot have working buttons, which are the only
+   controls that exist on a touchscreen.
+
+   This is the second version of the machine. The first was a
+   marquee, a screen and a d-pad, and it read as a web page with
+   a border round it. This one has the sloped uprights, a lit
+   marquee, a hooded monitor behind curved glass, a control deck
+   tilted away from you, a ball-top stick on a real shaft and a
+   coin door. The game list moved onto the screen.
+
+   Sizes inside the screen are in cqw — a percentage of the
+   bezel's own width — so the menu text stays in proportion to
+   the machine whether it is 560px wide on a desktop or 320 on a
+   phone. Every one has a px fallback in front of it for anything
+   that does not do container queries.
 
    Load order matters. This file comes after 14-features.css and
    relies on the tokens from 01-base.css.
    ============================================================ */
 
-.vg-arcade { max-width: 780px; margin: 0 auto; }
+.vg-arcade { max-width: 900px; margin: 0 auto; }
 
 .vg-arcade-intro h1 {
   font-family: var(--font-pixel);
@@ -25,53 +39,158 @@
   font-size: 16px;
   line-height: 1.55;
   color: var(--text-secondary);
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 
-/* ---------- the machine ---------- */
+.vg-arcade-nudge { color: var(--text-primary); }
+.vg-arcade-nudge b { color: var(--orange); }
+
+/* ============================================================
+   THE MACHINE
+   ============================================================ */
+
+.vg-cab-room {
+  /* A pool of light on the floor under the cabinet. Cheap, and it
+     is most of what stops the machine looking like it is floating. */
+  background:
+    radial-gradient(ellipse 60% 34% at 50% 100%, rgba(232, 163, 23, .13), transparent 70%);
+  padding: 6px 0 4px;
+  margin-bottom: 18px;
+}
+
 .vg-cab {
-  background: linear-gradient(180deg, #2a2136 0%, #1b1626 60%, #141019 100%);
-  border: 3px solid #0b0810;
-  border-radius: 16px 16px 8px 8px;
-  box-shadow: inset 0 2px 0 rgba(255, 255, 255, .07), 0 10px 26px rgba(0, 0, 0, .5);
-  padding: 10px 10px 12px;
-  max-width: 560px;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: 0;
+  max-width: 620px;
   margin: 0 auto;
+  filter: drop-shadow(0 16px 26px rgba(0, 0, 0, .55));
 }
 
+/* ---------- the sloped uprights ---------- */
+.vg-cab-wing {
+  position: relative;
+  width: 38px;
+  flex: 0 0 38px;
+  /* Lighter than the body, not darker. The first attempt made these almost
+     black and they vanished against the page — a silhouette nobody can see
+     is not a silhouette. The bright edge is the light catching the front
+     corner of the cabinet, which is what tells you it has a side at all. */
+  background: linear-gradient(90deg, #241b33 0%, #3a2c50 40%, #1d1529 100%);
+  border: 2px solid #0a0710;
+  box-shadow: inset -2px 0 0 rgba(255, 255, 255, .06);
+  /* The classic upright silhouette: tall at the back, cut away at
+     the front where the control deck sticks out. */
+  clip-path: polygon(0 0, 100% 4%, 100% 62%, 62% 70%, 62% 100%, 0 100%);
+}
+
+.vg-cab-wing.is-right {
+  background: linear-gradient(270deg, #241b33 0%, #3a2c50 40%, #1d1529 100%);
+  box-shadow: inset 2px 0 0 rgba(255, 255, 255, .06);
+  clip-path: polygon(0 4%, 100% 0, 100% 100%, 38% 100%, 38% 70%, 0 62%);
+}
+
+.vg-cab-sideart {
+  position: absolute;
+  top: 16%;
+  left: 50%;
+  transform: translateX(-50%) rotate(180deg);
+  writing-mode: vertical-rl;
+  font-family: var(--font-pixel);
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: rgba(255, 196, 80, .78);
+  text-shadow: 0 0 10px rgba(232, 163, 23, .6);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.vg-cab-wing.is-right .vg-cab-sideart { top: 20%; }
+
+/* ---------- the body ---------- */
+.vg-cab-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  background: linear-gradient(180deg, #2a2136 0%, #1b1626 58%, #120e19 100%);
+  border: 3px solid #0b0810;
+  border-radius: 14px 14px 4px 4px;
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, .08);
+  padding: 8px 10px 0;
+}
+
+/* A thin lip above the marquee, like the top moulding of a real one. */
+.vg-cab-crown {
+  height: 6px;
+  border-radius: 6px 6px 0 0;
+  background: linear-gradient(180deg, #3b2f4c, #221a2e);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12);
+  margin-bottom: 6px;
+}
+
+/* ---------- marquee ---------- */
 .vg-cab-marquee {
-  background: linear-gradient(180deg, #ffcf5a 0%, #e8a317 55%, #b87c0c 100%);
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(180deg, #ffd977 0%, #f0ac1d 52%, #b87c0c 100%);
   border: 2px solid #0b0810;
-  border-radius: 8px 8px 3px 3px;
-  padding: 8px 10px;
+  border-radius: 6px 6px 2px 2px;
+  padding: 9px 10px;
   text-align: center;
-  box-shadow: 0 0 18px rgba(232, 163, 23, .35);
+  box-shadow:
+    0 0 22px rgba(232, 163, 23, .4),
+    inset 0 -3px 6px rgba(0, 0, 0, .25);
 }
 
 .vg-cab-marquee-text {
+  position: relative;
+  z-index: 2;
   font-family: var(--font-pixel);
-  font-size: 11px;
-  letter-spacing: 2px;
-  color: #20160a;
+  font-size: 12px;
+  letter-spacing: 3px;
+  color: #241708;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, .45), 0 0 12px rgba(255, 255, 255, .3);
 }
 
+/* The fluorescent tube behind the perspex — a bright band across
+   the middle that falls off top and bottom. */
+.vg-cab-tube {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(180deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, .55) 46%,
+    rgba(255, 255, 255, .55) 54%,
+    rgba(255, 255, 255, 0) 100%);
+  pointer-events: none;
+}
+
+/* ---------- the monitor ---------- */
 .vg-cab-hood {
-  background: #0b0810;
+  background: #08060c;
   border: 2px solid #000;
-  border-radius: 6px;
-  margin-top: 10px;
-  padding: 10px;
+  border-radius: 8px;
+  margin-top: 9px;
+  padding: 9px 9px 7px;
+  box-shadow: inset 0 6px 14px rgba(0, 0, 0, .8);
 }
 
 .vg-cab-bezel {
   position: relative;
-  background: #05070a;
-  border: 3px solid #191622;
-  border-radius: 10px;
+  background: #04060a;
+  border: 3px solid #171320;
+  border-radius: 14px;
   /* A real arcade screen shape. Fixed, so the playfield is the same size for
      everybody rather than bigger — and therefore easier — on a big monitor. */
   aspect-ratio: 4 / 3;
   overflow: hidden;
+  /* Everything inside sizes itself against the width of this box, so the
+     menu keeps its proportions on a phone. */
+  container-type: inline-size;
+  box-shadow:
+    inset 0 0 0 2px #000,
+    inset 0 0 30px rgba(0, 0, 0, .9);
 }
 
 .vg-cab-screen {
@@ -82,263 +201,774 @@
   background: #0b0f14;
 }
 
-.vg-cab-glass {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, .10) 0%, rgba(255, 255, 255, 0) 42%),
-    repeating-linear-gradient(180deg, rgba(0, 0, 0, .16) 0 1px, rgba(0, 0, 0, 0) 1px 3px);
-}
-
 .vg-cab-overlay {
   position: absolute;
   inset: 0;
+  z-index: 3;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 16px;
-  background: rgba(5, 7, 10, .82);
+  flex-direction: column;
+  padding: 3.5cqw;
+  background: #05080d;
+}
+
+/* Scanlines. Kept faint — heavy ones look like a broken screen rather
+   than a CRT, and they make small text genuinely harder to read. */
+.vg-cab-scan {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    180deg,
+    rgba(0, 0, 0, .22) 0px,
+    rgba(0, 0, 0, .22) 1px,
+    transparent 1px,
+    transparent 3px);
+}
+
+/* The sheen off curved glass. */
+.vg-cab-glass {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 70% 50% at 30% 8%, rgba(255, 255, 255, .1), transparent 60%),
+    linear-gradient(115deg, rgba(255, 255, 255, .06) 0 16%, transparent 42%);
+}
+
+/* Corners fall away, the way a tube does. */
+.vg-cab-vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+  border-radius: 14px;
+  box-shadow: inset 0 0 42px 14px rgba(0, 0, 0, .72);
 }
 
 .vg-cab-readout {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 8px;
+  margin-top: 7px;
+  padding: 4px 2px 0;
   font-family: var(--font-pixel);
   font-size: 8px;
   letter-spacing: 1px;
-  color: var(--text-dim);
+  color: #6d6480;
 }
 
-.vg-cab-readout b { color: var(--orange); }
-.vg-cab-status { color: var(--text-secondary); text-transform: none; }
+.vg-cab-score b { color: var(--orange); }
+.vg-cab-status { color: #8f86a3; text-align: right; }
 
-/* ---------- control panel ---------- */
+/* ---------- the control deck ---------- */
+.vg-cab-deck {
+  margin: 10px -10px 0;
+  padding: 10px 12px 12px;
+  background: linear-gradient(180deg, #322845 0%, #241c33 40%, #171122 100%);
+  border-top: 2px solid #0b0810;
+  box-shadow: inset 0 3px 0 rgba(255, 255, 255, .07);
+  /* Tilted away from you. This is the single thing that does most of
+     the work of making it read as a machine you are standing at
+     rather than a picture of one. */
+  transform: perspective(620px) rotateX(13deg);
+  transform-origin: top center;
+}
+
 .vg-cab-panel {
+  position: relative;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  margin-top: 12px;
-  padding: 14px 16px;
-  background: linear-gradient(180deg, #3a3048 0%, #241d30 100%);
-  border: 2px solid #0b0810;
+  /* Centred, not spread. space-between pushed the stick to one wall and the
+     buttons to the other with a hole in the middle, which is not how a hand
+     sits on a control deck. */
+  justify-content: center;
+  gap: 40px;
+  padding: 10px 46px;
+  background: linear-gradient(180deg, #100b18 0%, #1a1327 100%);
+  border: 2px solid #0a0710;
   border-radius: 8px;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, .7);
 }
 
-.vg-cab-stick {
+/* Speaker grilles, pinned to the ends of the deck so they never push the
+   controls apart. */
+.vg-cab-grille {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 44px;
+  border-radius: 4px;
+  background: repeating-linear-gradient(180deg, #0a0710 0 2px, #241a30 2px 4px);
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, .9);
+  opacity: .75;
+}
+
+.vg-cab-grille.is-left  { left: 10px; }
+.vg-cab-grille.is-right { right: 10px; }
+
+/* ---------- the stick ---------- */
+.vg-cab-stickwell {
   position: relative;
-  width: 132px;
-  height: 132px;
-  flex: none;
+  width: 92px;
+  height: 92px;
+  flex: 0 0 92px;
 }
 
+/* The chrome dust washer the shaft comes through. */
+.vg-cab-washer {
+  position: absolute;
+  left: 50%;
+  top: 62%;
+  transform: translate(-50%, -50%);
+  width: 46px;
+  height: 18px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 30%, #d8d4e2 0%, #8d8799 45%, #3a3448 100%);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, .7), inset 0 -2px 3px rgba(0, 0, 0, .5);
+}
+
+.vg-cab-shaft {
+  position: absolute;
+  left: 50%;
+  top: 62%;
+  width: 9px;
+  height: 30px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #4b4459 0%, #cfc9dc 45%, #5d5570 100%);
+  transform-origin: bottom center;
+  transition: transform .07s linear;
+}
+
+/* The ball top. Red because that is what a ball top is. */
+.vg-cab-ball {
+  position: absolute;
+  left: 50%;
+  top: 30%;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 34% 28%, #ff9e94 0%, #e0453a 42%, #8e1b16 78%, #5a0f0c 100%);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, .6), inset -3px -4px 8px rgba(0, 0, 0, .45);
+  transition: transform .07s linear;
+  z-index: 2;
+}
+
+/* The real controls: four invisible quarters over the well, so a thumb
+   pushes the stick where it looks like it is pushing it. */
 .vg-cab-dir {
   position: absolute;
-  width: 44px;
-  height: 44px;
-  background: #15111d;
-  border: 2px solid #0b0810;
-  border-radius: 7px;
-  color: var(--orange);
-  font-size: 15px;
-  line-height: 1;
+  background: none;
+  border: 0;
+  padding: 0;
   cursor: pointer;
-  /* Without this a thumb drag on a phone scrolls the page instead of
-     steering, which makes the machine feel broken. */
+  z-index: 3;
+  -webkit-tap-highlight-color: transparent;
   touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
 }
 
-.vg-cab-dir:active { background: var(--orange); color: #1a1206; }
-.vg-cab-dir.is-up    { top: 0;    left: 44px; }
-.vg-cab-dir.is-left  { top: 44px; left: 0; }
-.vg-cab-dir.is-right { top: 44px; left: 88px; }
-.vg-cab-dir.is-down  { top: 88px; left: 44px; }
+.vg-cab-dir.is-up    { left: 22%; top: 0;   width: 56%; height: 42%; }
+.vg-cab-dir.is-down  { left: 22%; top: 58%; width: 56%; height: 42%; }
+.vg-cab-dir.is-left  { left: 0;   top: 18%; width: 34%; height: 64%; }
+.vg-cab-dir.is-right { left: 66%; top: 18%; width: 34%; height: 64%; }
 
-.vg-cab-stick-hub {
-  position: absolute;
-  top: 51px; left: 51px;
-  width: 30px; height: 30px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #4b4160, #221b2e);
-  border: 2px solid #0b0810;
+.vg-cab-dir:focus-visible {
+  outline: 2px solid var(--orange);
+  outline-offset: -2px;
+  border-radius: 4px;
 }
 
-.vg-cab-fire { display: flex; gap: 14px; }
-
-.vg-cab-btn {
-  width: 62px;
-  height: 62px;
-  border-radius: 50%;
-  border: 3px solid #0b0810;
-  font-family: var(--font-pixel);
-  font-size: 12px;
-  color: #1a1206;
-  cursor: pointer;
-  touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
-  box-shadow: inset 0 -4px 0 rgba(0, 0, 0, .35);
-}
-
-.vg-cab-btn.is-a { background: radial-gradient(circle at 34% 28%, #ff9d7a, #d9432b); }
-.vg-cab-btn.is-b { background: radial-gradient(circle at 34% 28%, #ffd98a, #e8a317); }
-.vg-cab-btn:active { box-shadow: inset 0 3px 6px rgba(0, 0, 0, .5); transform: translateY(2px); }
-
-.vg-cab-foot {
+/* ---------- the fire buttons ---------- */
+.vg-cab-buttons {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-top: 10px;
-  flex-wrap: wrap;
+  gap: 14px;
+  padding-bottom: 8px;
 }
 
-.vg-cab-slot {
-  width: 46px;
-  height: 8px;
-  border-radius: 3px;
-  background: #05070a;
-  border: 2px solid #443a55;
-  flex: none;
-}
-
-.vg-cab-keys {
-  font-family: var(--font-retro);
-  font-size: 14px;
-  color: var(--text-dim);
-}
-
-.vg-cab-keys b { color: var(--text-secondary); }
-
-/* ---------- attract screen ---------- */
-.vg-arcade-attract { max-width: 320px; }
-
-.vg-arcade-big {
+.vg-cab-btn {
+  position: relative;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  border: 3px solid #0a0710;
+  cursor: pointer;
   font-family: var(--font-pixel);
-  font-size: 15px;
-  color: var(--orange);
-  letter-spacing: 2px;
-  margin-bottom: 10px;
+  font-size: 10px;
+  color: rgba(0, 0, 0, .55);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, .25);
+  /* Concave: light from the top, shadow pooling at the bottom inside. */
+  box-shadow:
+    0 5px 0 #2a1f38,
+    0 7px 10px rgba(0, 0, 0, .55),
+    inset 0 -6px 10px rgba(0, 0, 0, .35),
+    inset 0 5px 8px rgba(255, 255, 255, .3);
+  transition: transform .05s linear, box-shadow .05s linear;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none;
 }
 
-.vg-arcade-blurb,
-.vg-arcade-final {
-  font-family: var(--font-retro);
-  font-size: 18px;
-  color: var(--text-primary);
-  margin-bottom: 6px;
+.vg-cab-btn.is-a { background: radial-gradient(circle at 40% 32%, #ffd98a, #e8a317 55%, #a06d06 100%); }
+
+/* Staggered, like a real panel, so the thumb and forefinger are not
+   asked to sit in a straight line. */
+.vg-cab-btn.is-b {
+  background: radial-gradient(circle at 40% 32%, #9fe0ff, #3d9ede 55%, #16587f 100%);
+  align-self: flex-end;
 }
 
-.vg-arcade-how {
-  font-family: var(--font-retro);
-  font-size: 15px;
-  color: var(--text-dim);
-  margin-bottom: 14px;
+/* Sunk. Same look whether the press came from a thumb or the J key —
+   on a keyboard this is the only sign the machine heard you. */
+.vg-cab-btn.is-down,
+.vg-cab-btn:active {
+  transform: translateY(4px);
+  box-shadow:
+    0 1px 0 #2a1f38,
+    0 2px 4px rgba(0, 0, 0, .5),
+    inset 0 -3px 8px rgba(0, 0, 0, .5),
+    inset 0 3px 6px rgba(255, 255, 255, .2);
 }
 
-.vg-arcade-insert { animation: vg-blink 1.4s steps(2, end) infinite; }
+.vg-cab-btn:focus-visible { outline: 3px solid var(--text-bright); outline-offset: 3px; }
 
-@keyframes vg-blink { 50% { opacity: .55; } }
-
-/* Somebody who has run out should not get a flashing button they cannot
-   press. They get an explanation and a way to earn more instead. */
-.vg-arcade-broke p {
-  font-family: var(--font-retro);
-  font-size: 16px;
-  color: var(--text-secondary);
-  margin-bottom: 6px;
+/* ---------- START ---------- */
+.vg-cab-start {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-top: 10px;
+  padding: 9px 12px;
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: #1a1206;
+  background: linear-gradient(180deg, #ffe08a 0%, #f2b021 48%, #b8790a 100%);
+  border: 2px solid #0a0710;
+  border-radius: 6px;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #6d4705, 0 6px 12px rgba(0, 0, 0, .5);
+  transition: transform .05s linear, box-shadow .05s linear;
 }
 
-.vg-arcade-broke a { color: var(--orange); font-weight: bold; }
+.vg-cab-start:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #6d4705, 0 2px 6px rgba(0, 0, 0, .5);
+}
 
-.vg-arcade-quit {
+.vg-cab-start:disabled { opacity: .55; cursor: default; }
+
+.vg-cab-start-lamp {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #fff6d6;
+  box-shadow: 0 0 8px 2px rgba(255, 255, 255, .8);
+  animation: vg-cab-blink 1.1s steps(1) infinite;
+}
+
+@keyframes vg-cab-blink { 50% { opacity: .18; box-shadow: none; } }
+
+/* ---------- coin door ---------- */
+.vg-cab-door {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 14px;
+  margin: 10px -10px 0;
+  padding: 9px 12px;
+  background: linear-gradient(180deg, #1b1526 0%, #0f0b18 100%);
+  border-top: 2px solid #0a0710;
+}
+
+.vg-cab-slot {
+  position: relative;
+  width: 40px;
+  height: 30px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #c9c3d6 0%, #7d7690 55%, #3b3549 100%);
+  box-shadow: inset 0 -2px 4px rgba(0, 0, 0, .5), 0 2px 4px rgba(0, 0, 0, .6);
+}
+
+.vg-cab-slot-mouth {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) rotate(90deg);
+  width: 17px;
+  height: 4px;
+  border-radius: 2px;
+  background: #05040a;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, .9);
+}
+
+.vg-cab-plate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 10px;
+  background: #0a0710;
+  border: 1px solid #2c2340;
+  border-radius: 3px;
+}
+
+.vg-cab-plate b,
+.vg-cab-plate i {
+  font-family: var(--font-pixel);
+  font-size: 7px;
+  font-style: normal;
+  letter-spacing: 1px;
+  color: var(--orange);
+}
+
+.vg-cab-plate i { color: #6d6480; }
+
+.vg-cab-return {
+  width: 34px;
+  height: 16px;
+  border-radius: 3px 3px 8px 8px;
+  background: linear-gradient(180deg, #8d8699 0%, #453d56 100%);
+  box-shadow: inset 0 2px 3px rgba(0, 0, 0, .5);
+}
+
+.vg-cab-kick {
+  height: 16px;
+  margin: 0 -10px;
+  background: repeating-linear-gradient(90deg, #0d0a14 0 6px, #191225 6px 12px);
+  border-top: 2px solid #000;
+  border-radius: 0 0 2px 2px;
+}
+
+.vg-cab-keys {
+  margin: 10px auto 0;
+  max-width: 560px;
+  text-align: center;
+  font-family: var(--font-retro);
+  font-size: 15px;
+  color: var(--text-dim);
+}
+
+.vg-cab-keys b { color: var(--orange); }
+
+/* A faint glow off the glass while something is actually running. */
+.vg-cab.is-playing .vg-cab-bezel {
+  box-shadow:
+    inset 0 0 0 2px #000,
+    inset 0 0 30px rgba(0, 0, 0, .9),
+    0 0 26px rgba(120, 180, 255, .18);
+}
+
+/* ============================================================
+   THE MENU, ON THE SCREEN
+   ============================================================ */
+
+.vg-menu {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  font-family: var(--font-pixel);
+  color: #cfe6ff;
+}
+
+.vg-menu-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  padding-bottom: 2.4cqw;
+  border-bottom: 1px solid rgba(120, 180, 255, .28);
+}
+
+.vg-menu-title {
+  font-size: 9px;
+  font-size: 3.4cqw;
+  letter-spacing: 1px;
+  color: var(--orange);
+  text-shadow: 0 0 8px rgba(232, 163, 23, .5);
+}
+
+.vg-menu-hint {
+  font-size: 7px;
+  font-size: 2.5cqw;
+  color: rgba(160, 200, 240, .55);
+}
+
+.vg-menu-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  list-style: none;
+  margin: 0;
+  padding: 1.6cqw 0 0;
+  /* No visible scrollbar: a scrollbar down the side of a CRT is the one
+     thing that would give the whole illusion away. It still scrolls, and the
+     bottom edge is faded so the row that runs off it reads as "more below"
+     rather than as something drawn wrong. */
+  scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(180deg, #000 0, #000 86%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0, #000 86%, transparent 100%);
+}
+
+.vg-menu-more {
+  padding: .4cqw 0 1.2cqw;
+  text-align: center;
+  font-size: 6px;
+  font-size: 2.1cqw;
+  letter-spacing: 2px;
+  color: rgba(160, 200, 240, .4);
+}
+
+.vg-menu-list::-webkit-scrollbar { display: none; }
+
+.vg-menu-row {
+  display: flex;
+  align-items: center;
+  gap: 2cqw;
+  width: 100%;
+  padding: 1.5cqw 1.6cqw;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  font-size: 8px;
+  font-size: 3cqw;
+  color: rgba(190, 216, 245, .78);
+  letter-spacing: .5px;
+}
+
+.vg-menu-row.is-on {
+  color: #fff;
+  background: linear-gradient(90deg, rgba(232, 163, 23, .3), rgba(232, 163, 23, .02));
+  box-shadow: inset 2px 0 0 var(--orange);
+  text-shadow: 0 0 8px rgba(255, 210, 120, .6);
+}
+
+.vg-menu-row:focus-visible { outline: 1px solid var(--orange); outline-offset: -1px; }
+
+.vg-menu-arrow {
+  flex: 0 0 3cqw;
+  color: var(--orange);
+  animation: vg-menu-tick .9s steps(1) infinite;
+}
+
+@keyframes vg-menu-tick { 50% { opacity: .25; } }
+
+.vg-menu-name { flex: 1 1 auto; }
+
+.vg-menu-best {
+  flex: 0 0 auto;
+  font-size: 2.4cqw;
+  color: rgba(140, 190, 235, .6);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 40%;
+}
+
+.vg-menu-row.is-on .vg-menu-best { color: rgba(255, 220, 150, .85); }
+
+.vg-menu-foot {
+  padding-top: 2cqw;
+  border-top: 1px solid rgba(120, 180, 255, .28);
+}
+
+.vg-menu-blurb {
+  margin: 0 0 1cqw;
+  font-size: 7px;
+  font-size: 2.7cqw;
+  line-height: 1.5;
+  color: #cfe6ff;
+}
+
+.vg-menu-how {
+  margin: 0;
+  font-size: 6px;
+  font-size: 2.4cqw;
+  line-height: 1.5;
+  color: rgba(160, 200, 240, .6);
+}
+
+/* ---------- game over ---------- */
+.vg-arcade-attract {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2.4cqw;
+  height: 100%;
+  text-align: center;
+  font-family: var(--font-pixel);
+}
+
+.vg-arcade-big {
+  font-size: 14px;
+  font-size: 5.4cqw;
+  letter-spacing: 2px;
+  color: var(--orange);
+  text-shadow: 0 0 14px rgba(232, 163, 23, .55);
+}
+
+.vg-arcade-final {
+  font-size: 8px;
+  font-size: 3.2cqw;
+  color: #cfe6ff;
+}
+
+.vg-arcade-verdict {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.4cqw;
+  min-height: 8cqw;
+}
+
+.vg-arcade-saving { font-size: 2.6cqw; color: rgba(160, 200, 240, .7); }
+.vg-arcade-rank   { font-size: 3.4cqw; color: var(--yellow); }
+.vg-arcade-pb     { font-size: 2.6cqw; color: var(--green); }
+.vg-arcade-pb.is-quiet { color: rgba(160, 200, 240, .7); }
+
+.vg-arcade-refused {
+  font-size: 2.4cqw;
+  line-height: 1.5;
+  color: #ff9b8a;
+  max-width: 76%;
+}
+
+.vg-arcade-attract .retro-cta { font-size: 10px; }
+
+/* ---------- under the machine ---------- */
+.vg-arcade-quit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
   flex-wrap: wrap;
-  margin-top: 12px;
+  margin: -8px 0 18px;
   font-family: var(--font-retro);
   font-size: 15px;
   color: var(--text-dim);
 }
 
 .vg-arcade-quit button {
-  background: var(--bg-input);
-  border: 2px solid var(--border-dark);
-  color: var(--text-secondary);
   font-family: var(--font-pixel);
-  font-size: 8px;
-  padding: 9px 14px;
-  cursor: pointer;
-}
-
-.vg-arcade-quit button:hover { color: var(--orange); border-color: var(--orange); }
-
-/* ---------- picker ---------- */
-.vg-arcade-picker { margin-top: 18px; }
-
-.vg-arcade-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 8px;
-  padding: 10px;
-}
-
-.vg-arcade-tile {
-  text-align: left;
-  background: var(--bg-input);
+  font-size: 9px;
+  padding: 8px 12px;
+  color: var(--text-primary);
+  background: var(--bg-panel);
   border: 2px solid var(--border-dark);
-  padding: 10px;
   cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
 }
 
-.vg-arcade-tile.is-on { border-color: var(--orange); background: rgba(232, 163, 23, .10); }
+.vg-arcade-quit button:hover { border-color: var(--orange); color: var(--orange); }
 
-.vg-arcade-tile-name {
+.vg-arcade-signin,
+.vg-arcade-broke {
+  max-width: 560px;
+  margin: 0 auto 18px;
+  padding: 12px 14px;
+  text-align: center;
+  background: var(--bg-panel);
+  border: 2px solid var(--border-dark);
+  font-family: var(--font-read, var(--font-retro));
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+.vg-arcade-signin { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.vg-arcade-broke p { margin: 0 0 6px; }
+.vg-arcade-broke a { color: var(--orange); }
+
+/* ============================================================
+   HIGH SCORES
+   ============================================================ */
+
+.vg-hs { margin-top: 22px; }
+
+.vg-hs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.vg-hs-card {
+  background: var(--bg-panel);
+  border: 2px solid var(--border-dark);
+  padding: 10px 10px 12px;
+}
+
+/* The game currently loaded into the machine is marked, so the chart
+   and the cabinet agree with each other at a glance. */
+.vg-hs-card.is-on { border-color: var(--orange); box-shadow: 0 0 0 1px rgba(232, 163, 23, .3); }
+
+.vg-hs-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-panel);
+}
+
+.vg-hs-card-head h3 {
+  margin: 0;
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  color: var(--orange);
+  letter-spacing: 1px;
+}
+
+.vg-hs-play {
+  font-family: var(--font-pixel);
+  font-size: 7px;
+  padding: 5px 7px;
+  color: var(--text-dim);
+  background: var(--bg-input);
+  border: 1px solid var(--border-dark);
+  cursor: pointer;
+}
+
+.vg-hs-play:hover { color: var(--orange); border-color: var(--orange); }
+
+.vg-hs-list { list-style: none; margin: 8px 0 0; padding: 0; }
+
+.vg-hs-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 4px;
+  font-family: var(--font-retro);
+  font-size: 17px;
+  color: var(--text-primary);
+  border-bottom: 1px solid rgba(255, 255, 255, .04);
+}
+
+.vg-hs-row:last-child { border-bottom: 0; }
+
+.vg-hs-row.is-you {
+  background: rgba(232, 163, 23, .1);
+  box-shadow: inset 2px 0 0 var(--orange);
+}
+
+.vg-hs-rank {
+  flex: 0 0 26px;
+  font-size: 15px;
+  color: var(--text-dim);
+  text-align: center;
+}
+
+.vg-hs-face {
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
+  object-fit: cover;
+  border: 1px solid var(--border-dark);
+  background: var(--bg-input);
+}
+
+.vg-hs-face.is-blank {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-pixel);
+  font-size: 7px;
+  color: var(--text-dim);
+}
+
+.vg-hs-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--blue-link);
+  text-decoration: none;
+}
+
+.vg-hs-name:hover { color: var(--orange); text-decoration: underline; }
+
+.vg-hs-score { flex: 0 0 auto; color: var(--yellow); }
+
+.vg-hs-empty,
+.vg-hs-mine {
+  margin: 10px 0 0;
+  font-family: var(--font-retro);
+  font-size: 16px;
+  line-height: 1.4;
+  color: var(--text-dim);
+}
+
+.vg-hs-mine { color: var(--text-secondary); }
+.vg-hs-mine b { color: var(--yellow); }
+
+.vg-hs-honest {
+  margin-top: 14px;
+  padding: 12px 14px;
+  background: var(--bg-panel-alt);
+  border: 2px solid var(--border-dark);
+  border-left: 4px solid var(--orange);
+}
+
+.vg-hs-honest h4 {
+  margin: 0 0 8px;
   font-family: var(--font-pixel);
   font-size: 9px;
   color: var(--orange);
   letter-spacing: 1px;
 }
 
-.vg-arcade-tile-blurb {
-  font-family: var(--font-retro);
+.vg-hs-honest p {
+  margin: 0 0 8px;
+  font-family: var(--font-read, var(--font-retro));
   font-size: 15px;
-  color: var(--text-dim);
+  line-height: 1.6;
+  color: var(--text-secondary);
 }
 
-.vg-arcade-note {
-  font-family: var(--font-retro);
-  font-size: 14px;
-  color: var(--text-dim);
-  text-align: center;
-  margin: 18px 0 8px;
+.vg-hs-honest p:last-child { margin-bottom: 0; }
+.vg-hs-honest b { color: var(--text-primary); }
+.vg-hs-ask a { color: var(--orange); }
+
+/* ============================================================
+   MOTION
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .vg-cab-start-lamp,
+  .vg-menu-arrow { animation: none; }
+  .vg-cab-ball,
+  .vg-cab-shaft { transition: none; }
 }
 
-/* ---------- phones ---------- */
-@media (max-width: 520px) {
-  .vg-cab { padding: 8px; }
-  .vg-cab-panel { gap: 10px; padding: 10px; }
-  .vg-cab-stick { width: 108px; height: 108px; }
-  .vg-cab-dir { width: 36px; height: 36px; font-size: 13px; }
-  .vg-cab-dir.is-up { left: 36px; }
-  .vg-cab-dir.is-left { top: 36px; }
-  .vg-cab-dir.is-right { top: 36px; left: 72px; }
-  .vg-cab-dir.is-down { top: 72px; left: 36px; }
-  .vg-cab-stick-hub { top: 41px; left: 41px; width: 26px; height: 26px; }
-  .vg-cab-btn { width: 52px; height: 52px; font-size: 10px; }
-  .vg-cab-fire { gap: 10px; }
-  /* The keyboard hint is noise on a device with no keyboard. */
-  .vg-cab-keys { display: none; }
+/* ============================================================
+   SMALL SCREENS
+   ============================================================
+   The uprights are the first thing to go. They are the part that
+   is purely silhouette, and on a 360px phone they are stealing
+   width from the screen, which is the part you actually use. */
+
+@media (max-width: 560px) {
+  .vg-cab-wing { width: 16px; flex-basis: 16px; }
+  .vg-cab-sideart { display: none; }
+  .vg-cab-grille { display: none; }
+  .vg-cab-stickwell { width: 84px; flex-basis: 84px; height: 84px; }
+  .vg-cab-btn { width: 50px; height: 50px; }
+  .vg-cab-deck { transform: none; }   /* the tilt eats vertical room here */
+  .vg-cab-marquee-text { font-size: 9px; }
+  .vg-arcade { max-width: 100%; }
+}
+
+@media (max-width: 380px) {
+  .vg-cab-wing { display: none; }
+  .vg-cab-buttons { gap: 10px; }
+  .vg-cab-btn { width: 46px; height: 46px; }
 }
