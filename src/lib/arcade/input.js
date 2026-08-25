@@ -81,7 +81,15 @@ export default function createInput() {
     down.delete(b);
   };
 
+  // While something on the machine needs real typing — entering your three
+  // letters for the board — the keyboard has to be handed back. Otherwise
+  // pressing A to type the letter A also shoves the stick left, because that
+  // is what A means to a game. The painted buttons are unaffected: they call
+  // press() directly and never go near a key event.
+  let asleep = false;
+
   const onKeyDown = (e) => {
+    if (asleep) return;
     const b = KEY_MAP[e.code];
     if (!b) return;
     // Space and the arrows scroll the page, which is ruinous mid-game.
@@ -90,6 +98,7 @@ export default function createInput() {
     press(b);
   };
   const onKeyUp = (e) => {
+    if (asleep) return;
     const b = KEY_MAP[e.code];
     if (!b) return;
     e.preventDefault();
@@ -114,6 +123,14 @@ export default function createInput() {
     press,
     release,
     clear: () => { down.clear(); edge.clear(); },
+
+    /**
+     * Hand the keyboard back to the page, or take it again. Anything already
+     * held is let go on the way out, or a key held at the moment of suspending
+     * would still read as down for ever.
+     */
+    suspend() { asleep = true; down.clear(); edge.clear(); },
+    resume() { asleep = false; },
 
     /** Start writing down what gets pressed, against the machine's tick. */
     record(tickFn) {
