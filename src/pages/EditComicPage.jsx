@@ -6,7 +6,7 @@ import SiteHeader from '../components/SiteHeader';
 import Notice from '../components/Notice';
 import ComicPageGrid from '../components/ComicPageGrid';
 import { pageFromRemote, releasePage } from '../lib/comicFiles';
-import { uploadPages, forgetRemovedPages } from '../lib/comicUpload';
+import { uploadPages, forgetRemovedPages, recompressExisting } from '../lib/comicUpload';
 import { useDocumentTitle } from '../lib/pageMeta';
 
 /**
@@ -35,6 +35,7 @@ export default function EditComicPage() {
   const [denied, setDenied] = useState('');
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
+  const [shrinkResult, setShrinkResult] = useState('');
 
   useDocumentTitle(comic ? `Editing ${comic.title}` : undefined);
 
@@ -117,6 +118,58 @@ export default function EditComicPage() {
     window.addEventListener('beforeunload', warn);
     return () => window.removeEventListener('beforeunload', warn);
   }, [changes.any, busy]);
+
+  /**
+   * Squash pages that were posted before we started squashing them.
+   *
+   * Kept as its own button rather than folded into Save, because it rewrites
+   * every page of somebody's comic and that should be a thing you choose,
+   * not a side effect of fixing a typo in the title.
+   */
+  const shrinkExisting = async () => {
+    const already = pages.filter((p) => p.remoteUrl).length;
+    if (!already) return;
+    if (!window.confirm(
+      `Make the ${already} page${already === 1 ? '' : 's'} already on this comic smaller?\n\n`
+      + 'The pictures stay the same — they are just stored in a more efficient format, '
+      + 'so the comic loads faster and costs readers far less data. '
+      + 'Your original files are kept.',
+    )) return;
+
+    setError('');
+    setShrinkResult('');
+    try {
+      const r = await recompressExisting(pages, comic.creator_id, setBusy);
+
+      setBusy('Saving...');
+      const { error: rpcErr } = await withTimeout(
+        retryOnAbort(() => supabase.rpc('update_comic', {
+          p_comic: id,
+          p_title: title.trim(),
+          p_description: description.trim(),
+          p_is_nsfw: isNsfw,
+          p_pages: r.urls,
+          p_widths: r.widths,
+          p_heights: r.heights,
+        })),
+        30000,
+      );
+      if (rpcErr) throw new Error(describeError(rpcErr));
+
+      // Deliberately does NOT delete the originals. If this made a mess, the
+      // old pages are still there to point back at.
+      setBusy('');
+      setShrinkResult(
+        r.changed
+          ? `Done — ${r.changed} page${r.changed === 1 ? '' : 's'} shrunk${r.saved ? `: ${r.saved}` : ''}`
+            + (r.skipped ? `. ${r.skipped} left as they were.` : '.')
+          : 'Nothing to do — these pages are already as small as they are going to get.',
+      );
+    } catch (e2) {
+      setBusy('');
+      setError(describeError(e2));
+    }
+  };
 
   const save = async (e) => {
     e.preventDefault();
@@ -214,6 +267,24 @@ export default function EditComicPage() {
               Nothing changes on the site until you press save, and the box at
               the bottom says exactly what saving will do.
             </p>
+
+            {pages.some((p) => p.remoteUrl) && (
+              <div className="vg-comic-shrink">
+                <div>
+                  <b>Make this comic lighter</b>
+                  <p>
+                    Pages posted before we started compressing them are stored
+                    as they arrived. Squashing them keeps the pictures exactly
+                    as they look and makes the comic far quicker to read — a
+                    big help to anybody on a phone.
+                  </p>
+                  {shrinkResult && <p className="vg-comic-shrink-done">{shrinkResult}</p>}
+                </div>
+                <button type="button" onClick={shrinkExisting} disabled={!!busy}>
+                  ↓ Shrink the pages
+                </button>
+              </div>
+            )}
 
             <form onSubmit={save}>
               <ComicPageGrid
