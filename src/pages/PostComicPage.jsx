@@ -52,9 +52,12 @@ export default function PostComicPage() {
     setError('');
 
     try {
-      const { urls, widths, heights } = await uploadPages(pages, user.id, setBusy);
+      const { urls, widths, heights, saved } = await uploadPages(pages, user.id, setBusy);
 
-      setBusy('Posting the comic...');
+      // Worth showing. Somebody who has just watched eighty pages upload
+      // deserves to know the comic they posted is a fraction of the size
+      // their originals were.
+      setBusy(saved ? `Posting the comic... (pages shrunk: ${saved})` : 'Posting the comic...');
       const { data, error: rpcErr } = await withTimeout(
         retryOnAbort(() => supabase.rpc('submit_comic', {
           p_title: title.trim(),

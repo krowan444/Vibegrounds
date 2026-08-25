@@ -124,9 +124,9 @@ export default function EditComicPage() {
     setError('');
 
     try {
-      const { urls, widths, heights } = await uploadPages(pages, comic.creator_id, setBusy);
+      const { urls, widths, heights, saved } = await uploadPages(pages, comic.creator_id, setBusy);
 
-      setBusy('Saving the comic...');
+      setBusy(saved ? `Saving the comic... (pages shrunk: ${saved})` : 'Saving the comic...');
       const { error: rpcErr } = await withTimeout(
         retryOnAbort(() => supabase.rpc('update_comic', {
           p_comic: id,

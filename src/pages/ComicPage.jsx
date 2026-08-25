@@ -12,6 +12,7 @@ import BackToTop from '../components/BackToTop';
 import { useDocumentTitle } from '../lib/pageMeta';
 import { timeAgo, compactNumber } from '../lib/format';
 import { scrollToElement, scrollToTop } from '../lib/scrollTo';
+import { thumbUrlFor } from '../lib/imageShrink';
 
 /**
  * Read a comic.
@@ -491,7 +492,19 @@ export default function ComicPage() {
                   className={`vg-comic-thumb ${n === i ? 'is-on' : ''}`}
                   onClick={() => go(n)}
                 >
-                  <img src={p.image_url} alt="" loading="lazy" />
+                  {/* The little pages used to be the full pages, scaled down
+                      by the browser — 2.8MB of picture to draw something 44
+                      pixels across, eighty times over. Comics posted before
+                      thumbnails existed have none, so a miss falls back to
+                      the page itself rather than showing a broken image. */}
+                  <img
+                    src={thumbUrlFor(p.image_url) || p.image_url}
+                    alt=""
+                    loading="lazy"
+                    onError={(e) => {
+                      if (e.currentTarget.src !== p.image_url) e.currentTarget.src = p.image_url;
+                    }}
+                  />
                   <span>{n + 1}</span>
                 </button>
               ))}
