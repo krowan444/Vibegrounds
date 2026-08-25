@@ -7,6 +7,7 @@ import Notice from '../components/Notice';
 import ArcadeCabinet from '../components/ArcadeCabinet';
 import ArcadeMenu from '../components/ArcadeMenu';
 import ArcadeCharts from '../components/ArcadeCharts';
+import ArcadeInitials from '../components/ArcadeInitials';
 import CouldNotLoad from '../components/CouldNotLoad';
 import createInput from '../lib/arcade/input';
 import { runGame } from '../lib/arcade/screen';
@@ -33,7 +34,7 @@ import { scrollToElement } from '../lib/scrollTo';
  * trust than one that says where its edges are.
  */
 export default function ArcadePage() {
-  const { user, refreshProfile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
 
   useDocumentTitle(
     'The Arcade',
@@ -51,6 +52,16 @@ export default function ArcadePage() {
   const [lastGo, setLastGo] = useState(null);
   const [result, setResult] = useState(null);   // what the database said about the score
   const [saving, setSaving] = useState(false);
+
+  // The three letters that go on the board. Asked for once, then remembered
+  // on the profile and preloaded into every game after — which is the whole
+  // point of them, so this is read from the server rather than kept in this
+  // browser, where a different phone would forget it.
+  const [initials, setInitials] = useState(null);
+  const [naming, setNaming] = useState(false);
+  const [namingErr, setNamingErr] = useState('');
+  const [namingBusy, setNamingBusy] = useState(false);
+  const [skipped, setSkipped] = useState(false);
 
   const canvasRef = useRef(null);
   const inputRef = useRef(null);
@@ -81,10 +92,21 @@ export default function ArcadePage() {
   // load and therefore stops you playing is a bug.
   const loadCharts = useCallback(async () => {
     const { data, error: err } = await supabase.rpc('arcade_charts', { p_top: 5 });
-    if (!err) setCharts(data);
+    if (!err) {
+      setCharts(data);
+      if (data?.initials) setInitials(data.initials);
+    }
   }, []);
 
   useEffect(() => { load(); loadCharts(); }, [load, loadCharts]);
+
+  // The profile is loaded by the auth context anyway and carries the three
+  // letters, so they are on screen before the chart has finished coming back
+  // — which is the difference between the name being "remembered" and the
+  // name appearing a second late every time.
+  useEffect(() => {
+    if (profile?.arcade_initials) setInitials(profile.arcade_initials);
+  }, [profile?.arcade_initials]);
 
   const game = GAMES.find((g) => g.meta.id === picked) || GAMES[0];
 
@@ -107,6 +129,11 @@ export default function ArcadePage() {
       if (err) throw err;
       setResult(data);
       loadCharts();
+
+      // Only ever asked when there is a score on the board to attach it to,
+      // and only when they have not already got one. Somebody who said "not
+      // now" this session is left alone until they come back.
+      if (data?.saved && !initials && !skipped) setNaming(true);
     } catch (e) {
       // Said out loud rather than swallowed. If the database refused the
       // score the player is owed the reason — silently dropping it would
@@ -116,7 +143,25 @@ export default function ArcadePage() {
     } finally {
       setSaving(false);
     }
-  }, [loadCharts]);
+  }, [loadCharts, initials, skipped]);
+
+  const saveInitials = async (word) => {
+    setNamingErr('');
+    setNamingBusy(true);
+    try {
+      const { data, error: err } = await supabase.rpc('set_arcade_initials', { p_initials: word });
+      if (err) throw err;
+      setInitials(data.initials);
+      setNaming(false);
+      // The board is showing the old three letters until it is asked again.
+      loadCharts();
+      refreshProfile();
+    } catch (e) {
+      setNamingErr(describeError(e));
+    } finally {
+      setNamingBusy(false);
+    }
+  };
 
   const start = async () => {
     setError('');
@@ -236,11 +281,27 @@ export default function ArcadePage() {
             score={score}
             status={line}
             playing={phase === 'playing'}
-            onStart={phase === 'idle' && user && canAfford ? start : null}
+            onStart={phase === 'idle' && !naming && user && canAfford ? start : null}
             startLabel={startLabel}
             startDisabled={busy}
           >
-            {phase === 'idle' && (
+            {/* Naming takes the screen over whatever else was on it. It is a
+                modal moment on a real machine too — the game is over, the
+                board is waiting, nothing else is happening. */}
+            {naming && (
+              <ArcadeInitials
+                input={inputRef.current}
+                username={profile?.username}
+                current={initials}
+                onSave={saveInitials}
+                onSkip={() => { setNaming(false); setSkipped(true); }}
+                saving={namingBusy}
+                error={namingErr}
+                madeTheBoard={Boolean(result?.saved && result.rank <= 5)}
+              />
+            )}
+
+            {!naming && phase === 'idle' && (
               <ArcadeMenu
                 games={GAMES}
                 pickedId={picked}
@@ -252,10 +313,13 @@ export default function ArcadePage() {
               />
             )}
 
-            {phase === 'over' && (
+            {!naming && phase === 'over' && (
               <div className="vg-arcade-attract">
                 <div className="vg-arcade-big">GAME OVER</div>
-                <div className="vg-arcade-final">{game.meta.name} — {score.toLocaleString()}</div>
+                <div className="vg-arcade-final">
+                  {game.meta.name} — {score.toLocaleString()}
+                  {initials && <span className="vg-arcade-tag">{initials}</span>}
+                </div>
 
                 <div className="vg-arcade-verdict">
                   {saving && <span className="vg-arcade-saving">SAVING YOUR SCORE…</span>}
@@ -312,6 +376,27 @@ export default function ArcadePage() {
             </p>
             <Link to="/portal">Go and rate something →</Link>
           </div>
+        )}
+
+        {user && (
+          <p className="vg-arcade-name">
+            {initials
+              ? <>Your name on the board is <b>{initials}</b>. </>
+              : <>You have not picked your three letters yet. </>}
+            <button
+              type="button"
+              className="vg-arcade-rename"
+              onClick={() => {
+                setSkipped(false);
+                setNamingErr('');
+                setNaming(true);
+                if (phase === 'playing') quit();
+                if (cabRef.current) scrollToElement(cabRef.current, { offset: 12 });
+              }}
+            >
+              {initials ? 'Change it' : 'Pick them now'}
+            </button>
+          </p>
         )}
 
         <ArcadeCharts
