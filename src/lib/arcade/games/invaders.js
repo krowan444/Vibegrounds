@@ -21,7 +21,7 @@ const MARCH_X = 6, DROP = 9;     // one hop sideways, one hop down
 const PW = 16, PH = 8;           // player ship
 const MAX_BULLETS = 2;           // small magazine, so it is about timing
 
-export function create({ width, height, input, onScore, onOver }) {
+export function create({ width, height, input, onScore, onOver, rng }) {
   const py = height - 18;
   let px = width / 2 - PW / 2;
   let grid, ox, oy, dir, bullets, bombs;
@@ -75,7 +75,7 @@ export function create({ width, height, input, onScore, onOver }) {
       }
     }
     if (!front.length) return;
-    const p = front[(Math.random() * front.length) | 0];
+    const p = front[(rng() * front.length) | 0];
     bombs.push({ x: ax(p.c) + AW / 2 - 1, y: ay(p.r) + AH, w: 2, h: 5 });
   }
 
@@ -113,7 +113,7 @@ export function create({ width, height, input, onScore, onOver }) {
       bombTimer -= dt;
       if (bombTimer <= 0) {
         dropBomb();
-        bombTimer = 0.5 + Math.random() * (1.4 - Math.min(0.9, wave * 0.2));
+        bombTimer = 0.5 + rng() * (1.4 - Math.min(0.9, wave * 0.2));
       }
       bombs.forEach((b) => { b.y += 95 * dt; });
       bombs = bombs.filter((b) => b.y < height);

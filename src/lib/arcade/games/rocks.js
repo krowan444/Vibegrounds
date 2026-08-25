@@ -25,7 +25,7 @@ const SHIP_R = 7, ROCK_R = [6, 11, 17];   // ship, then small/medium/big rocks
 const ROCK_SCORE = [100, 50, 20];  // the small fast ones are the hard ones
 const CLEAR_R = 40;                // room the centre needs before the ship comes back
 
-export function create({ width, height, input, onScore, onOver }) {
+export function create({ width, height, input, onScore, onOver, rng }) {
   const ship = { x: width / 2, y: height / 2, vx: 0, vy: 0, a: -Math.PI / 2 };
   let rocks = [], shots = [];
   let score = 0, lives = 3, wave = 0;
@@ -42,16 +42,16 @@ export function create({ width, height, input, onScore, onOver }) {
   const wrap = (o) => { o.x = (o.x + width) % width; o.y = (o.y + height) % height; };
 
   function makeRock(x, y, size) {
-    const dir = Math.random() * Math.PI * 2;
+    const dir = rng() * Math.PI * 2;
     // Chunks fly faster than what they came off, so breaking a big rock winds
     // the pace up instead of just leaving more of the same to dodge.
     const speed = (26 + wave * 5) * (1 + (2 - size) * 0.35);
     const verts = [];
-    for (let i = 0; i < 9; i++) verts.push(0.7 + Math.random() * 0.45);
+    for (let i = 0; i < 9; i++) verts.push(0.7 + rng() * 0.45);
     return {
       x, y, size, verts, r: ROCK_R[size],
       vx: Math.cos(dir) * speed, vy: Math.sin(dir) * speed,
-      a: Math.random() * Math.PI * 2, spin: (Math.random() - 0.5) * 1.6,
+      a: rng() * Math.PI * 2, spin: (rng() - 0.5) * 1.6,
     };
   }
 
@@ -61,7 +61,7 @@ export function create({ width, height, input, onScore, onOver }) {
       let x, y;
       // Never in the player's lap: a wave that opens with a rock already on
       // top of you is a life lost before you have touched the controls.
-      do { x = Math.random() * width; y = Math.random() * height; }
+      do { x = rng() * width; y = rng() * height; }
       while (dist(x, y, ship.x, ship.y) < 75);
       rocks.push(makeRock(x, y, 2));
     }

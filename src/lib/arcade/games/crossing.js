@@ -48,7 +48,7 @@ const minGap = (speed, carW) => Math.max(PLAYER + speed * DWELL, carW * 2);
 
 const wrap = (v, m) => ((v % m) + m) % m;
 
-export function create({ width, height, input, onScore, onOver }) {
+export function create({ width, height, input, onScore, onOver, rng }) {
   const cols = Math.floor(width / COL);
 
   let lanes = [];
@@ -67,15 +67,15 @@ export function create({ width, height, input, onScore, onOver }) {
     const busy = Math.min(LANE_ROWS.length, 4 + (level >> 1));
     lanes = LANE_ROWS.map((r, i) => {
       if (FILL_ORDER.indexOf(i) >= busy) return { row: r, cars: [] };
-      const speed = Math.min(110, (26 + Math.random() * 44) * mult);
+      const speed = Math.min(110, (26 + rng() * 44) * mult);
       const cars = [];
       let x = 0;
       // Keep laying cars until the convoy is longer than the screen, so the
       // wrap-around join is off-screen and the pattern never visibly repeats.
       while (x < width + 80) {
-        const w = Math.random() < 0.25 ? 44 : 28;
+        const w = rng() < 0.25 ? 44 : 28;
         cars.push({ x, w });
-        x += w + minGap(speed, w) + Math.random() * 40;
+        x += w + minGap(speed, w) + rng() * 40;
       }
       return { row: r, dir: i % 2 ? 1 : -1, speed, cars, span: x, shift: 0, pale: i % 3 === 0 };
     });

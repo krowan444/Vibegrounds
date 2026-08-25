@@ -55,7 +55,7 @@ function block(ctx, x, y, colour, size) {
   ctx.fillRect(x + 1, y + 1, size - 2, size - 2);
 }
 
-export function create({ width, height, input, onScore, onOver }) {
+export function create({ width, height, input, onScore, onOver, rng }) {
   const grid = [];
   for (let r = 0; r < ROWS; r++) grid.push(new Array(COLS).fill(null));
 
@@ -73,7 +73,7 @@ export function create({ width, height, input, onScore, onOver }) {
     if (!bag.length) {
       bag = KEYS.slice();
       for (let i = bag.length - 1; i > 0; i--) {
-        const j = (Math.random() * (i + 1)) | 0;
+        const j = (rng() * (i + 1)) | 0;
         [bag[i], bag[j]] = [bag[j], bag[i]];
       }
     }

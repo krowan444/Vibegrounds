@@ -21,7 +21,7 @@ const BRICK_W = 30, BRICK_H = 10;   // the cell pitch, not the drawn size
 const ROW_COLOUR = ['#e2564f', '#e8a317', '#9fe870', '#4bb8d8', '#8f7fd8'];
 const MAX_HOP = 3;                  // px of ball travel resolved in one go
 
-export function create({ width, height, input, onScore, onOver }) {
+export function create({ width, height, input, onScore, onOver, rng }) {
   const bricks = [];
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
@@ -43,7 +43,7 @@ export function create({ width, height, input, onScore, onOver }) {
     stuck = false;
     // Never straight up: a vertical launch just bounces back down the same
     // column and the first go looks broken rather than lucky.
-    const angle = (Math.random() < 0.5 ? -1 : 1) * 0.5;
+    const angle = (rng() < 0.5 ? -1 : 1) * 0.5;
     vx = Math.sin(angle) * speed;
     vy = -Math.cos(angle) * speed;
   }

@@ -67,7 +67,7 @@ const GAP_SLACK = 0.22;
 const GAP_RANDOM = 0.55;
 const SPEED_MARGIN = 1.1;
 
-export function create({ width, height, input, onScore, onOver }) {
+export function create({ width, height, input, onScore, onOver, rng }) {
   let speed = SPEED_MIN;
   let dist = 0;
   let score = 0;
@@ -84,7 +84,7 @@ export function create({ width, height, input, onScore, onOver }) {
   let gapLeft = 200;       // a beat of empty runway before the first hurdle
 
   // Distant marks, drifting slower than the ground so the world has depth.
-  const newMark = (x) => ({ x, w: 10 + ((Math.random() * 26) | 0), h: 6 + ((Math.random() * 18) | 0) });
+  const newMark = (x) => ({ x, w: 10 + ((rng() * 26) | 0), h: 6 + ((rng() * 18) | 0) });
   const marks = [];
   for (let i = 0; i < 7; i++) marks.push(newMark(i * 52));
 
@@ -95,7 +95,7 @@ export function create({ width, height, input, onScore, onOver }) {
   }
 
   function spawn() {
-    const h = OB_H_MIN + Math.random() * (OB_H_MAX - OB_H_MIN);
+    const h = OB_H_MIN + rng() * (OB_H_MAX - OB_H_MIN);
     // Crossing takes (w + player) / speed seconds and must fit the window the
     // jump buys. Using only half of it leaves the rest as slack for imperfect
     // timing, which is what keeps wide blocks fair rather than frame-perfect.
@@ -104,9 +104,9 @@ export function create({ width, height, input, onScore, onOver }) {
     // being judged by eye is exactly the block collided with, and never bigger
     // than the sum above signed off on.
     const room = speed * clearWindow(h) * 0.5 - PLAYER_W;
-    const w = OB_W_MIN + Math.random() * Math.max(0, Math.min(OB_W_MAX, room) - OB_W_MIN);
+    const w = OB_W_MIN + rng() * Math.max(0, Math.min(OB_W_MAX, room) - OB_W_MIN);
     obstacles.push({ x: width + 4, w: Math.floor(w), h: Math.floor(h) });
-    gapLeft = w + speed * SPEED_MARGIN * (AIRTIME + GAP_SLACK + Math.random() * GAP_RANDOM);
+    gapLeft = w + speed * SPEED_MARGIN * (AIRTIME + GAP_SLACK + rng() * GAP_RANDOM);
   }
 
   return {
@@ -149,7 +149,7 @@ export function create({ width, height, input, onScore, onOver }) {
 
       for (const m of marks) {
         m.x -= speed * 0.35 * dt;
-        if (m.x + m.w < 0) Object.assign(m, newMark(width + Math.random() * 60));
+        if (m.x + m.w < 0) Object.assign(m, newMark(width + rng() * 60));
       }
 
       for (let i = obstacles.length - 1; i >= 0; i--) {

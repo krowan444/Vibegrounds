@@ -19,7 +19,7 @@ export const meta = {
 
 const CELL = 8;
 
-export function create({ width, height, input, onScore, onOver }) {
+export function create({ width, height, input, onScore, onOver, rng }) {
   const cols = Math.floor(width / CELL);
   const rows = Math.floor(height / CELL);
 
@@ -34,7 +34,7 @@ export function create({ width, height, input, onScore, onOver }) {
   function spawn() {
     let p;
     do {
-      p = { x: (Math.random() * cols) | 0, y: (Math.random() * rows) | 0 };
+      p = { x: (rng() * cols) | 0, y: (rng() * rows) | 0 };
     } while (snake.some((s) => s.x === p.x && s.y === p.y));
     return p;
   }

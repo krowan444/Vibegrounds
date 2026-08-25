@@ -27,7 +27,7 @@ const BALL_MAX = 280;
 const MAX_ANGLE = Math.PI / 3; // 60° off horizontal keeps some forward pace
 const WIN = 5;
 
-export function create({ width, height, input, onScore, onOver }) {
+export function create({ width, height, input, onScore, onOver, rng }) {
   const leftX = 12;
   const rightX = width - 12 - PAD_W;
 
@@ -43,7 +43,7 @@ export function create({ width, height, input, onScore, onOver }) {
     ballY = height / 2;
     // Serve shallow and always sideways, so a serve can never dribble
     // vertically down the centre line and stall the rally.
-    const angle = (Math.random() - 0.5) * (MAX_ANGLE / 2);
+    const angle = (rng() - 0.5) * (MAX_ANGLE / 2);
     vx = Math.cos(angle) * BALL_MIN * towards;
     vy = Math.sin(angle) * BALL_MIN;
     serveIn = 0.8;
@@ -54,7 +54,7 @@ export function create({ width, height, input, onScore, onOver }) {
   // frame: the computer commits to a slightly wrong spot and lives with it,
   // which reads as a misjudgement instead of a shaking bat.
   function reaim() {
-    aim = (Math.random() - 0.5) * PAD_H * 0.85;
+    aim = (rng() - 0.5) * PAD_H * 0.85;
   }
 
   function bounce(padY, dir, hitY) {
@@ -78,7 +78,7 @@ export function create({ width, height, input, onScore, onOver }) {
     return serve(toPlayer ? 1 : -1);   // the side that conceded receives
   }
 
-  serve(Math.random() < 0.5 ? -1 : 1);
+  serve(rng() < 0.5 ? -1 : 1);
 
   return {
     update(dt) {

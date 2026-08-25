@@ -39,7 +39,7 @@ const WRONG_TIME = 0.9;
 const WRONG_BLINK = 0.13;
 const PRESS_TIME = 3.5;       // per press, not per round
 
-export function create({ width, height, input, onScore, onOver }) {
+export function create({ width, height, input, onScore, onOver, rng }) {
   const seq = [];
   let phase = 'show';   // show | input | good | wrong
   let step = 0;
@@ -60,7 +60,7 @@ export function create({ width, height, input, onScore, onOver }) {
   const gapTime = (on) => Math.max(GAP_MIN, on * GAP_RATIO);
 
   function nextRound() {
-    seq.push((Math.random() * 4) | 0);
+    seq.push((rng() * 4) | 0);
     step = 0;
     phase = 'show';
     timer = PRE_ROLL;
