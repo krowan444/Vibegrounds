@@ -476,6 +476,8 @@
 
 /* ---------- coin door ---------- */
 .vg-cab-door {
+  /* The CREDIT flash is positioned against this. */
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -528,6 +530,114 @@
 }
 
 .vg-cab-plate i { color: #6d6480; }
+
+/* ---------- inserting a coin ----------
+
+   A V coin falls in from above the machine, turns edge-on as it meets the
+   mouth, and disappears into it. Then the door takes the knock.
+
+   Separate animations rather than one, because these are separate things:
+   the coin travels, the coin's face turns, and the slot lights up as it
+   swallows. Folded into a single keyframe set, every tweak to one of them
+   fights the other two.
+
+   The coin is mounted on the slot, which is `position: relative`, so it
+   lands on the mouth whatever the door's flex row does at narrow widths. */
+
+.vg-cab-coin {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
+  z-index: 3;
+  pointer-events: none;
+  animation: vg-coin-drop 620ms cubic-bezier(.45, .05, .55, 1) forwards;
+}
+
+.vg-cab-coin-face {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  font-style: normal;
+  color: #6b4a05;
+  /* Off-centre highlight, so it reads as a struck coin and not a disc. */
+  background: radial-gradient(circle at 34% 30%,
+    #fff3c4 0%, #e8a71b 46%, #b97e08 78%, #7d5303 100%);
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 240, 190, .55),
+    inset 0 -2px 3px rgba(0, 0, 0, .35),
+    0 2px 5px rgba(0, 0, 0, .55);
+  /* scaleX rather than rotateY: no 3D context to set up, and the V can
+     never come out mirrored on the back half of the turn. */
+  animation: vg-coin-spin 620ms linear forwards;
+}
+
+@keyframes vg-coin-drop {
+  0%   { transform: translateY(-78px); opacity: 0; }
+  12%  { opacity: 1; }
+  72%  { transform: translateY(0); opacity: 1; }      /* meets the mouth */
+  100% { transform: translateY(9px); opacity: 0; }    /* and goes in */
+}
+
+@keyframes vg-coin-spin {
+  0%   { transform: scaleX(1); }
+  30%  { transform: scaleX(.12); }
+  60%  { transform: scaleX(.9); }
+  /* Edge-on as it enters: the mouth is a vertical letterbox and a coin
+     lying flat could not fit through it. */
+  100% { transform: scaleX(.08); }
+}
+
+/* The knock. A real machine moves when it takes your money. */
+.vg-cab-door.is-taking { animation: vg-door-knock 260ms 560ms ease-out; }
+
+@keyframes vg-door-knock {
+  0%, 100% { transform: translateY(0); }
+  40%      { transform: translateY(1.5px); }
+}
+
+.vg-cab-door.is-taking .vg-cab-slot-mouth {
+  animation: vg-mouth-flash 420ms 520ms ease-out;
+}
+
+@keyframes vg-mouth-flash {
+  0%, 100% { background: #05040a; box-shadow: inset 0 1px 2px rgba(0, 0, 0, .9); }
+  35%      { background: var(--orange); box-shadow: 0 0 9px 2px rgba(232, 167, 27, .75); }
+}
+
+/* CREDIT rises off the door and fades, the way the counter used to tick
+   over. Absolute, so it cannot shove the door's layout about mid-go.
+
+   Anchored right rather than centre: the START button sits directly above
+   the middle of the door, and a centred CREDIT rose straight through its
+   label. Over the coin return there is nothing to collide with. */
+.vg-cab-credit {
+  position: absolute;
+  right: 12px;
+  bottom: 100%;
+  font-family: var(--font-pixel);
+  font-size: 8px;
+  letter-spacing: 1px;
+  color: var(--orange);
+  text-shadow: 0 0 8px rgba(232, 167, 27, .6);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  animation: vg-credit-up 900ms 540ms ease-out forwards;
+}
+
+@keyframes vg-credit-up {
+  0%   { opacity: 0; transform: translateY(0); }
+  25%  { opacity: 1; transform: translateY(-7px); }
+  70%  { opacity: 1; transform: translateY(-11px); }
+  100% { opacity: 0; transform: translateY(-18px); }
+}
 
 .vg-cab-return {
   width: 34px;
@@ -740,6 +850,93 @@
   line-height: 1.5;
   color: #ff9b8a;
   max-width: 76%;
+}
+
+/* ---------- the board, on the machine ----------
+
+   Shown straight after a go. Sizes in cqw like everything else inside the
+   bezel, so the table keeps its proportions on a phone instead of five rows
+   of pixel font shoving the buttons off the bottom of the screen. */
+
+.vg-arcade-board {
+  width: 78%;
+  max-width: 300px;
+  padding: 2cqw 0 0;
+  border-top: 1px solid rgba(120, 150, 190, .22);
+}
+
+.vg-arcade-board-head {
+  font-size: 2.4cqw;
+  letter-spacing: 1px;
+  color: rgba(160, 200, 240, .75);
+  margin-bottom: 1.4cqw;
+}
+
+.vg-arcade-board-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: .9cqw;
+}
+
+.vg-arcade-board-rows li {
+  display: grid;
+  /* Rank and score are fixed columns so the initials never shunt the
+     numbers about as scores get longer. */
+  grid-template-columns: 3.4cqw 1fr auto;
+  align-items: baseline;
+  gap: 2cqw;
+  font-size: 2.8cqw;
+  color: #b9d4ee;
+  padding: .4cqw .8cqw;
+  border-radius: 2px;
+}
+
+/* Your row. The whole reason the board is here. */
+.vg-arcade-board-rows li.is-you {
+  color: #fff3d0;
+  background: rgba(232, 163, 23, .16);
+  box-shadow: inset 0 0 0 1px rgba(232, 163, 23, .45);
+}
+
+.vg-arcade-board-rank  { color: rgba(160, 200, 240, .6); text-align: right; }
+.vg-arcade-board-name  { letter-spacing: 1px; text-align: left; }
+.vg-arcade-board-score { font-variant-numeric: tabular-nums; }
+
+.vg-arcade-board-rows li.is-you .vg-arcade-board-rank { color: var(--orange); }
+
+.vg-arcade-board-you {
+  margin-top: 1.4cqw;
+  font-size: 2.4cqw;
+  color: var(--orange);
+}
+
+.vg-arcade-after {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 2cqw;
+}
+
+.vg-arcade-seeboard {
+  background: none;
+  border: 1px solid rgba(160, 200, 240, .35);
+  border-radius: 3px;
+  padding: 1.2cqw 2.2cqw;
+  font-family: var(--font-pixel);
+  font-size: 2.4cqw;
+  letter-spacing: 1px;
+  color: rgba(180, 214, 245, .9);
+  cursor: pointer;
+}
+
+.vg-arcade-seeboard:hover,
+.vg-arcade-seeboard:focus-visible {
+  color: var(--orange);
+  border-color: var(--orange);
 }
 
 .vg-arcade-attract .retro-cta { font-size: 10px; }
@@ -1115,6 +1312,20 @@
   .vg-initials-slot.is-on .vg-initials-char { animation: none; }
   .vg-cab-ball,
   .vg-cab-shaft { transition: none; }
+
+  /* The coin is a moving object crossing the screen, which is exactly what
+     this setting is asking us not to do. The credit still appears — the
+     information survives, only the journey goes. The page also shortens the
+     wait to nothing in this case, so the go starts immediately. */
+  .vg-cab-coin { display: none; }
+  .vg-cab-door.is-taking,
+  .vg-cab-door.is-taking .vg-cab-slot-mouth { animation: none; }
+  .vg-cab-credit { animation: vg-credit-hold 900ms 0ms ease-out forwards; }
+}
+
+@keyframes vg-credit-hold {
+  0%, 80% { opacity: 1; transform: translateY(-9px); }
+  100%    { opacity: 0; transform: translateY(-9px); }
 }
 
 /* ============================================================
