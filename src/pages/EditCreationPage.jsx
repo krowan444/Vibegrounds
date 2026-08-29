@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import SiteHeader from '../components/SiteHeader';
 import Notice from '../components/Notice';
 import TagPicker from '../components/TagPicker';
-import { normalizeUrl, isValidUrl } from './UploadPage';
+import { normalizeUrl, isValidUrl } from '../lib/url';
 
 /**
  * Edit a submission you already posted.

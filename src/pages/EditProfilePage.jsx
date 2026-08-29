@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { AVATARS, AVATAR_GROUPS, DEFAULT_AVATAR } from '../data/avatars';
 import SiteHeader from '../components/SiteHeader';
+import { normalizeUrl } from '../lib/url';
 
 export default function EditProfilePage() {
   const { user, profile, updateProfile, loading: authLoading } = useAuth();
@@ -62,7 +63,11 @@ export default function EditProfilePage() {
         username: form.username.trim(),
         bio: form.bio.trim(),
         avatar_url: form.avatar_url,
-        website: form.website.trim()
+        // Typing "mysite.com" should save a working link, the same as it
+        // does on the upload form. The database sanitises this again on
+        // the way in — doing it here as well is so the field shows what
+        // was actually saved rather than quietly differing from it.
+        website: normalizeUrl(form.website)
       });
 
       setSuccess('✅ Profile updated! Looking fresh, viber!');

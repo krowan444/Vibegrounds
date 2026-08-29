@@ -424,9 +424,15 @@ export default function ArcadePage() {
                       {boardRows.map((r) => (
                         <li
                           key={`${r.rank}-${r.user_id}`}
-                          className={r.you ? 'is-you' : ''}
+                          className={[
+                            r.you ? 'is-you' : '',
+                            result?.saved && result.rank === r.rank && r.you ? 'is-fresh' : '',
+                          ].filter(Boolean).join(' ')}
                         >
                           <span className="vg-arcade-board-rank">{r.rank}</span>
+                          {result?.saved && result.rank === r.rank && r.you && (
+                            <span className="vg-arcade-board-new">NEW</span>
+                          )}
                           <span className="vg-arcade-board-name">{r.initials}</span>
                           <span className="vg-arcade-board-score">
                             {Number(r.score).toLocaleString()}
@@ -519,6 +525,9 @@ export default function ArcadePage() {
             charts={charts}
             pickedId={picked}
             onPick={pickFromCharts}
+            justSet={result?.saved
+              ? { game: result.game, rank: result.rank }
+              : null}
           />
         </div>
       </div>

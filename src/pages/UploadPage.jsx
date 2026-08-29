@@ -8,20 +8,7 @@ import ShareBar from '../components/ShareBar';
 import TagPicker from '../components/TagPicker';
 
 /** Normalise a URL: add https:// when the user leaves it off. */
-export function normalizeUrl(raw) {
-  const url = (raw || '').trim();
-  if (!url) return '';
-  return /^https?:\/\//i.test(url) ? url : `https://${url}`;
-}
-
-export function isValidUrl(str) {
-  try {
-    const u = new URL(str);
-    return u.hostname.includes('.');
-  } catch {
-    return false;
-  }
-}
+export { normalizeUrl, isValidUrl } from '../lib/url';
 
 /** Map the database's shouty error codes to something human. */
 const SUBMIT_ERRORS = {
