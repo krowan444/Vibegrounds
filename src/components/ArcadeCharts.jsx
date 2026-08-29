@@ -17,12 +17,17 @@ import { Link } from 'react-router-dom';
 
 const MEDAL = ['🥇', '🥈', '🥉'];
 
-function Row({ row }) {
+function Row({ row, fresh }) {
   return (
-    <li className={`vg-hs-row ${row.you ? 'is-you' : ''}`}>
+    <li className={`vg-hs-row ${row.you ? 'is-you' : ''} ${fresh ? 'is-fresh' : ''}`}>
       <span className="vg-hs-rank">
         {MEDAL[row.rank - 1] || String(row.rank).padStart(2, '0')}
       </span>
+
+      {/* Only on the go just finished, and only until you go back to the
+          machine — the result this comes from is cleared then. A badge that
+          stayed would stop meaning "this just happened" by the second look. */}
+      {fresh && <span className="vg-hs-new">NEW</span>}
 
       {/* The three letters, the way a real board shows them. Somebody who has
           not chosen yet gets the front of their username instead — dimmed,
@@ -47,7 +52,7 @@ function Row({ row }) {
   );
 }
 
-export default function ArcadeCharts({ games, charts, onPick, pickedId }) {
+export default function ArcadeCharts({ games, charts, onPick, pickedId, justSet }) {
   const top = charts?.top || {};
   const you = charts?.you || {};
 
@@ -82,7 +87,20 @@ export default function ArcadeCharts({ games, charts, onPick, pickedId }) {
                 </p>
               ) : (
                 <ol className="vg-hs-list">
-                  {rows.map((r) => <Row key={r.user_id} row={r} />)}
+                  {rows.map((r) => (
+                    <Row
+                      key={r.user_id}
+                      row={r}
+                      // Matched on the rank as well as on it being you: play
+                      // the same game twice without beating yourself and the
+                      // board does not move, so flashing NEW at an unchanged
+                      // row would be claiming something that did not happen.
+                      fresh={!!justSet
+                        && justSet.game === g.meta.id
+                        && justSet.rank === r.rank
+                        && r.you}
+                    />
+                  ))}
                 </ol>
               )}
 
