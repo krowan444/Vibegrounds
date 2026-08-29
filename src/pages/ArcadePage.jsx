@@ -16,6 +16,23 @@ import { useDocumentTitle } from '../lib/pageMeta';
 import { scrollToElement } from '../lib/scrollTo';
 
 /**
+ * How long the coin takes to fall, in milliseconds. Matches the CSS, and the
+ * two have to be changed together — the number is here as well because the
+ * page has to know when the machine has finished taking the coin.
+ *
+ * Read once, at module load. `matchMedia` is cheap but this is not something
+ * that changes mid-go, and reading it here keeps the decision in one place.
+ * Somebody who has asked their computer for less movement gets no wait at all
+ * rather than a shorter one: the honest reading of that setting is "do not
+ * make me watch things travel", not "travel faster".
+ */
+const COIN_MS =
+  typeof window !== 'undefined'
+  && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    ? 0
+    : 700;
+
+/**
  * The arcade.
  *
  * A go costs a coin and everybody gets one free go a day, so the machine is
@@ -63,11 +80,19 @@ export default function ArcadePage() {
   const [namingBusy, setNamingBusy] = useState(false);
   const [skipped, setSkipped] = useState(false);
 
+  // A counter, not a flag. Pressing START twice in a row has to replay the
+  // coin drop, and React will happily reuse an element whose key has not
+  // changed — leaving the second go with no animation at all.
+  const [inserting, setInserting] = useState(0);
+  const [freeGo, setFreeGo] = useState(false);
+
   const canvasRef = useRef(null);
   const inputRef = useRef(null);
   const runningRef = useRef(null);
   const cabRef = useRef(null);
   const scoreRef = useRef(0);
+  const coinTidyRef = useRef(0);
+  const chartsRef = useRef(null);
 
   if (!inputRef.current) inputRef.current = createInput();
 
@@ -108,6 +133,10 @@ export default function ArcadePage() {
     if (profile?.arcade_initials) setInitials(profile.arcade_initials);
   }, [profile?.arcade_initials]);
 
+  // Leaving the page mid-coin would otherwise set state on a page that is no
+  // longer here.
+  useEffect(() => () => clearTimeout(coinTidyRef.current), []);
+
   const game = GAMES.find((g) => g.meta.id === picked) || GAMES[0];
 
   /** The best score on the board for a game — shown beside it in the menu. */
@@ -115,6 +144,17 @@ export default function ArcadePage() {
     const rows = charts?.top?.[id];
     return rows && rows.length ? rows[0] : null;
   }, [charts]);
+
+  /** The five shown on the machine after a go, for the game just played. */
+  const boardRows = (charts?.top?.[game.meta.id] || []).slice(0, 5);
+
+  /**
+   * Where the player stands, but only worth saying when they are not already
+   * in the five above — otherwise the screen tells you your rank twice and
+   * the highlighted row stops meaning anything.
+   */
+  const mine = charts?.you?.[game.meta.id] || null;
+  const youOffBoard = mine && !boardRows.some((r) => r.you) ? mine : null;
 
   const fileScore = useCallback(async (playId, finalScore, ticks, log) => {
     if (!playId) return;
@@ -167,8 +207,31 @@ export default function ArcadePage() {
     setError('');
     setResult(null);
     setBusy(true);
+
+    // The coin drops while the database is being asked, not before it and not
+    // after it. Asking for a go takes a few hundred milliseconds of nothing
+    // visible happening; the animation fills that gap rather than adding to
+    // it, so the machine feels quicker than it did with a plain spinner even
+    // though it is doing exactly the same work.
+    //
+    // Whichever of the two finishes second decides when the game starts, so a
+    // slow connection never cuts the coin off halfway, and a fast one never
+    // makes you sit through the rest of it. Anyone who has asked not to be
+    // shown motion waits for nothing at all.
+    setFreeGo((status?.free_left ?? 0) > 0);
+    setInserting((n) => n + 1);
+    const still = COIN_MS > 0 ? new Promise((r) => setTimeout(r, COIN_MS)) : null;
+
+    // Take the coin back out of the page once it has landed, so the door is
+    // not left holding a finished animation. The pending clear is cancelled
+    // on every press: without that, a second go started inside the window
+    // would have its coin removed by the first go's timer.
+    clearTimeout(coinTidyRef.current);
+    coinTidyRef.current = setTimeout(() => setInserting(0), COIN_MS + 900);
+
     try {
-      const { data, error: err } = await supabase.rpc('start_arcade_play', { p_game: picked });
+      const asked = supabase.rpc('start_arcade_play', { p_game: picked });
+      const [{ data, error: err }] = await Promise.all([asked, still]);
       if (err) throw err;
 
       setLastGo(data);
@@ -284,6 +347,8 @@ export default function ArcadePage() {
             onStart={phase === 'idle' && !naming && user && canAfford ? start : null}
             startLabel={startLabel}
             startDisabled={busy}
+            inserting={inserting}
+            freePlay={freeGo}
           >
             {/* Naming takes the screen over whatever else was on it. It is a
                 modal moment on a real machine too — the game is over, the
@@ -342,9 +407,56 @@ export default function ArcadePage() {
                   )}
                 </div>
 
-                <button type="button" className="retro-cta" onClick={backToMenu}>
-                  ↩ BACK TO THE MACHINE
-                </button>
+                {/* The board, on the machine, straight after the go — which is
+                    what a real cabinet does and what this was missing. Walking
+                    away from a game you just played without being shown where
+                    it put you is the one thing an arcade never did.
+
+                    This game's table only. The full set is below the cabinet
+                    and one button away; five rows is what fits on the screen
+                    without the rest of the overlay having to shrink. */}
+                {!saving && boardRows.length > 0 && (
+                  <div className="vg-arcade-board">
+                    <div className="vg-arcade-board-head">
+                      HIGH SCORES — {game.meta.name}
+                    </div>
+                    <ol className="vg-arcade-board-rows">
+                      {boardRows.map((r) => (
+                        <li
+                          key={`${r.rank}-${r.user_id}`}
+                          className={r.you ? 'is-you' : ''}
+                        >
+                          <span className="vg-arcade-board-rank">{r.rank}</span>
+                          <span className="vg-arcade-board-name">{r.initials}</span>
+                          <span className="vg-arcade-board-score">
+                            {Number(r.score).toLocaleString()}
+                          </span>
+                        </li>
+                      ))}
+                    </ol>
+                    {/* Where you are, when you are not in the five shown. Being
+                        112th is still an answer; nothing at all is not. */}
+                    {youOffBoard && (
+                      <div className="vg-arcade-board-you">
+                        YOU — RANK {youOffBoard.rank} ·{' '}
+                        {Number(youOffBoard.score).toLocaleString()}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="vg-arcade-after">
+                  <button type="button" className="retro-cta" onClick={backToMenu}>
+                    ↩ BACK TO THE MACHINE
+                  </button>
+                  <button
+                    type="button"
+                    className="vg-arcade-seeboard"
+                    onClick={() => scrollToElement(chartsRef.current, { offset: 12 })}
+                  >
+                    SEE THE FULL BOARD ↓
+                  </button>
+                </div>
               </div>
             )}
           </ArcadeCabinet>
@@ -399,12 +511,16 @@ export default function ArcadePage() {
           </p>
         )}
 
-        <ArcadeCharts
-          games={GAMES}
-          charts={charts}
-          pickedId={picked}
-          onPick={pickFromCharts}
-        />
+        {/* Wrapped rather than given a ref directly: ArcadeCharts is a plain
+            function component, and a ref handed to one of those goes nowhere. */}
+        <div ref={chartsRef}>
+          <ArcadeCharts
+            games={GAMES}
+            charts={charts}
+            pickedId={picked}
+            onPick={pickFromCharts}
+          />
+        </div>
       </div>
     </>
   );
