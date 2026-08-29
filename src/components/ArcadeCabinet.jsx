@@ -37,6 +37,8 @@ export default function ArcadeCabinet({
   onStart,
   startLabel,
   startDisabled = false,
+  inserting = false,
+  freePlay = false,
 }) {
   const heldRef = useRef(new Set());
   const [lit, setLit] = useState('');   // which buttons are down, as a string
@@ -230,16 +232,43 @@ export default function ArcadeCabinet({
             )}
           </div>
 
-          {/* ---- coin door ---- */}
-          <div className="vg-cab-door">
+          {/* ---- coin door ----
+
+              Pressing START drops a coin into the slot. The point is not
+              decoration: starting a go costs a coin, and until now the only
+              sign of that was a number changing somewhere else on the page.
+              A machine should visibly take your money.
+
+              The coin is mounted on the slot rather than the door so it lands
+              exactly on the mouth however the door is laid out — on a narrow
+              phone the door's flex row shuffles, and a coin animated in door
+              coordinates would fall past the side of the slot.
+
+              `key` is the counter, not a boolean: pressing START twice in a
+              row must replay the animation, and React reuses an element with
+              the same key rather than restarting its CSS animation. */}
+          <div className={`vg-cab-door ${inserting ? 'is-taking' : ''}`}>
             <span className="vg-cab-slot" aria-hidden="true">
               <span className="vg-cab-slot-mouth" />
+              {inserting > 0 && (
+                <span className="vg-cab-coin" key={inserting}>
+                  <b className="vg-cab-coin-face">V</b>
+                </span>
+              )}
             </span>
             <span className="vg-cab-plate">
               <b>1 COIN</b>
               <i>1 PLAY</i>
             </span>
             <span className="vg-cab-return" aria-hidden="true" />
+
+            {/* Announced, because for somebody using a screen reader this is
+                the only word that the machine took the go. */}
+            {inserting > 0 && (
+              <span className="vg-cab-credit" key={`c${inserting}`} role="status">
+                {freePlay ? 'FREE PLAY' : 'CREDIT'}
+              </span>
+            )}
           </div>
 
           <div className="vg-cab-kick" aria-hidden="true" />
