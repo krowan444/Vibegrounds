@@ -131,3 +131,40 @@ a:hover {
   color: var(--yellow);
   text-decoration: underline;
 }
+
+/* ------------------------------------------------------------
+   WAITING FOR A PAGE
+
+   Each route is fetched when you go to it, so there is a moment
+   between the click and the page. On a good connection it is
+   under a tenth of a second.
+
+   Which is why this is so quiet. Anything with movement in it —
+   a spinner, a pulse — becomes a flicker at that length, and a
+   flicker on every navigation makes a fast site feel broken.
+   It holds the height so the footer does not jump up the page
+   and then back down, and it says one word.
+
+   The delayed fade means a wait short enough not to notice is
+   never announced at all.
+   ------------------------------------------------------------ */
+.vg-route-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  font-family: var(--font-pixel);
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--text-dim);
+  opacity: 0;
+  animation: vg-route-wait 1s ease-out 250ms forwards;
+}
+
+@keyframes vg-route-wait {
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vg-route-loading { animation: none; opacity: 1; }
+}

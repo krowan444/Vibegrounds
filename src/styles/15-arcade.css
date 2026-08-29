@@ -882,10 +882,22 @@
 }
 
 .vg-arcade-board-rows li {
+  /* The NEW badge is positioned against this and taken out of the grid.
+     As a fourth child it would land on an implicit second row, because
+     the template below declares three columns. */
+  position: relative;
   display: grid;
   /* Rank and score are fixed columns so the initials never shunt the
-     numbers about as scores get longer. */
-  grid-template-columns: 3.4cqw 1fr auto;
+     numbers about as scores get longer. Column 2 is the NEW badge and
+     is a fixed width on every row, present or not — every child names its
+     own column below, because leaving it to auto-placement would slide the
+     name and score left by one on the rows without a badge.
+
+     Reserved rather than collapsed: this is a high score table, and one row
+     whose initials sit 30px right of every other row reads as a fault
+     rather than as emphasis. The row is already highlighted; it does not
+     need to be out of line as well. */
+  grid-template-columns: 3.4cqw 6.4cqw 1fr auto;
   align-items: baseline;
   gap: 2cqw;
   font-size: 2.8cqw;
@@ -901,11 +913,41 @@
   box-shadow: inset 0 0 0 1px rgba(232, 163, 23, .45);
 }
 
-.vg-arcade-board-rank  { color: rgba(160, 200, 240, .6); text-align: right; }
-.vg-arcade-board-name  { letter-spacing: 1px; text-align: left; }
-.vg-arcade-board-score { font-variant-numeric: tabular-nums; }
+.vg-arcade-board-rank  { grid-column: 1; color: rgba(160, 200, 240, .6); text-align: right; }
+.vg-arcade-board-new   { grid-column: 2; }
+.vg-arcade-board-name  { grid-column: 3; letter-spacing: 1px; text-align: left; }
+.vg-arcade-board-score { grid-column: 4; font-variant-numeric: tabular-nums; }
 
 .vg-arcade-board-rows li.is-you .vg-arcade-board-rank { color: var(--orange); }
+
+/* The row you just put there. Three blinks and then it settles — a badge
+   that flashed for ever would be a thing on the page rather than a thing
+   that happened, and you have to be able to read the board underneath it. */
+.vg-arcade-board-rows li.is-fresh {
+  animation: vg-fresh-row 1.6s ease-out 3;
+}
+
+.vg-arcade-board-new {
+  align-self: center;
+  padding: 0 .5cqw;
+  border-radius: 2px;
+  background: var(--orange);
+  color: #1a1206;
+  font-size: 1.9cqw;
+  letter-spacing: 1px;
+  animation: vg-fresh-badge 1.6s steps(1) 3;
+}
+
+@keyframes vg-fresh-row {
+  0%, 100% { background: rgba(232, 163, 23, .16); }
+  50%      { background: rgba(232, 163, 23, .42); }
+}
+
+@keyframes vg-fresh-badge {
+  0%, 49%   { opacity: 1; }
+  50%, 99%  { opacity: .25; }
+  100%      { opacity: 1; }
+}
 
 .vg-arcade-board-you {
   margin-top: 1.4cqw;
@@ -1054,6 +1096,45 @@
 .vg-hs-row.is-you {
   background: rgba(232, 163, 23, .1);
   box-shadow: inset 2px 0 0 var(--orange);
+}
+
+/* The score you just put on the board. Blinks three times and stops —
+   long enough to catch your eye when the page scrolls down to the charts,
+   short enough that the table is readable a few seconds later. */
+.vg-hs-row.is-fresh {
+  animation: vg-hs-fresh 1.6s ease-out 3;
+}
+
+.vg-hs-new {
+  flex: 0 0 auto;
+  padding: 1px 5px;
+  border-radius: 2px;
+  background: var(--orange);
+  color: #1a1206;
+  font-family: var(--font-pixel);
+  font-size: 8px;
+  letter-spacing: 1px;
+  animation: vg-hs-fresh-badge 1.6s steps(1) 3;
+}
+
+@keyframes vg-hs-fresh {
+  0%, 100% { background: rgba(232, 163, 23, .1); }
+  50%      { background: rgba(232, 163, 23, .34); }
+}
+
+@keyframes vg-hs-fresh-badge {
+  0%, 49%  { opacity: 1; }
+  50%, 99% { opacity: .25; }
+  100%     { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* The badge still says NEW and the row is still highlighted. Only the
+     blinking goes — the information does not depend on it. */
+  .vg-hs-row.is-fresh,
+  .vg-hs-new,
+  .vg-arcade-board-rows li.is-fresh,
+  .vg-arcade-board-new { animation: none; }
 }
 
 .vg-hs-rank {
