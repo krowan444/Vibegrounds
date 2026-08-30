@@ -17,21 +17,31 @@ import { thumbFor, onThumbError, LOGO_FALLBACK } from '../lib/thumbnail';
 
 /*
  * What each of the eleven home page queries is, in the order they are fired
- * below. Used only to name the failing one in the error message — if you add
- * or reorder a query, add or reorder its label here too.
+ * below. Used to name the failing one in the error message — if you add or
+ * reorder a query, add or reorder its label here too.
+ *
+ * `soft: true` marks a part nobody came to the page for. The two counts are
+ * decoration on a stat line: when one fails the number is simply left out,
+ * and the page reads perfectly without it. Raising a red banner across the
+ * top for that is out of all proportion to what went wrong — it tells
+ * somebody the site is broken when what actually happened is that a figure
+ * they were not looking for is missing.
+ *
+ * They still go to the console. Quiet for the visitor, loud for whoever is
+ * debugging, which is the right way round.
  */
 const PARTS = [
-  'the staff picks',
-  'the newest submissions',
-  "today's chart",
-  "this week's chart",
-  'the all-time chart',
-  'the categories',
-  'the top creators',
-  'the submission count',
-  'the member count',
-  'the memes',
-  "this month's chart",
+  { label: 'the staff picks' },
+  { label: 'the newest submissions' },
+  { label: "today's chart" },
+  { label: "this week's chart" },
+  { label: 'the all-time chart' },
+  { label: 'the categories' },
+  { label: 'the top creators' },
+  { label: 'the submission count', soft: true },
+  { label: 'the member count',     soft: true },
+  { label: 'the memes' },
+  { label: "this month's chart" },
 ];
 
 /** ['a'] → "a"; ['a','b'] → "a and b"; ['a','b','c'] → "a, b and c". */
@@ -91,16 +101,22 @@ export default function HomePage() {
        *      fix it, and they need more than one sentence.
        */
       const failed = R
-        .map((r, i) => (r?.error ? { part: PARTS[i], error: r.error } : null))
+        .map((r, i) => (r?.error ? { part: PARTS[i].label, soft: !!PARTS[i].soft, error: r.error } : null))
         .filter(Boolean);
 
       if (failed.length) {
         console.warn('[VibeGrounds] home page partial load failure:', failed);
-        setError(
-          failed.length === R.length
-            ? loadFailure(failed[0].error, 'anything')
-            : `Could not load ${listOf(failed.map((f) => f.part))}. The rest of the page is fine — refresh to try again.`,
-        );
+
+        // Only the parts somebody actually came for get a banner. A count
+        // that did not arrive leaves a number out of a stat line and
+        // nothing else — see PARTS above.
+        const worthSaying = failed.filter((f) => !f.soft);
+
+        if (failed.length === R.length) {
+          setError(loadFailure(failed[0].error, 'anything'));
+        } else if (worthSaying.length) {
+          setError(`Could not load ${listOf(worthSaying.map((f) => f.part))}. The rest of the page is fine — refresh to try again.`);
+        }
       }
 
       setD({
@@ -255,7 +271,14 @@ export default function HomePage() {
             <div className="vg-section" style={{ marginBottom: 0 }}>
               <div className="vg-section-head">
                 <h2>BROWSE THE GROUNDS</h2>
-                <span className="vg-sub">{compactNumber(d.total)} submissions</span>
+                {/* Guarded for the same reason as the stat line above: when
+                    the count fails it comes back null, and compactNumber
+                    turns null into "0". A site with 30 submissions on it
+                    announcing "0 submissions" over the category list is a
+                    worse failure than the one that caused it. */}
+                {d.total != null && (
+                  <span className="vg-sub">{compactNumber(d.total)} submissions</span>
+                )}
               </div>
               <div className="vg-cats">
                 {d.categories.map((c) => (
