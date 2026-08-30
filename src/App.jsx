@@ -39,6 +39,7 @@ const MemesPage         = lazy(() => import('./pages/MemesPage'));
 
 const ComicsPage        = lazy(() => import('./pages/ComicsPage'));
 const ComicPage         = lazy(() => import('./pages/ComicPage'));
+const ComicSeriesPage   = lazy(() => import('./pages/ComicSeriesPage'));
 const PostComicPage     = lazy(() => import('./pages/PostComicPage'));
 const EditComicPage     = lazy(() => import('./pages/EditComicPage'));
 const PostMemePage      = lazy(() => import('./pages/PostMemePage'));
@@ -112,6 +113,8 @@ export default function App() {
               <Route path="/comics" element={<ComicsPage />} />
               <Route path="/arcade" element={<ArcadePage />} />
               <Route path="/comics/post" element={<PostComicPage />} />
+              {/* Before /comics/:id, or "series" is read as a comic id. */}
+              <Route path="/comics/series/:slug" element={<ComicSeriesPage />} />
               <Route path="/comics/:id" element={<ComicPage />} />
               <Route path="/comics/:id/edit" element={<EditComicPage />} />
               <Route path="/memes/post" element={<PostMemePage />} />
