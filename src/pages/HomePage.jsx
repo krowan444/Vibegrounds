@@ -268,29 +268,12 @@ export default function HomePage() {
               </div>
             )}
 
-            <div className="vg-section" style={{ marginBottom: 0 }}>
-              <div className="vg-section-head">
-                <h2>BROWSE THE GROUNDS</h2>
-                {/* Guarded for the same reason as the stat line above: when
-                    the count fails it comes back null, and compactNumber
-                    turns null into "0". A site with 30 submissions on it
-                    announcing "0 submissions" over the category list is a
-                    worse failure than the one that caused it. */}
-                {d.total != null && (
-                  <span className="vg-sub">{compactNumber(d.total)} submissions</span>
-                )}
-              </div>
-              <div className="vg-cats">
-                {d.categories.map((c) => (
-                  <Link key={c.slug} to={`/category/${c.slug}`} className="vg-cat" style={{ borderColor: c.color }}>
-                    <div className="vg-cat-icon">{c.icon}</div>
-                    <div className="vg-cat-name" style={{ color: c.color }}>{c.name}</div>
-                    <div className="vg-cat-count">{c.tagline}</div>
-                  </Link>
-                ))}
-              </div>
-            </div>
-
+            {/* Order set by Kieran: the work first, then the way in.
+                Staff picks and the newest submissions are what somebody came
+                to look at; the category list is navigation, which is more use
+                once you have seen something you like than before. The advert
+                sits under the categories where he asked for it — the end of
+                the browsing block rather than in the middle of the reading. */}
             {/* The first pick is already the hero above, so skip it here
                 rather than showing the same submission twice. */}
             {d.featured.length > 1 && (
@@ -329,12 +312,39 @@ export default function HomePage() {
               </div>
             )}
 
-            {/* The meme board's shop window. Sits under the projects because
-                it is the lighter thing, but above the ad because it is the
-                more useful one. */}
-            <MemeRail memes={d.memes} />
+            <div className="vg-section" style={{ marginBottom: 0 }}>
+              <div className="vg-section-head">
+                <h2>BROWSE THE GROUNDS</h2>
+                {/* Guarded for the same reason as the stat line above: when
+                    the count fails it comes back null, and compactNumber
+                    turns null into "0". A site with 30 submissions on it
+                    announcing "0 submissions" over the category list is a
+                    worse failure than the one that caused it. */}
+                {d.total != null && (
+                  <span className="vg-sub">{compactNumber(d.total)} submissions</span>
+                )}
+              </div>
+              <div className="vg-cats">
+                {d.categories.map((c) => (
+                  <Link key={c.slug} to={`/category/${c.slug}`} className="vg-cat" style={{ borderColor: c.color }}>
+                    <div className="vg-cat-icon">{c.icon}</div>
+                    <div className="vg-cat-name" style={{ color: c.color }}>{c.name}</div>
+                    <div className="vg-cat-count">{c.tagline}</div>
+                  </Link>
+                ))}
+              </div>
+            </div>
 
             <AdSlot index={1} />
+
+            {/* The meme board's shop window, last. It used to sit above the
+                advert on the grounds that it was the more useful of the two —
+                true when the advert was the final thing on the page. Now the
+                advert closes the browsing block, so the memes go after it and
+                the column ends on something of ours rather than somebody
+                else's. */}
+            <MemeRail memes={d.memes} />
+
           </div>
 
           {/* RIGHT — the All-Time 100, straight away */}
