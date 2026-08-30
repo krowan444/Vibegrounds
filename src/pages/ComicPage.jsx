@@ -322,6 +322,30 @@ export default function ComicPage() {
 
         <div className="vg-comic-head">
           <div>
+            {/* The way into the rest of the run, above the title rather than
+                buried in the meta line: somebody who has just finished part
+                two is looking for part three, and that is the likeliest next
+                thing they want from this page.
+
+                "of 3" appears only when the artist declared how long the run
+                will be. Counting the parts that exist instead would tell a
+                reader a trilogy was complete while two of it are still to
+                come — see migration 39. */}
+            {comic.series_slug && (
+              <Link to={`/comics/series/${comic.series_slug}`} className="vg-comic-series">
+                📚 {comic.series_title}
+                {comic.edition_number != null && (
+                  <>
+                    {' — '}
+                    {comic.edition_label ? `${comic.edition_label} ` : '#'}
+                    {comic.edition_number}
+                    {comic.series_planned_count ? ` of ${comic.series_planned_count}` : ''}
+                  </>
+                )}
+                <span className="vg-comic-series-go"> · read the series →</span>
+              </Link>
+            )}
+
             <h1 className="vg-comic-title">{comic.title}</h1>
             <div className="vg-comic-meta">
               by <Link to={`/profile/${comic.creator_username}`}>{comic.creator_username}</Link>

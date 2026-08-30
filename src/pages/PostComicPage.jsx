@@ -7,6 +7,7 @@ import Notice from '../components/Notice';
 import ComicPageGrid from '../components/ComicPageGrid';
 import { releasePage } from '../lib/comicFiles';
 import { uploadPages } from '../lib/comicUpload';
+import SeriesFields, { EMPTY_SERIES, seriesArgs } from '../components/SeriesFields';
 
 /**
  * Post a comic.
@@ -24,6 +25,7 @@ export default function PostComicPage() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [isNsfw, setIsNsfw] = useState(false);
+  const [series, setSeries] = useState(EMPTY_SERIES);
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
 
@@ -70,6 +72,29 @@ export default function PostComicPage() {
         30000,
       );
       if (rpcErr) throw new Error(describeError(rpcErr));
+
+      // Filed into its series afterwards, because set_comic_series needs an
+      // id and the comic does not have one until submit_comic returns.
+      //
+      // Deliberately not fatal. The comic is posted and its pages are up; if
+      // this one call fails, throwing here would send somebody back to a form
+      // whose work is already saved and invite them to post it twice. They get
+      // told, and the series can be set from the edit page in two clicks.
+      if (series.name.trim()) {
+        const { error: sErr } = await retryOnAbort(
+          () => supabase.rpc('set_comic_series', seriesArgs(data, series)),
+        );
+        if (sErr) {
+          console.error('series could not be set:', sErr);
+          setBusy('');
+          setError(
+            `The comic is posted, but it could not be added to "${series.name.trim()}" `
+            + `— ${describeError(sErr)} You can set the series from the edit page.`,
+          );
+          setTimeout(() => navigate(`/comics/${data}`), 4000);
+          return;
+        }
+      }
 
       setBusy('');
       navigate(`/comics/${data}`);
@@ -143,6 +168,8 @@ export default function PostComicPage() {
                   disabled={!!busy}
                 />
               </div>
+
+              <SeriesFields value={series} onChange={setSeries} disabled={!!busy} />
 
               <label className="vg-comic-nsfw">
                 <input type="checkbox" checked={isNsfw} disabled={!!busy}

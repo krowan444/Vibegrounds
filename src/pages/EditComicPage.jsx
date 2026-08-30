@@ -7,6 +7,7 @@ import Notice from '../components/Notice';
 import ComicPageGrid from '../components/ComicPageGrid';
 import { pageFromRemote, releasePage } from '../lib/comicFiles';
 import { uploadPages, forgetRemovedPages, recompressExisting } from '../lib/comicUpload';
+import SeriesFields, { EMPTY_SERIES, seriesArgs } from '../components/SeriesFields';
 import { useDocumentTitle } from '../lib/pageMeta';
 
 /**
@@ -30,6 +31,7 @@ export default function EditComicPage() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [isNsfw, setIsNsfw] = useState(false);
+  const [series, setSeries] = useState(EMPTY_SERIES);
 
   const [loading, setLoading] = useState(true);
   const [denied, setDenied] = useState('');
@@ -63,9 +65,14 @@ export default function EditComicPage() {
       // comic is still null.
       setLoading(true);
 
-      const [c, p] = await Promise.all([
+      // comics_public carries the series title; the comics table only has the
+      // id, and the field wants a name to put in the box.
+      const [c, p, sv] = await Promise.all([
         supabase.from('comics').select('*').eq('id', id).maybeSingle(),
         supabase.from('comic_pages').select('*').eq('comic_id', id).order('position'),
+        supabase.from('comics_public')
+          .select('series_title, series_planned_count')
+          .eq('id', id).maybeSingle(),
       ]);
       if (!alive) return;
 
@@ -79,6 +86,12 @@ export default function EditComicPage() {
       setTitle(c.data.title);
       setDescription(c.data.description || '');
       setIsNsfw(!!c.data.is_nsfw);
+      setSeries({
+        name:    sv?.data?.series_title || '',
+        number:  c.data.edition_number == null ? '' : String(c.data.edition_number),
+        label:   c.data.edition_label || '',
+        planned: sv?.data?.series_planned_count == null ? '' : String(sv.data.series_planned_count),
+      });
       setOriginal({
         pages: loaded.map((x) => x.remoteUrl),
         title: c.data.title,
@@ -242,6 +255,14 @@ export default function EditComicPage() {
       );
       if (rpcErr) throw new Error(describeError(rpcErr));
 
+      // The series is a separate call: update_comic predates series and
+      // widening it would mean a new overload of a function that several
+      // things already call.
+      const { error: sErr } = await retryOnAbort(
+        () => supabase.rpc('set_comic_series', seriesArgs(id, series)),
+      );
+      if (sErr) throw new Error(describeError(sErr));
+
       // Only after the save is safely done, and only best effort.
       const dropped = original.pages.filter((u) => !urls.includes(u));
       if (dropped.length) await forgetRemovedPages(dropped, comic.creator_id);
@@ -370,6 +391,8 @@ export default function EditComicPage() {
                   onChange={(e) => setDescription(e.target.value)} maxLength={2000} rows={3} disabled={!!busy}
                 />
               </div>
+
+              <SeriesFields value={series} onChange={setSeries} disabled={!!busy} />
 
               <label className="vg-comic-nsfw">
                 <input type="checkbox" checked={isNsfw} disabled={!!busy}
