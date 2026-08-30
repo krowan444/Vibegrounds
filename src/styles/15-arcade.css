@@ -277,6 +277,32 @@
   transform-origin: top center;
 }
 
+/* ---------- nothing on the deck behaves like text ----------
+
+   Kieran's report: holding a direction, or tapping one twice quickly, would
+   sometimes bring up the copy/paste menu on a phone. The controls already
+   called preventDefault on contextmenu, and on Android that is enough.
+
+   It is not enough on iOS, which is what he is using. Safari does not fire
+   a contextmenu event for a long press — it shows its own callout, and the
+   only thing that stops it is -webkit-touch-callout. The selection handles
+   that come with a double tap need user-select on top of that.
+
+   Applied to the whole deck rather than to each control, because the misses
+   are what cause this: a thumb that lands just off the edge of a button is
+   pressing the panel, and the panel was still ordinary selectable page. */
+.vg-cab-panel,
+.vg-cab-deck,
+.vg-cab-stickwell,
+.vg-cab-dir,
+.vg-cab-btn,
+.vg-cab-start,
+.vg-cab-door {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 .vg-cab-panel {
   position: relative;
   display: flex;
