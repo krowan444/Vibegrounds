@@ -673,3 +673,223 @@
   font-size: 14px;
   color: var(--orange);
 }
+
+/* ============================================================
+   SERIES, VOLUMES AND EDITIONS
+   ============================================================
+   A run of comics grouped under one name, with a page of its
+   own. See migration 39 for why a series is a real row rather
+   than a text field on each comic.
+   ============================================================ */
+
+/* ---------- the link out of a comic and into its run ----------
+   Above the title, because somebody finishing part two is looking
+   for part three and this is the likeliest thing they want next. */
+.vg-comic-series {
+  display: inline-flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 6px;
+  padding: 3px 9px;
+  border: 1px solid var(--border-dark);
+  border-left: 3px solid var(--orange);
+  border-radius: 3px;
+  background: rgba(232, 163, 23, .07);
+  font-family: var(--font-retro);
+  font-size: 15px;
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.vg-comic-series:hover,
+.vg-comic-series:focus-visible {
+  background: rgba(232, 163, 23, .16);
+  border-color: var(--orange);
+  text-decoration: none;
+}
+
+/* Hidden on a phone, where the row is tight and the arrow badge
+   already says the thing is a link. */
+.vg-comic-series-go { color: var(--blue-link); }
+
+@media (max-width: 480px) {
+  .vg-comic-series-go { display: none; }
+}
+
+/* ---------- the fields on the post and edit forms ---------- */
+
+.vg-series-shut {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 0;
+}
+
+.vg-series-open {
+  background: none;
+  border: 1px dashed var(--border-dark);
+  border-radius: 3px;
+  padding: 5px 10px;
+  font-family: var(--font-retro);
+  font-size: 16px;
+  color: var(--blue-link);
+  cursor: pointer;
+}
+
+.vg-series-open:hover:not(:disabled) {
+  border-color: var(--orange);
+  color: var(--orange);
+}
+
+.vg-series {
+  margin: 14px 0;
+  padding: 10px 14px 14px;
+  border: 1px solid var(--border-dark);
+  border-radius: 3px;
+  background: var(--bg-dark);
+}
+
+.vg-series legend {
+  padding: 0 6px;
+  font-family: var(--font-pixel);
+  font-size: 8px;
+  letter-spacing: 1px;
+  color: var(--orange);
+}
+
+/* Number and "out of" are narrow on purpose — they hold one or two
+   digits, and a full-width box for a "3" invites people to type a
+   sentence into it. */
+.vg-series-row {
+  display: grid;
+  grid-template-columns: 1.4fr .8fr .8fr;
+  gap: 10px;
+}
+
+@media (max-width: 560px) {
+  .vg-series-row { grid-template-columns: 1fr 1fr; }
+}
+
+.vg-series-note {
+  margin: 6px 0 0;
+  font-family: var(--font-retro);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+
+.vg-series-note b { color: var(--text-primary); }
+
+.vg-series-clear {
+  margin-top: 10px;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--font-retro);
+  font-size: 14px;
+  color: var(--text-dim);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.vg-series-clear:hover { color: var(--orange); }
+
+/* ---------- the series page ---------- */
+
+.vg-series-by {
+  font-family: var(--font-retro);
+  font-size: 16px;
+  color: var(--text-secondary);
+  margin: 0 0 8px;
+}
+
+.vg-series-desc {
+  font-family: var(--font-read, var(--font-retro));
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  margin: 0 0 12px;
+}
+
+.vg-series-list {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* A row per edition rather than a grid of covers. Reading order is
+   the whole point of this page, and a vertical list is the only
+   layout where "next" is unambiguous — a grid asks the reader to
+   work out whether it wraps across or down. */
+.vg-series-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  border: 1px solid var(--border-dark);
+  border-radius: 3px;
+  background: var(--bg-panel, rgba(255, 255, 255, .02));
+}
+
+.vg-series-item:hover { border-color: var(--orange); }
+
+.vg-series-cover {
+  position: relative;
+  flex: 0 0 66px;
+  width: 66px;
+  height: 92px;
+  border-radius: 2px;
+  overflow: hidden;
+  background: #0d0b14;
+}
+
+.vg-series-cover-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* On the cover, where a real comic carries its number. */
+.vg-series-num {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  padding: 2px 6px;
+  background: var(--orange);
+  color: #1a1206;
+  font-family: var(--font-pixel);
+  font-size: 7px;
+  letter-spacing: 1px;
+  border-radius: 0 3px 0 0;
+}
+
+.vg-series-meta { min-width: 0; }
+
+.vg-series-title {
+  display: block;
+  font-family: var(--font-retro);
+  font-size: 18px;
+  color: var(--text-primary);
+  text-decoration: none;
+  margin-bottom: 3px;
+}
+
+.vg-series-title:hover { color: var(--orange); }
+
+.vg-series-sub {
+  font-family: var(--font-retro);
+  font-size: 14px;
+  color: var(--text-dim);
+}
+
+.vg-series-back {
+  margin-top: 14px;
+  font-family: var(--font-retro);
+  font-size: 15px;
+}
