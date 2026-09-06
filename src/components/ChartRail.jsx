@@ -65,7 +65,10 @@ export function CreatorRail({ rows = [] }) {
     <div className="vg-rail-box vg-creator-rail">
       <div className="vg-rail-head">
         <span>👑 Top Creators</span>
-        <Link to="/charts?chart=creators">more</Link>
+        {/* Was /charts?chart=creators. There is no such chart — ChartsPage
+            falls back to CHARTS[0] on an id it does not recognise, so this
+            quietly landed people on the daily submissions chart. */}
+        <Link to="/creators">more</Link>
       </div>
       {rows.length === 0 ? (
         <div className="vg-rail-empty">No creators yet.</div>

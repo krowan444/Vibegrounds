@@ -15,8 +15,18 @@ import { Link } from 'react-router-dom';
  * To change what it promotes, edit PROMO below — nothing else. Set
  * `on: false` and the live ticker comes back in its place.
  */
+/*
+ * Switched off at Kieran's request. The Arcade and Comics are no longer new
+ * enough to be worth the most valuable line on the page, and regulars
+ * already know where they are. `on: false` puts the live ticker back in its
+ * place — the newest submission and who made it, which changes every day
+ * rather than being a fixed menu.
+ *
+ * Left in place rather than deleted: the next thing worth announcing goes in
+ * `places`, and `on: true` brings the strip straight back.
+ */
 export const PROMO = {
-  on: true,
+  on: false,
   badge: 'NEW',
   places: [
     // Said as things a person might want, not as announcements. "Comics are
