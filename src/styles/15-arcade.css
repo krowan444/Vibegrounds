@@ -290,17 +290,35 @@
 
    Applied to the whole deck rather than to each control, because the misses
    are what cause this: a thumb that lands just off the edge of a button is
-   pressing the panel, and the panel was still ordinary selectable page. */
-.vg-cab-panel,
-.vg-cab-deck,
-.vg-cab-stickwell,
-.vg-cab-dir,
-.vg-cab-btn,
-.vg-cab-start,
-.vg-cab-door {
+   pressing the panel, and the panel was still ordinary selectable page.
+
+   ---- second pass: it was still happening "sometimes" ----
+
+   The list below was right about the deck and then stopped at its edge,
+   which is the one place that argument does not finish. A thumb that misses
+   the deck altogether lands on the cabinet — the marquee, the side art, the
+   readout, the score above the screen — and every one of those is real text
+   that iOS will happily offer to select on a long press or a double tap.
+   That is the "sometimes": not random, just a question of how far the miss
+   went.
+
+   So it moves up to the whole cabinet. Nothing inside .vg-cab-room is text
+   anybody would ever want to select — the initials entry is driven by the
+   stick, not a text field — and both properties inherit, so one declaration
+   covers every child and there is no list left to forget to add to.
+
+   touch-action: manipulation on the cabinet turns off double-tap zoom across
+   the whole thing while leaving ordinary page scrolling alone. The controls
+   keep their own touch-action: none further down, which is stricter and
+   should be: no scroll should ever begin from a fire button mid-go. */
+.vg-cab-room {
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
+}
+
+.vg-cab {
+  touch-action: manipulation;
 }
 
 .vg-cab-panel {
