@@ -30,6 +30,7 @@ import RouteMeta from './lib/pageMeta';
  */
 const PortalPage        = lazy(() => import('./pages/PortalPage'));
 const ChartsPage        = lazy(() => import('./pages/ChartsPage'));
+const CreatorsPage      = lazy(() => import('./pages/CreatorsPage'));
 const BadgesPage        = lazy(() => import('./pages/BadgesPage'));
 const HallOfFamePage    = lazy(() => import('./pages/HallOfFamePage'));
 const CategoryPage      = lazy(() => import('./pages/CategoryPage'));
@@ -102,6 +103,7 @@ export default function App() {
               <Route path="/" element={<HomePage />} />
               <Route path="/portal" element={<PortalPage />} />
               <Route path="/charts" element={<ChartsPage />} />
+              <Route path="/creators" element={<CreatorsPage />} />
               <Route path="/badges" element={<BadgesPage />} />
               <Route path="/hall-of-fame" element={<HallOfFamePage />} />
               <Route path="/category/:category" element={<CategoryPage />} />
