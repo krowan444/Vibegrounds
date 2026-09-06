@@ -567,6 +567,18 @@
   font-family: var(--font-retro); font-size: 17px; color: var(--text-primary);
 }
 
+/* The same announcement inside the progress drawer, which is a narrow
+   column rather than a full-width strip. A left-to-right gradient reads as
+   a smudge across ~280px, so it becomes a flat wash. The text wraps onto
+   two or three lines in there, which is what the line-height is for — the
+   retro face sets solid without it and the rank numbers run together. */
+.vg-drawer-yours {
+  background: rgba(255,215,0,.12);
+  font-size: 15px;
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+
 @media (max-width: 900px) {
   .vg-layout { grid-template-columns: 1fr; }
   .vg-rail { flex-direction: row; flex-wrap: wrap; }

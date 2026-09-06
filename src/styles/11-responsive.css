@@ -34,14 +34,49 @@
   .vg-3col > .vg-col:nth-child(2) > * { order: 40; }
   .vg-3col > .vg-col:nth-child(3) > * { order: 60; }
 
-  /* The requested order. Charts first, then the Staff Pick, then Top
-     Creators, then the paid advert directly under it. */
+  /* The requested order.
+   *
+   * Every rule here is (0,3,0) — three classes — including the baseline
+   * above, so none of them can quietly out-rank another and SOURCE ORDER
+   * decides. That matters twice below, and both are marked.
+   *
+   *   1  Top 10 Today / This Week      left column
+   *   2  the hero advert               middle
+   *   3  join / welcome strip          middle
+   *   4  MORE STAFF PICKS              middle
+   *   5  ALL-TIME TOP 100              right column
+   *   6  TOP CREATORS                  left column
+   *   7  BROWSE THE GROUNDS            middle
+   *   8  FRESH OUT THE PORTAL          middle
+   *   9  TOP 50 THIS MONTH             right column
+   *  10  the paid advert               left column
+   *      …then everything else at 20 / 40 / 60, in column order.
+   *
+   * The two all-time and monthly boards were previously stranded at 60,
+   * which on a phone put the site's main chart below every advert in the
+   * left column. They are the reason this list was reshuffled.
+   */
   .vg-3col > .vg-col-left  > .vg-rail-box      { order: 1; }
   .vg-3col > .vg-col       > .vg-hero-ad       { order: 2; }
-  /* Same specificity as the .vg-rail-box rule above and written after it,
-     so this wins for the one rail that is Top Creators. */
-  .vg-3col > .vg-col-left  > .vg-creator-rail  { order: 3; }
-  .vg-3col > .vg-col-left  > .vg-sponsor       { order: 4; }
+  .vg-3col > .vg-col       > .vg-strip         { order: 3; }
+  .vg-3col > .vg-col       > .vg-staff-picks   { order: 4; }
+  .vg-3col > .vg-col-right > .vg-rail-alltime  { order: 5; }
+  /* (a) Same specificity as the .vg-rail-box rule above and written after
+     it, so this wins for the one left-column rail that is Top Creators. */
+  .vg-3col > .vg-col-left  > .vg-creator-rail  { order: 6; }
+  .vg-3col > .vg-col       > .vg-browse        { order: 7; }
+  .vg-3col > .vg-col       > .vg-fresh         { order: 8; }
+  /* (b) Likewise: .vg-rail-monthly also carries .vg-rail-box, but that
+     rule is scoped to .vg-col-left and this board is in the right column,
+     so there is nothing to override — it only has to beat the baseline. */
+  .vg-3col > .vg-col-right > .vg-rail-monthly  { order: 9; }
+  .vg-3col > .vg-col-left  > .vg-sponsor       { order: 10; }
+
+  /* The two right-hand boards carry an inline margin-top meant to separate
+     them when they are stacked one above the other in a column of their
+     own. Interleaved into a single mobile stack they are no longer
+     neighbours, and the extra gap reads as a broken join. */
+  .vg-3col > .vg-col-right > .vg-rail-monthly { margin-top: 0 !important; }
 }
 
 
