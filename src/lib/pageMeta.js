@@ -44,6 +44,8 @@ const ROUTES = {
     'Browse everything posted to VibeGrounds — games, apps, websites, AI movies and experiments, newest first or best rated.'],
   '/charts': ['Top 100',
     'The hundred highest-rated things anyone has vibe coded, scored 0–5 by the community.'],
+  '/creators': ['Top Creators',
+    'The people behind the highest-rated work on VibeGrounds, ranked by what the community made of it.'],
   '/hall-of-fame': ['Hall of Fame',
     'The creations that took the number one spot. Daily, weekly and all-time champions of VibeGrounds.'],
   '/badges': ['Trophy Cabinet',
