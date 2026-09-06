@@ -53,7 +53,6 @@ function listOf(items) {
 export default function HomePage() {
   const { user, profile } = useAuth();
   const [d, setD] = useState(null);
-  const [mine, setMine] = useState([]);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -149,16 +148,6 @@ export default function HomePage() {
     return () => { alive = false; };
   }, []);
 
-  useEffect(() => {
-    if (!user || !d) return;
-    const all = [
-      ...d.daily.map((c) => ({ ...c, chart: 'Daily' })),
-      ...d.weekly.map((c) => ({ ...c, chart: 'Weekly' })),
-      ...d.alltime.slice(0, 100).map((c) => ({ ...c, chart: 'All-Time' })),
-    ];
-    setMine(all.filter((c) => c.creator_id === user.id));
-  }, [user, d]);
-
   if (!d) {
     return (
       <>
@@ -199,20 +188,10 @@ export default function HomePage() {
           </div>
         )}
 
-        {mine.length > 0 && (
-          <div className="vg-yours">
-            🎉 <strong style={{ color: 'var(--yellow)' }}>You&#39;re on the charts!</strong>{' '}
-            {mine.slice(0, 2).map((c, i) => (
-              <span key={`${c.chart}-${c.id}`}>
-                {i > 0 && ' · '}
-                <Link to={`/creation/${c.id}`} style={{ color: 'var(--orange)', fontWeight: 'bold' }}>
-                  {c.title}
-                </Link>{' '}
-                is #{c.rank} on {c.chart}
-              </span>
-            ))}
-          </div>
-        )}
+        {/* "You're on the charts!" used to sit here, above the fold on the
+            home page only. It has moved into the progress drawer, which is
+            where the rest of somebody's own standing already lives and is on
+            every page rather than just this one. See ProgressDrawer.jsx. */}
 
         {/* ── three columns ── */}
         <div className="vg-3col">
@@ -277,7 +256,7 @@ export default function HomePage() {
             {/* The first pick is already the hero above, so skip it here
                 rather than showing the same submission twice. */}
             {d.featured.length > 1 && (
-              <div className="vg-section" style={{ marginBottom: 0 }}>
+              <div className="vg-section vg-staff-picks" style={{ marginBottom: 0 }}>
                 <div className="vg-section-head">
                   <h2>⭐ MORE STAFF PICKS</h2>
                   <span className="vg-sub">Hand-chosen</span>
@@ -289,7 +268,7 @@ export default function HomePage() {
             )}
 
             {d.latest.length > 0 ? (
-              <div className="vg-section" style={{ marginBottom: 0 }}>
+              <div className="vg-section vg-fresh" style={{ marginBottom: 0 }}>
                 <div className="vg-section-head">
                   <h2>🆕 FRESH OUT THE PORTAL</h2>
                   <Link to="/portal">Browse everything →</Link>
@@ -312,7 +291,7 @@ export default function HomePage() {
               </div>
             )}
 
-            <div className="vg-section" style={{ marginBottom: 0 }}>
+            <div className="vg-section vg-browse" style={{ marginBottom: 0 }}>
               <div className="vg-section-head">
                 <h2>BROWSE THE GROUNDS</h2>
                 {/* Guarded for the same reason as the stat line above: when
@@ -349,7 +328,7 @@ export default function HomePage() {
 
           {/* RIGHT — the All-Time 100, straight away */}
           <div className="vg-col vg-col-right">
-            <div className="vg-rail-box vg-rail-scroll">
+            <div className="vg-rail-box vg-rail-scroll vg-rail-alltime">
               <div className="vg-rail-head" style={{ position: 'sticky', top: 0, zIndex: 2 }}>
                 <span>👑 ALL-TIME TOP 100</span>
                 <Link to="/charts?chart=alltime">full</Link>
@@ -388,7 +367,7 @@ export default function HomePage() {
             {/* Top 50 this month, under the all-time board. A monthly window
                 gives newer work a realistic shot — on the all-time chart an
                 early submission with a head start is very hard to displace. */}
-            <div className="vg-rail-box vg-rail-scroll" style={{ marginTop: '14px' }}>
+            <div className="vg-rail-box vg-rail-scroll vg-rail-monthly" style={{ marginTop: '14px' }}>
               <div className="vg-rail-head" style={{ position: 'sticky', top: 0, zIndex: 2 }}>
                 <span>📅 TOP 50 THIS MONTH</span>
                 <Link to="/charts?chart=monthly">full</Link>

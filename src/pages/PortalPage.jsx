@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { supabase, retryOnAbort, describeError, loadFailure } from '../lib/supabase';
 import SiteHeader from '../components/SiteHeader';
+import { CreatorRail } from '../components/ChartRail';
 import AdSlot from '../components/AdSlot';
 import Notice from '../components/Notice';
 import SubmitCta from '../components/SubmitCta';
@@ -77,6 +78,7 @@ export default function PortalPage() {
   const [weekly, setWeekly] = useState([]);
   const [monthly, setMonthly] = useState([]);
   const [alltime, setAlltime] = useState([]);
+  const [creators, setCreators] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -86,6 +88,21 @@ export default function PortalPage() {
     retryOnAbort(() =>
       supabase.from('categories').select('*').eq('is_active', true).order('sort_order'),
     ).then(({ data }) => setCategories(data || []));
+  }, []);
+
+  /* Top Creators, under the all-time board.
+   *
+   * Fetched here rather than inside load(), and deliberately: the
+   * leaderboard is a property of the site, not of whatever category or
+   * device filter happens to be set. Putting it in load() would refetch an
+   * unchanging list every time somebody clicked a category tab, and worse,
+   * would invite somebody later to pass it through apply() and end up with
+   * "top creators — in the Games category, on mobile", which is a different
+   * and much less useful claim than the one the heading makes. */
+  useEffect(() => {
+    retryOnAbort(() =>
+      supabase.from('creator_leaderboard').select('*').order('rank').limit(5),
+    ).then(({ data }) => setCreators(data || []));
   }, []);
 
   const load = useCallback(async () => {
@@ -303,13 +320,18 @@ export default function PortalPage() {
                   <AdSlot index={0} />
                 </div>
 
-                {/* RIGHT — all time */}
+                {/* RIGHT — all time, then who made it there.
+                    Top Creators sits under the all-time board rather than
+                    above it: the board is what somebody came to the Portal
+                    to read, and the people behind it are the natural next
+                    question rather than the first one. */}
                 <div className="vg-col">
                   <ChartColumn
                     title="All-Time Top 100" icon="👑" rows={alltime}
                     to="/charts?chart=alltime"
                     empty="Nothing charted yet."
                   />
+                  <CreatorRail rows={creators} />
                   <AdSlot index={1} />
                 </div>
               </>
